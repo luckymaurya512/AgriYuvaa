@@ -20,13 +20,13 @@ router.use(authenticate, authorize("admin", "superadmin"));
 
 router.get("/stats", getPlatformStats);
 router.get("/users", listUsers);
-router.patch("/users/:id/status", updateUserStatus);
+router.route("/users/:id/status").patch(updateUserStatus).post(updateUserStatus);
 
 router.get("/employers/pending", getPendingEmployers);
-router.patch("/employers/:id/verify", verifyEmployer);
+router.route("/employers/:id/verify").patch(verifyEmployer).post(verifyEmployer);
 
 router.get("/jobs/pending", getPendingJobs);
-router.patch("/jobs/:id/review", reviewJob);
+router.route("/jobs/:id/review").patch(reviewJob).post(reviewJob);
 
 router.post("/categories", createCategory);
 router.patch("/categories/:id", updateCategory);

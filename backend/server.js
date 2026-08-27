@@ -31,8 +31,10 @@ app.use((req, res, next) => {
     "https://frontend-lime-nine-60.vercel.app",
   ].filter(Boolean);
 
-  if (!origin || allowed.includes(origin) || origin.endsWith(".vercel.app")) {
-    res.setHeader("Access-Control-Allow-Origin", origin || "*");
+  if (origin) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  } else {
+    res.setHeader("Access-Control-Allow-Origin", "*");
   }
   
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD");
