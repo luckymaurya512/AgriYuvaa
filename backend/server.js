@@ -22,29 +22,28 @@ connectDB();
 
 const app = express();
 
-const allowedOrigins = [
-  process.env.CLIENT_URL,
-  "http://localhost:5173",
-  "https://frontend-lime-nine-60.vercel.app",
-].filter(Boolean);
+// Custom bulletproof CORS middleware
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  const allowed = [
+    process.env.CLIENT_URL,
+    "http://localhost:5173",
+    "https://frontend-lime-nine-60.vercel.app",
+  ].filter(Boolean);
 
-const corsOptions = {
-  origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, curl, etc.) or matching Vercel/localhost
-    if (!origin || allowedOrigins.includes(origin) || origin.endsWith(".vercel.app")) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
-  optionsSuccessStatus: 200,
-};
+  if (!origin || allowed.includes(origin) || origin.endsWith(".vercel.app")) {
+    res.setHeader("Access-Control-Allow-Origin", origin || "*");
+  }
+  
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, Accept, Origin");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
 
-app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+  next();
+});
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 if (process.env.NODE_ENV !== "production") app.use(morgan("dev"));
