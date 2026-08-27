@@ -86,10 +86,11 @@ export const registerUser = asyncHandler(async (req, res) => {
       html: otpEmailHtml(user.name, otp),
     });
   } catch (emailError) {
+    console.error("Failed to send verification email:", emailError);
     // Clean up the created user if email fails so they can retry
     await User.findByIdAndDelete(user._id);
     res.status(500);
-    throw new Error("Failed to send verification email. Please try again.");
+    throw new Error(`Failed to send verification email: ${emailError.message}`);
   }
 
   res.status(201).json({
@@ -219,11 +220,17 @@ export const resendOtp = asyncHandler(async (req, res) => {
   user.emailOtpAttempts = 0;
   await user.save();
 
-  await sendEmail({
-    to: user.email,
-    subject: "Your new AgriYuvaa verification code",
-    html: otpEmailHtml(user.name, otp),
-  });
+  try {
+    await sendEmail({
+      to: user.email,
+      subject: "Your new AgriYuvaa verification code",
+      html: otpEmailHtml(user.name, otp),
+    });
+  } catch (emailError) {
+    console.error("Failed to resend verification email:", emailError);
+    res.status(500);
+    throw new Error(`Failed to send email: ${emailError.message}`);
+  }
 
   res.json({ message: "A new OTP has been sent to your email." });
 });
