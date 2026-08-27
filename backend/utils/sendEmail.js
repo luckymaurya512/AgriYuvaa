@@ -1,15 +1,6 @@
-import { Resend } from "resend";
 import nodemailer from "nodemailer";
 
-let resendClient = null;
 let transporter = null;
-
-const getResend = () => {
-  if (!resendClient && process.env.RESEND_API_KEY) {
-    resendClient = new Resend(process.env.RESEND_API_KEY);
-  }
-  return resendClient;
-};
 
 const getNodemailerTransporter = () => {
   if (!transporter) {
@@ -44,32 +35,45 @@ const getNodemailerTransporter = () => {
 };
 
 /**
- * Send an email via Resend (HTTPS port 443 - works seamlessly on Render/cloud)
- * with automatic fallback to Nodemailer SMTP if RESEND_API_KEY is not set.
+ * Send an email using Brevo HTTP API (Port 443 - free 300 emails/day to any recipient),
+ * with fallback to Nodemailer SMTP.
  * 
  * @param {{ to: string, subject: string, html: string }} options
  */
 const sendEmail = async ({ to, subject, html }) => {
-  // 1. Prefer Resend if API key is provided (never blocked by cloud firewalls)
-  if (process.env.RESEND_API_KEY) {
-    const resend = getResend();
-    const fromAddress = process.env.EMAIL_FROM || "AgriYuvaa <onboarding@resend.dev>";
+  // 1. Brevo HTTP API (Recommended: no domain required, works anywhere on cloud)
+  if (process.env.BREVO_API_KEY) {
+    const senderEmail = process.env.BREVO_SENDER_EMAIL || process.env.SMTP_USER || "mauryalucky512@gmail.com";
+    const senderName = process.env.BREVO_SENDER_NAME || "AgriYuvaa";
 
-    const { data, error } = await resend.emails.send({
-      from: fromAddress,
-      to: [to],
-      subject,
-      html,
+    const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "accept": "application/json",
+        "api-key": process.env.BREVO_API_KEY.trim(),
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        sender: {
+          name: senderName,
+          email: senderEmail,
+        },
+        to: [{ email: to }],
+        subject,
+        htmlContent: html,
+      }),
     });
 
-    if (error) {
-      throw new Error(error.message || "Failed to send email via Resend");
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || `Brevo email error: ${response.statusText}`);
     }
 
     return data;
   }
 
-  // 2. Fallback to Nodemailer SMTP
+  // 2. Fallback to Nodemailer SMTP if configured
   const mailOptions = {
     from: process.env.EMAIL_FROM || `"AgriYuvaa" <${process.env.SMTP_USER || "no-reply@agriyuvaa.com"}>`,
     to,
