@@ -38,11 +38,21 @@ export const getJobs = asyncHandler(async (req, res) => {
 
   const query = { status: "approved" };
 
-  if (keyword) query.$text = { $search: keyword };
+  if (keyword && keyword.trim()) {
+    const keywordRegex = { $regex: keyword.trim(), $options: "i" };
+    query.$or = [
+      { title: keywordRegex },
+      { description: keywordRegex },
+      { cropTags: keywordRegex },
+      { requirements: keywordRegex },
+      { responsibilities: keywordRegex },
+    ];
+  }
+
   if (category) query.category = category;
   if (employmentType) query.employmentType = employmentType;
   if (experienceLevel) query.experienceLevel = experienceLevel;
-  if (location) query.location = { $regex: location, $options: "i" };
+  if (location && location.trim()) query.location = { $regex: location.trim(), $options: "i" };
   if (minSalary) query.salaryMax = { $gte: Number(minSalary) };
   if (maxSalary) query.salaryMin = { ...(query.salaryMin || {}), $lte: Number(maxSalary) };
 
