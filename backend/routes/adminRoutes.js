@@ -8,6 +8,7 @@ import {
   verifyEmployer,
   getPendingJobs,
   reviewJob,
+  toggleJobFeatured,
   getAuditLogs,
 } from "../controllers/adminController.js";
 import { createCategory, updateCategory, deleteCategory } from "../controllers/categoryController.js";
@@ -28,6 +29,7 @@ router.route("/employers/:id/verify").patch(verifyEmployer).post(verifyEmployer)
 
 router.get("/jobs/pending", getPendingJobs);
 router.route("/jobs/:id/review").patch(reviewJob).post(reviewJob);
+router.route("/jobs/:id/featured").patch(toggleJobFeatured).post(toggleJobFeatured);
 router.post("/jobs", createJob);
 
 router.post("/categories", createCategory);

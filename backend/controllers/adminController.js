@@ -116,16 +116,33 @@ export const getPendingJobs = asyncHandler(async (req, res) => {
 // @desc  Approve or reject a job posting
 // @route PATCH /api/admin/jobs/:id/review
 export const reviewJob = asyncHandler(async (req, res) => {
-  const { decision, rejectionReason } = req.body; // "approved" | "rejected"
+  const { decision, rejectionReason, isFeatured } = req.body; // "approved" | "rejected"
   const job = await Job.findById(req.params.id);
   if (!job) {
     res.status(404);
     throw new Error("Job not found");
   }
   job.status = decision;
+  if (isFeatured !== undefined) {
+    job.isFeatured = Boolean(isFeatured);
+  }
   if (decision === "rejected") job.rejectionReason = rejectionReason || "Did not meet posting guidelines";
   await job.save();
-  await logAction(req.user, "review_job", "Job", job._id, { decision });
+  await logAction(req.user, "review_job", "Job", job._id, { decision, isFeatured: job.isFeatured });
+  res.json(job);
+});
+
+// @desc  Toggle featured status on any job (Admin / Super Admin)
+// @route PATCH /api/admin/jobs/:id/featured
+export const toggleJobFeatured = asyncHandler(async (req, res) => {
+  const job = await Job.findById(req.params.id);
+  if (!job) {
+    res.status(404);
+    throw new Error("Job not found");
+  }
+  job.isFeatured = !job.isFeatured;
+  await job.save();
+  await logAction(req.user, "toggle_job_featured", "Job", job._id, { isFeatured: job.isFeatured });
   res.json(job);
 });
 

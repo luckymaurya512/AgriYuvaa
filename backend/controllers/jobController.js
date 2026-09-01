@@ -17,11 +17,15 @@ export const createJob = asyncHandler(async (req, res) => {
 
   // Admin-created jobs are automatically approved; employer jobs are pending review
   const initialStatus = isPrivileged ? (req.body.status || "approved") : "pending";
+  const isFeatured = isPrivileged ? Boolean(req.body.isFeatured) : false;
+  const featuredRequested = !isPrivileged && Boolean(req.body.featuredRequested || req.body.isFeatured);
 
   const job = await Job.create({
     ...req.body,
     employer: req.user._id,
     status: initialStatus,
+    isFeatured,
+    featuredRequested,
   });
 
   res.status(201).json(job);

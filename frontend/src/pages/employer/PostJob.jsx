@@ -378,24 +378,42 @@ const PostJob = () => {
         <div className="p-4 bg-gray-50 rounded-xl border border-brand-border space-y-3">
           <p className="text-xs font-bold uppercase tracking-wider text-brand-grey">Visibility & Boost</p>
           <div className="grid sm:grid-cols-2 gap-3">
-            <label className="flex items-center gap-2.5 text-xs font-medium cursor-pointer select-none">
+            <label className="flex items-start gap-2.5 text-xs font-medium cursor-pointer select-none">
               <input
                 type="checkbox"
-                checked={form.isFeatured || false}
-                onChange={(e) => setForm({ ...form, isFeatured: e.target.checked })}
-                className="w-4 h-4 rounded text-brand-green focus:ring-brand-green"
+                checked={form.isFeatured || form.featuredRequested || false}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    isFeatured: isAdmin ? e.target.checked : false,
+                    featuredRequested: !isAdmin ? e.target.checked : false,
+                  })
+                }
+                className="w-4 h-4 rounded text-brand-green focus:ring-brand-green mt-0.5"
               />
-              <span>⭐ <strong>Featured Job</strong> (Top listing & badge)</span>
+              <div>
+                <span>
+                  ⭐ <strong>{isAdmin ? "Featured Listing (Direct)" : "Request Featured Boost"}</strong>
+                </span>
+                <p className="text-[11px] text-brand-grey mt-0.5">
+                  {isAdmin
+                    ? "Pins job to top of search results with gold badge."
+                    : "Top search placement. Reviewed & activated by Admin team."}
+                </p>
+              </div>
             </label>
 
-            <label className="flex items-center gap-2.5 text-xs font-medium cursor-pointer select-none">
+            <label className="flex items-start gap-2.5 text-xs font-medium cursor-pointer select-none">
               <input
                 type="checkbox"
                 checked={form.isUrgent || false}
                 onChange={(e) => setForm({ ...form, isUrgent: e.target.checked })}
-                className="w-4 h-4 rounded text-orange-600 focus:ring-orange-500"
+                className="w-4 h-4 rounded text-orange-600 focus:ring-orange-500 mt-0.5"
               />
-              <span>⚡ <strong>Urgent Hiring</strong> (Priority badge)</span>
+              <div>
+                <span>⚡ <strong>Urgent Hiring</strong></span>
+                <p className="text-[11px] text-brand-grey mt-0.5">Displays prominent urgent hiring priority badge.</p>
+              </div>
             </label>
           </div>
         </div>
