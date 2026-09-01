@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { PlusCircle, UserPlus } from "lucide-react";
 import { fetchPlatformStats, fetchUsers, updateUserStatus, createAdmin } from "../../services/adminService.js";
 
 const SuperAdminDashboard = () => {
@@ -36,14 +38,22 @@ const SuperAdminDashboard = () => {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-display font-bold mb-1">Super Admin Dashboard</h1>
           <p className="text-sm text-brand-grey">Full platform control and oversight</p>
         </div>
-        <button onClick={() => setShowAdminForm(!showAdminForm)} className="btn-primary">
-          + New Admin
-        </button>
+        <div className="flex items-center gap-3">
+          <Link
+            to="/employer/post-job"
+            className="btn-primary text-sm flex items-center gap-2 py-2.5 px-4"
+          >
+            <PlusCircle size={16} /> Post Direct Job
+          </Link>
+          <button onClick={() => setShowAdminForm(!showAdminForm)} className="btn-secondary text-sm flex items-center gap-2 py-2.5 px-4">
+            <UserPlus size={16} /> + New Admin
+          </button>
+        </div>
       </div>
 
       {showAdminForm && (

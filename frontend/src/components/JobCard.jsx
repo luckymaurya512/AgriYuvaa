@@ -16,7 +16,9 @@ const JobCard = ({ job }) => {
         {job.isFeatured && <span className="badge-featured shrink-0">Featured</span>}
       </div>
 
-      <p className="text-sm text-brand-grey">{job.employer?.name || "AgriYuvaa Employer"}</p>
+      <p className="text-sm font-medium text-brand-black/90">
+        {job.companyName || job.employer?.name || "AgriYuvaa Employer"}
+      </p>
 
       <div className="flex flex-wrap gap-3 text-xs text-brand-grey">
         <span className="inline-flex items-center gap-1">
@@ -30,11 +32,23 @@ const JobCard = ({ job }) => {
         </span>
       </div>
 
-      {job.category?.name && (
-        <span className="text-xs font-medium text-brand-green-dark bg-brand-green-light w-fit px-3 py-1 rounded-full">
-          {job.category.name}
-        </span>
-      )}
+      <div className="flex flex-wrap items-center gap-2 mt-auto pt-1">
+        {job.category?.name && (
+          <span className="text-xs font-medium text-brand-green-dark bg-brand-green-light px-3 py-1 rounded-full">
+            {job.category.name}
+          </span>
+        )}
+        {job.applyType === "email" && (
+          <span className="text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-full">
+            ✉️ Email HR
+          </span>
+        )}
+        {job.applyType === "external_link" && (
+          <span className="text-xs font-medium text-purple-700 bg-purple-50 border border-purple-200 px-2.5 py-0.5 rounded-full">
+            🌐 Company Site
+          </span>
+        )}
+      </div>
     </Link>
   );
 };

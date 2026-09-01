@@ -2,19 +2,26 @@ import asyncHandler from "express-async-handler";
 import Job from "../models/Job.js";
 import EmployerProfile from "../models/EmployerProfile.js";
 
-// @desc  Create a job (employer only). Goes to "pending" for admin approval.
+// @desc  Create a job (employer or admin/superadmin)
 // @route POST /api/jobs
 export const createJob = asyncHandler(async (req, res) => {
-  const employerProfile = await EmployerProfile.findOne({ user: req.user._id });
-  if (!employerProfile || employerProfile.verificationStatus !== "approved") {
-    res.status(403);
-    throw new Error("Your employer account must be verified before posting jobs");
+  const isPrivileged = ["admin", "superadmin"].includes(req.user.role);
+
+  if (!isPrivileged) {
+    const employerProfile = await EmployerProfile.findOne({ user: req.user._id });
+    if (!employerProfile || employerProfile.verificationStatus !== "approved") {
+      res.status(403);
+      throw new Error("Your employer account must be verified before posting jobs");
+    }
   }
+
+  // Admin-created jobs are automatically approved; employer jobs are pending review
+  const initialStatus = isPrivileged ? (req.body.status || "approved") : "pending";
 
   const job = await Job.create({
     ...req.body,
     employer: req.user._id,
-    status: "pending",
+    status: initialStatus,
   });
 
   res.status(201).json(job);
@@ -42,6 +49,7 @@ export const getJobs = asyncHandler(async (req, res) => {
     const keywordRegex = { $regex: keyword.trim(), $options: "i" };
     query.$or = [
       { title: keywordRegex },
+      { companyName: keywordRegex },
       { description: keywordRegex },
       { cropTags: keywordRegex },
       { requirements: keywordRegex },
