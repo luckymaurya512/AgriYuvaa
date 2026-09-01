@@ -83,8 +83,12 @@ export const updateApplicationStatus = asyncHandler(async (req, res) => {
     throw new Error("Application not found");
   }
 
-  const isOwner = application.job.employer.toString() === req.user._id.toString();
-  const isPrivileged = ["admin", "superadmin"].includes(req.user.role);
+  const isPrivileged = ["admin", "superadmin"].includes(req.user?.role);
+  const employerId = application.job?.employer?._id
+    ? application.job.employer._id.toString()
+    : application.job?.employer?.toString();
+  const isOwner = employerId && employerId === req.user._id.toString();
+
   if (!isOwner && !isPrivileged) {
     res.status(403);
     throw new Error("You do not have permission to update this application");

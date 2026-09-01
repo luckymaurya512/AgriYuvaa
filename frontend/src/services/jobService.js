@@ -15,4 +15,7 @@ export const fetchMyApplications = () => api.get("/applications/mine").then((r) 
 export const fetchApplicationsForJob = (jobId) =>
   api.get(`/applications/jobs/${jobId}`).then((r) => r.data);
 export const updateApplicationStatus = (id, status) =>
-  api.patch(`/applications/${id}/status`, { status }).then((r) => r.data);
+  api
+    .post(`/applications/${id}/status`, { status })
+    .catch(() => api.patch(`/applications/${id}/status`, { status }))
+    .then((r) => r.data);
