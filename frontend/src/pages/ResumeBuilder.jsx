@@ -16,6 +16,9 @@ import {
   Briefcase,
   Layers,
   FileCheck,
+  BookText,
+  FileBadge2,
+  FolderPlus,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
 
@@ -60,14 +63,53 @@ const sampleData = {
   ],
   skills:
     "Agronomy, Crop Management, Integrated Pest Management (IPM), Soil Health Analysis, Precision Farming, GIS & Remote Sensing, Hydroponics, Farmer Training & Advisory, MS Office",
-  certifications:
-    "ICAR NET (Agronomy) Qualified (2024), Certificate in Digital Agriculture & Drone Applications (Coursera), Organic Farming Practices (NCOF)",
-  languages: "English (Fluent), Hindi (Native), Punjabi (Conversational)",
-  projects: [
+  certificationsList: [
+    {
+      name: "ICAR National Eligibility Test (NET) in Agronomy",
+      issuer: "Agricultural Scientists Recruitment Board (ASRB)",
+      year: "2024",
+    },
+    {
+      name: "Certificate in Digital Agriculture & Drone Applications",
+      issuer: "Coursera / PAU",
+      year: "2023",
+    },
+    {
+      name: "Organic Farming & Certification Standards",
+      issuer: "National Centre of Organic Farming (NCOF)",
+      year: "2022",
+    },
+  ],
+  publications: [
     {
       title: "Optimization of Nitrogen Use Efficiency in Direct-Seeded Rice",
+      journal: "Indian Journal of Agronomy (Vol. 68, Issue 3)",
+      year: "2023",
+      link: "https://doi.org/10.1234/ija.2023.045",
       description:
         "Evaluated leaf color chart (LCC) based nitrogen management, reducing fertilizer inputs by 18% while maintaining optimal grain yield.",
+    },
+  ],
+  projects: [
+    {
+      title: "Automated Drip Fertigation & Soil Moisture Monitoring",
+      description:
+        "Developed an IoT-assisted sensor prototype for real-time root-zone moisture tracking in vegetable polyhouses.",
+    },
+  ],
+  languages: "English (Fluent), Hindi (Native), Punjabi (Conversational)",
+  customSections: [
+    {
+      id: "sec_1",
+      heading: "Workshops & Field Demonstrations",
+      items: [
+        {
+          title: "National Seminar on Climate Resilient Agriculture",
+          subtitle: "IARI, New Delhi",
+          year: "2023",
+          description: "Presented research poster on direct-seeded rice water-saving techniques.",
+        },
+      ],
     },
   ],
 };
@@ -83,9 +125,11 @@ const initialEmptyData = {
   education: [{ degree: "", institution: "", year: "", score: "" }],
   experience: [{ role: "", company: "", duration: "", description: "" }],
   skills: "",
-  certifications: "",
-  languages: "",
+  certificationsList: [{ name: "", issuer: "", year: "" }],
+  publications: [{ title: "", journal: "", year: "", link: "", description: "" }],
   projects: [{ title: "", description: "" }],
+  languages: "",
+  customSections: [],
 };
 
 const ResumeBuilder = () => {
@@ -94,7 +138,6 @@ const ResumeBuilder = () => {
   const [activeTab, setActiveTab] = useState("editor"); // For mobile: "editor" | "preview"
 
   const [data, setData] = useState(() => {
-    // Pre-populate with logged in user info if available
     if (user) {
       return {
         ...sampleData,
@@ -120,7 +163,7 @@ const ResumeBuilder = () => {
     }
   };
 
-  // ── Dynamic Array Handlers ──
+  // ── Dynamic Array Handlers: Education ──
   const handleEduChange = (index, field, value) => {
     const updated = [...data.education];
     updated[index][field] = value;
@@ -136,6 +179,7 @@ const ResumeBuilder = () => {
     setData({ ...data, education: data.education.filter((_, i) => i !== index) });
   };
 
+  // ── Dynamic Array Handlers: Experience ──
   const handleExpChange = (index, field, value) => {
     const updated = [...data.experience];
     updated[index][field] = value;
@@ -151,6 +195,7 @@ const ResumeBuilder = () => {
     setData({ ...data, experience: data.experience.filter((_, i) => i !== index) });
   };
 
+  // ── Dynamic Array Handlers: Projects ──
   const handleProjChange = (index, field, value) => {
     const updated = [...data.projects];
     updated[index][field] = value;
@@ -161,6 +206,98 @@ const ResumeBuilder = () => {
   };
   const removeProj = (index) => {
     setData({ ...data, projects: data.projects.filter((_, i) => i !== index) });
+  };
+
+  // ── Dynamic Array Handlers: Publications / Research Papers ──
+  const handlePubChange = (index, field, value) => {
+    const updated = [...(data.publications || [])];
+    updated[index][field] = value;
+    setData({ ...data, publications: updated });
+  };
+  const addPub = () => {
+    setData({
+      ...data,
+      publications: [...(data.publications || []), { title: "", journal: "", year: "", link: "", description: "" }],
+    });
+  };
+  const removePub = (index) => {
+    setData({ ...data, publications: data.publications.filter((_, i) => i !== index) });
+  };
+
+  // ── Dynamic Array Handlers: Certifications ──
+  const handleCertChange = (index, field, value) => {
+    const updated = [...(data.certificationsList || [])];
+    updated[index][field] = value;
+    setData({ ...data, certificationsList: updated });
+  };
+  const addCert = () => {
+    setData({
+      ...data,
+      certificationsList: [...(data.certificationsList || []), { name: "", issuer: "", year: "" }],
+    });
+  };
+  const removeCert = (index) => {
+    setData({ ...data, certificationsList: data.certificationsList.filter((_, i) => i !== index) });
+  };
+
+  // ── Dynamic Custom Sections ──
+  const addCustomSection = () => {
+    const newSection = {
+      id: `sec_${Date.now()}`,
+      heading: "New Custom Section",
+      items: [{ title: "", subtitle: "", year: "", description: "" }],
+    };
+    setData({ ...data, customSections: [...(data.customSections || []), newSection] });
+  };
+
+  const removeCustomSection = (secId) => {
+    setData({
+      ...data,
+      customSections: data.customSections.filter((s) => s.id !== secId),
+    });
+  };
+
+  const updateSectionHeading = (secId, heading) => {
+    const updated = data.customSections.map((s) => (s.id === secId ? { ...s, heading } : s));
+    setData({ ...data, customSections: updated });
+  };
+
+  const addCustomSectionItem = (secId) => {
+    const updated = data.customSections.map((s) => {
+      if (s.id === secId) {
+        return {
+          ...s,
+          items: [...s.items, { title: "", subtitle: "", year: "", description: "" }],
+        };
+      }
+      return s;
+    });
+    setData({ ...data, customSections: updated });
+  };
+
+  const removeCustomSectionItem = (secId, itemIdx) => {
+    const updated = data.customSections.map((s) => {
+      if (s.id === secId) {
+        return {
+          ...s,
+          items: s.items.filter((_, i) => i !== itemIdx),
+        };
+      }
+      return s;
+    });
+    setData({ ...data, customSections: updated });
+  };
+
+  const updateCustomSectionItem = (secId, itemIdx, field, value) => {
+    const updated = data.customSections.map((s) => {
+      if (s.id === secId) {
+        const newItems = [...s.items];
+        newItems[itemIdx][field] = value;
+        return { ...s, items: newItems };
+      }
+      return s;
+    });
+    setData({ ...data, customSections: updated });
   };
 
   return (
@@ -511,6 +648,143 @@ const ResumeBuilder = () => {
               ))}
             </div>
 
+            {/* Research Papers & Publications */}
+            <div className="card p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="font-display font-bold text-sm text-brand-black uppercase tracking-wider flex items-center gap-2">
+                    <BookText size={16} className="text-brand-green" /> Research Papers & Publications
+                  </h2>
+                  <p className="text-xs text-brand-grey mt-0.5">Add published research, journal articles, or conference proceedings</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={addPub}
+                  className="text-xs font-semibold text-brand-green-dark hover:underline flex items-center gap-1 shrink-0"
+                >
+                  <Plus size={14} /> Add Paper
+                </button>
+              </div>
+
+              {(data.publications || []).map((pub, idx) => (
+                <div key={idx} className="p-4 bg-gray-50 border border-brand-border rounded-xl space-y-3 relative">
+                  <button
+                    type="button"
+                    onClick={() => removePub(idx)}
+                    className="absolute top-3 right-3 text-gray-400 hover:text-red-600 transition-colors"
+                    title="Remove"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+
+                  <div className="pr-6">
+                    <label className="text-[11px] font-semibold text-brand-grey uppercase">Paper / Article Title</label>
+                    <input
+                      className="input-field mt-1 text-xs bg-white"
+                      value={pub.title}
+                      onChange={(e) => handlePubChange(idx, "title", e.target.value)}
+                      placeholder="e.g. Assessment of Soil Fertility under Organic Regimes"
+                    />
+                  </div>
+
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[11px] font-semibold text-brand-grey uppercase">Journal / Conference Name</label>
+                      <input
+                        className="input-field mt-1 text-xs bg-white"
+                        value={pub.journal}
+                        onChange={(e) => handlePubChange(idx, "journal", e.target.value)}
+                        placeholder="Indian Journal of Agricultural Sciences"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-semibold text-brand-grey uppercase">Year / DOI / Link</label>
+                      <input
+                        className="input-field mt-1 text-xs bg-white"
+                        value={pub.year}
+                        onChange={(e) => handlePubChange(idx, "year", e.target.value)}
+                        placeholder="2023 / https://doi.org/..."
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-semibold text-brand-grey uppercase">Brief Summary / Findings (Optional)</label>
+                    <textarea
+                      rows={2}
+                      className="input-field mt-1 text-xs bg-white"
+                      value={pub.description}
+                      onChange={(e) => handlePubChange(idx, "description", e.target.value)}
+                      placeholder="Summary of research impact, methodology, or key findings..."
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Certifications & Trainings */}
+            <div className="card p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="font-display font-bold text-sm text-brand-black uppercase tracking-wider flex items-center gap-2">
+                    <FileBadge2 size={16} className="text-brand-green" /> Certifications & Trainings
+                  </h2>
+                  <p className="text-xs text-brand-grey mt-0.5">ICAR NET, licenses, technical courses, or specialized agri-trainings</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={addCert}
+                  className="text-xs font-semibold text-brand-green-dark hover:underline flex items-center gap-1 shrink-0"
+                >
+                  <Plus size={14} /> Add Certificate
+                </button>
+              </div>
+
+              {(data.certificationsList || []).map((cert, idx) => (
+                <div key={idx} className="p-4 bg-gray-50 border border-brand-border rounded-xl space-y-3 relative">
+                  <button
+                    type="button"
+                    onClick={() => removeCert(idx)}
+                    className="absolute top-3 right-3 text-gray-400 hover:text-red-600 transition-colors"
+                    title="Remove"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+
+                  <div className="pr-6">
+                    <label className="text-[11px] font-semibold text-brand-grey uppercase">Certificate / License Name</label>
+                    <input
+                      className="input-field mt-1 text-xs bg-white"
+                      value={cert.name}
+                      onChange={(e) => handleCertChange(idx, "name", e.target.value)}
+                      placeholder="e.g. ICAR NET in Soil Science / Drone Pilot License"
+                    />
+                  </div>
+
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[11px] font-semibold text-brand-grey uppercase">Issuing Institute / Body</label>
+                      <input
+                        className="input-field mt-1 text-xs bg-white"
+                        value={cert.issuer}
+                        onChange={(e) => handleCertChange(idx, "issuer", e.target.value)}
+                        placeholder="e.g. ASRB, ICAR, Coursera"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-semibold text-brand-grey uppercase">Year / Validity</label>
+                      <input
+                        className="input-field mt-1 text-xs bg-white"
+                        value={cert.year}
+                        onChange={(e) => handleCertChange(idx, "year", e.target.value)}
+                        placeholder="2024"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
             {/* Skills */}
             <div className="card p-6 space-y-3">
               <h2 className="font-display font-bold text-sm text-brand-black uppercase tracking-wider flex items-center gap-2">
@@ -526,39 +800,11 @@ const ResumeBuilder = () => {
               />
             </div>
 
-            {/* Certifications & Languages */}
-            <div className="card p-6 space-y-4">
-              <div>
-                <h2 className="font-display font-bold text-sm text-brand-black uppercase tracking-wider mb-2">
-                  Certifications & Honors
-                </h2>
-                <textarea
-                  rows={2}
-                  className="input-field text-sm"
-                  value={data.certifications}
-                  onChange={(e) => setData({ ...data, certifications: e.target.value })}
-                  placeholder="ICAR NET Qualified, Certified Organic Inspector, Drone Pilot License..."
-                />
-              </div>
-
-              <div>
-                <h2 className="font-display font-bold text-sm text-brand-black uppercase tracking-wider mb-2">
-                  Languages Known
-                </h2>
-                <input
-                  className="input-field text-sm"
-                  value={data.languages}
-                  onChange={(e) => setData({ ...data, languages: e.target.value })}
-                  placeholder="English, Hindi, Punjabi"
-                />
-              </div>
-            </div>
-
-            {/* Projects & Research */}
+            {/* Projects & Field Research */}
             <div className="card p-6 space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="font-display font-bold text-sm text-brand-black uppercase tracking-wider">
-                  Projects & Field Research
+                  Field Projects & Practical Work
                 </h2>
                 <button
                   type="button"
@@ -603,6 +849,113 @@ const ResumeBuilder = () => {
                 </div>
               ))}
             </div>
+
+            {/* Languages */}
+            <div className="card p-6 space-y-3">
+              <h2 className="font-display font-bold text-sm text-brand-black uppercase tracking-wider flex items-center gap-2">
+                <Globe size={16} className="text-brand-green" /> Languages Known
+              </h2>
+              <input
+                className="input-field text-sm"
+                value={data.languages}
+                onChange={(e) => setData({ ...data, languages: e.target.value })}
+                placeholder="English, Hindi, Punjabi"
+              />
+            </div>
+
+            {/* ── CUSTOM SECTIONS (ADD ANY OTHER FIELD) ── */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xs font-bold text-brand-grey uppercase tracking-wider">Custom Sections</h3>
+                  <p className="text-xs text-brand-grey">Add custom categories like Awards, Field Demonstrations, Patents, etc.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={addCustomSection}
+                  className="btn-secondary text-xs py-2 px-3 flex items-center gap-1.5"
+                >
+                  <FolderPlus size={14} /> + Add Custom Section
+                </button>
+              </div>
+
+              {(data.customSections || []).map((sec) => (
+                <div key={sec.id} className="card p-6 space-y-4 border-2 border-emerald-100 bg-emerald-50/20">
+                  <div className="flex items-center justify-between gap-3 border-b border-brand-border pb-3">
+                    <div className="flex-1">
+                      <label className="text-[11px] font-bold text-emerald-800 uppercase">Section Heading</label>
+                      <input
+                        className="input-field mt-1 text-sm font-bold bg-white"
+                        value={sec.heading}
+                        onChange={(e) => updateSectionHeading(sec.id, e.target.value)}
+                        placeholder="e.g. Workshops, Awards, Field Trials"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeCustomSection(sec.id)}
+                      className="text-gray-400 hover:text-red-600 p-2 shrink-0 transition-colors"
+                      title="Delete Entire Section"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {sec.items.map((item, itemIdx) => (
+                      <div key={itemIdx} className="p-4 bg-white border border-brand-border rounded-xl space-y-3 relative shadow-xs">
+                        <button
+                          type="button"
+                          onClick={() => removeCustomSectionItem(sec.id, itemIdx)}
+                          className="absolute top-3 right-3 text-gray-400 hover:text-red-600 transition-colors"
+                          title="Remove item"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                        <div className="grid sm:grid-cols-2 gap-3 pr-6">
+                          <div>
+                            <label className="text-[11px] font-semibold text-brand-grey uppercase">Title / Topic</label>
+                            <input
+                              className="input-field mt-1 text-xs"
+                              value={item.title}
+                              onChange={(e) => updateCustomSectionItem(sec.id, itemIdx, "title", e.target.value)}
+                              placeholder="Title / Event / Award name"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[11px] font-semibold text-brand-grey uppercase">Organization / Year</label>
+                            <input
+                              className="input-field mt-1 text-xs"
+                              value={item.year}
+                              onChange={(e) => updateCustomSectionItem(sec.id, itemIdx, "year", e.target.value)}
+                              placeholder="e.g. IARI New Delhi, 2023"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-[11px] font-semibold text-brand-grey uppercase">Description</label>
+                          <textarea
+                            rows={2}
+                            className="input-field mt-1 text-xs"
+                            value={item.description}
+                            onChange={(e) => updateCustomSectionItem(sec.id, itemIdx, "description", e.target.value)}
+                            placeholder="Details, accomplishments, or outcomes..."
+                          />
+                        </div>
+                      </div>
+                    ))}
+
+                    <button
+                      type="button"
+                      onClick={() => addCustomSectionItem(sec.id)}
+                      className="text-xs font-semibold text-emerald-800 hover:underline flex items-center gap-1 pt-1"
+                    >
+                      <Plus size={13} /> Add item to {sec.heading || "this section"}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* ══ RIGHT: LIVE PREVIEW CANVAS ══ */}
@@ -643,7 +996,7 @@ const TemplateAgriClean = ({ data }) => {
     : [];
 
   return (
-    <div className="font-sans text-[13px] leading-relaxed space-y-5">
+    <div className="font-sans text-[13px] leading-relaxed space-y-4">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-emerald-800 tracking-tight">
@@ -665,7 +1018,7 @@ const TemplateAgriClean = ({ data }) => {
       {/* Career Objective */}
       {data.objective && (
         <div>
-          <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-800 mb-1.5">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-800 mb-1">
             Career Objective
           </h2>
           <p className="text-gray-700 text-xs leading-relaxed">{data.objective}</p>
@@ -675,10 +1028,10 @@ const TemplateAgriClean = ({ data }) => {
       {/* Education */}
       {data.education?.some((e) => e.degree || e.institution) && (
         <div>
-          <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-800 mb-2">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-800 mb-1.5">
             Education
           </h2>
-          <div className="space-y-2.5">
+          <div className="space-y-2">
             {data.education.map((edu, i) =>
               edu.degree || edu.institution ? (
                 <div key={i} className="text-xs">
@@ -700,10 +1053,10 @@ const TemplateAgriClean = ({ data }) => {
       {/* Experience */}
       {data.experience?.some((e) => e.role || e.company) && (
         <div>
-          <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-800 mb-2">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-800 mb-1.5">
             Experience & Internships
           </h2>
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {data.experience.map((exp, i) =>
               exp.role || exp.company ? (
                 <div key={i} className="text-xs space-y-0.5">
@@ -725,10 +1078,55 @@ const TemplateAgriClean = ({ data }) => {
         </div>
       )}
 
+      {/* Research Papers & Publications */}
+      {data.publications?.some((p) => p.title) && (
+        <div>
+          <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-800 mb-1.5">
+            Research Papers & Publications
+          </h2>
+          <div className="space-y-2">
+            {data.publications.map((pub, i) =>
+              pub.title ? (
+                <div key={i} className="text-xs space-y-0.5">
+                  <div className="flex justify-between items-baseline font-bold text-gray-900">
+                    <span>{pub.title}</span>
+                    <span className="font-normal text-gray-600 shrink-0">{pub.year}</span>
+                  </div>
+                  {pub.journal && <p className="text-emerald-800 italic font-medium">{pub.journal}</p>}
+                  {pub.description && <p className="text-gray-700 text-xs">{pub.description}</p>}
+                </div>
+              ) : null
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Certifications & Trainings */}
+      {data.certificationsList?.some((c) => c.name) && (
+        <div>
+          <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-800 mb-1.5">
+            Certifications & Accreditations
+          </h2>
+          <div className="space-y-1.5">
+            {data.certificationsList.map((cert, i) =>
+              cert.name ? (
+                <div key={i} className="text-xs flex justify-between items-baseline">
+                  <div>
+                    <span className="font-bold text-gray-900">{cert.name}</span>
+                    {cert.issuer && <span className="text-gray-600"> · {cert.issuer}</span>}
+                  </div>
+                  {cert.year && <span className="text-gray-500 font-medium shrink-0 ml-2">{cert.year}</span>}
+                </div>
+              ) : null
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Skills */}
       {skillList.length > 0 && (
         <div>
-          <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-800 mb-1.5">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-800 mb-1">
             Key Skills & Expertise
           </h2>
           <p className="text-xs text-gray-800 leading-relaxed">{skillList.join(" · ")}</p>
@@ -738,10 +1136,10 @@ const TemplateAgriClean = ({ data }) => {
       {/* Projects */}
       {data.projects?.some((p) => p.title) && (
         <div>
-          <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-800 mb-2">
-            Projects & Field Research
+          <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-800 mb-1.5">
+            Projects & Practical Work
           </h2>
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {data.projects.map((proj, i) =>
               proj.title ? (
                 <div key={i} className="text-xs">
@@ -754,21 +1152,35 @@ const TemplateAgriClean = ({ data }) => {
         </div>
       )}
 
-      {/* Certifications */}
-      {data.certifications && (
-        <div>
-          <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-800 mb-1">
-            Certifications & Honors
-          </h2>
-          <p className="text-xs text-gray-700">{data.certifications}</p>
-        </div>
+      {/* Dynamic Custom Sections */}
+      {(data.customSections || []).map((sec) =>
+        sec.items?.some((it) => it.title || it.description) ? (
+          <div key={sec.id}>
+            <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-800 mb-1.5">
+              {sec.heading || "Additional Information"}
+            </h2>
+            <div className="space-y-2">
+              {sec.items.map((it, i) =>
+                it.title || it.description ? (
+                  <div key={i} className="text-xs space-y-0.5">
+                    <div className="flex justify-between items-baseline font-bold text-gray-900">
+                      <span>{it.title}</span>
+                      <span className="font-normal text-gray-600 shrink-0">{it.year}</span>
+                    </div>
+                    {it.description && <p className="text-gray-700 text-xs">{it.description}</p>}
+                  </div>
+                ) : null
+              )}
+            </div>
+          </div>
+        ) : null
       )}
 
       {/* Languages */}
       {data.languages && (
         <div>
           <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-800 mb-1">
-            Languages
+            Languages Known
           </h2>
           <p className="text-xs text-gray-700">{data.languages}</p>
         </div>
@@ -786,7 +1198,7 @@ const TemplateModernGreen = ({ data }) => {
     : [];
 
   return (
-    <div className="font-sans text-[13px] leading-relaxed space-y-5">
+    <div className="font-sans text-[13px] leading-relaxed space-y-4">
       {/* Header Banner */}
       <div className="bg-emerald-900 text-white rounded-xl p-5 -mx-4 -mt-4 shadow-sm">
         <h1 className="text-2xl font-bold tracking-wide text-white">
@@ -807,7 +1219,7 @@ const TemplateModernGreen = ({ data }) => {
       {/* Career Objective */}
       {data.objective && (
         <div>
-          <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-900 border-l-3 border-emerald-600 pl-2 mb-1.5">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-900 border-l-3 border-emerald-600 pl-2 mb-1">
             Professional Summary
           </h2>
           <p className="text-gray-700 text-xs leading-relaxed pl-3">{data.objective}</p>
@@ -817,10 +1229,10 @@ const TemplateModernGreen = ({ data }) => {
       {/* Experience */}
       {data.experience?.some((e) => e.role || e.company) && (
         <div>
-          <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-900 border-l-3 border-emerald-600 pl-2 mb-2.5">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-900 border-l-3 border-emerald-600 pl-2 mb-2">
             Work Experience
           </h2>
-          <div className="space-y-3 pl-3">
+          <div className="space-y-2.5 pl-3">
             {data.experience.map((exp, i) =>
               exp.role || exp.company ? (
                 <div key={i} className="text-xs space-y-0.5">
@@ -844,7 +1256,7 @@ const TemplateModernGreen = ({ data }) => {
       {/* Education */}
       {data.education?.some((e) => e.degree || e.institution) && (
         <div>
-          <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-900 border-l-3 border-emerald-600 pl-2 mb-2">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-900 border-l-3 border-emerald-600 pl-2 mb-1.5">
             Education
           </h2>
           <div className="space-y-2 pl-3">
@@ -866,10 +1278,55 @@ const TemplateModernGreen = ({ data }) => {
         </div>
       )}
 
+      {/* Research Papers & Publications */}
+      {data.publications?.some((p) => p.title) && (
+        <div>
+          <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-900 border-l-3 border-emerald-600 pl-2 mb-2">
+            Research Publications
+          </h2>
+          <div className="space-y-2 pl-3">
+            {data.publications.map((pub, i) =>
+              pub.title ? (
+                <div key={i} className="text-xs">
+                  <div className="flex justify-between items-baseline font-bold text-gray-900">
+                    <span>{pub.title}</span>
+                    <span className="font-normal text-gray-600 shrink-0">{pub.year}</span>
+                  </div>
+                  {pub.journal && <p className="text-emerald-800 text-[11px] font-semibold">{pub.journal}</p>}
+                  {pub.description && <p className="text-gray-700 text-xs mt-0.5">{pub.description}</p>}
+                </div>
+              ) : null
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Certifications & Trainings */}
+      {data.certificationsList?.some((c) => c.name) && (
+        <div>
+          <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-900 border-l-3 border-emerald-600 pl-2 mb-1.5">
+            Certifications
+          </h2>
+          <div className="space-y-1 pl-3">
+            {data.certificationsList.map((cert, i) =>
+              cert.name ? (
+                <div key={i} className="text-xs flex justify-between items-baseline">
+                  <div>
+                    <span className="font-bold text-gray-900">{cert.name}</span>
+                    {cert.issuer && <span className="text-gray-600"> · {cert.issuer}</span>}
+                  </div>
+                  {cert.year && <span className="text-gray-500 font-medium shrink-0 ml-2">{cert.year}</span>}
+                </div>
+              ) : null
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Skills Pill Badges */}
       {skillList.length > 0 && (
         <div>
-          <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-900 border-l-3 border-emerald-600 pl-2 mb-2">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-900 border-l-3 border-emerald-600 pl-2 mb-1.5">
             Core Competencies
           </h2>
           <div className="flex flex-wrap gap-1.5 pl-3">
@@ -885,44 +1342,37 @@ const TemplateModernGreen = ({ data }) => {
         </div>
       )}
 
-      {/* Projects */}
-      {data.projects?.some((p) => p.title) && (
-        <div>
-          <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-900 border-l-3 border-emerald-600 pl-2 mb-2">
-            Field Projects & Research
-          </h2>
-          <div className="space-y-2 pl-3">
-            {data.projects.map((proj, i) =>
-              proj.title ? (
-                <div key={i} className="text-xs">
-                  <p className="font-bold text-gray-900">{proj.title}</p>
-                  {proj.description && <p className="text-gray-700">{proj.description}</p>}
-                </div>
-              ) : null
-            )}
+      {/* Custom Sections */}
+      {(data.customSections || []).map((sec) =>
+        sec.items?.some((it) => it.title || it.description) ? (
+          <div key={sec.id}>
+            <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-900 border-l-3 border-emerald-600 pl-2 mb-1.5">
+              {sec.heading}
+            </h2>
+            <div className="space-y-1.5 pl-3">
+              {sec.items.map((it, i) =>
+                it.title || it.description ? (
+                  <div key={i} className="text-xs">
+                    <div className="flex justify-between items-baseline font-bold text-gray-900">
+                      <span>{it.title}</span>
+                      <span className="font-normal text-gray-600 shrink-0">{it.year}</span>
+                    </div>
+                    {it.description && <p className="text-gray-700 text-xs">{it.description}</p>}
+                  </div>
+                ) : null
+              )}
+            </div>
           </div>
-        </div>
+        ) : null
       )}
 
-      {/* Certifications & Languages */}
-      {(data.certifications || data.languages) && (
-        <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-200">
-          {data.certifications && (
-            <div>
-              <h2 className="text-[11px] font-bold uppercase tracking-wider text-emerald-900 mb-1">
-                Certifications
-              </h2>
-              <p className="text-xs text-gray-700">{data.certifications}</p>
-            </div>
-          )}
-          {data.languages && (
-            <div>
-              <h2 className="text-[11px] font-bold uppercase tracking-wider text-emerald-900 mb-1">
-                Languages
-              </h2>
-              <p className="text-xs text-gray-700">{data.languages}</p>
-            </div>
-          )}
+      {/* Languages */}
+      {data.languages && (
+        <div className="pt-2 border-t border-gray-200">
+          <p className="text-xs text-gray-700">
+            <span className="font-bold text-emerald-900">Languages: </span>
+            {data.languages}
+          </p>
         </div>
       )}
     </div>
@@ -938,7 +1388,7 @@ const TemplateClassicSerif = ({ data }) => {
     : [];
 
   return (
-    <div className="font-serif text-[13px] leading-relaxed text-gray-900 space-y-4">
+    <div className="font-serif text-[13px] leading-relaxed text-gray-900 space-y-3.5">
       {/* Centered Header */}
       <div className="text-center pb-2 border-b-2 border-gray-900">
         <h1 className="text-2xl font-bold tracking-tight text-black uppercase">
@@ -969,10 +1419,10 @@ const TemplateClassicSerif = ({ data }) => {
       {/* Education */}
       {data.education?.some((e) => e.degree || e.institution) && (
         <div>
-          <h2 className="text-xs font-bold uppercase tracking-widest text-black border-b border-gray-400 pb-0.5 mb-1.5">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-black border-b border-gray-400 pb-0.5 mb-1">
             Education
           </h2>
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {data.education.map((edu, i) =>
               edu.degree || edu.institution ? (
                 <div key={i} className="text-xs">
@@ -994,10 +1444,10 @@ const TemplateClassicSerif = ({ data }) => {
       {/* Experience */}
       {data.experience?.some((e) => e.role || e.company) && (
         <div>
-          <h2 className="text-xs font-bold uppercase tracking-widest text-black border-b border-gray-400 pb-0.5 mb-1.5">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-black border-b border-gray-400 pb-0.5 mb-1">
             Professional Experience
           </h2>
-          <div className="space-y-2.5">
+          <div className="space-y-2">
             {data.experience.map((exp, i) =>
               exp.role || exp.company ? (
                 <div key={i} className="text-xs space-y-0.5">
@@ -1019,6 +1469,51 @@ const TemplateClassicSerif = ({ data }) => {
         </div>
       )}
 
+      {/* Publications */}
+      {data.publications?.some((p) => p.title) && (
+        <div>
+          <h2 className="text-xs font-bold uppercase tracking-widest text-black border-b border-gray-400 pb-0.5 mb-1">
+            Publications & Research Papers
+          </h2>
+          <div className="space-y-1.5">
+            {data.publications.map((pub, i) =>
+              pub.title ? (
+                <div key={i} className="text-xs">
+                  <div className="flex justify-between items-baseline font-bold text-black">
+                    <span>{pub.title}</span>
+                    <span className="font-normal font-sans text-gray-700 shrink-0">{pub.year}</span>
+                  </div>
+                  {pub.journal && <p className="italic text-gray-800 text-[11px]">{pub.journal}</p>}
+                  {pub.description && <p className="text-gray-700 text-xs">{pub.description}</p>}
+                </div>
+              ) : null
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Certifications */}
+      {data.certificationsList?.some((c) => c.name) && (
+        <div>
+          <h2 className="text-xs font-bold uppercase tracking-widest text-black border-b border-gray-400 pb-0.5 mb-1">
+            Certifications & Honors
+          </h2>
+          <div className="space-y-1">
+            {data.certificationsList.map((cert, i) =>
+              cert.name ? (
+                <div key={i} className="text-xs flex justify-between items-baseline">
+                  <span>
+                    <strong className="text-black">{cert.name}</strong>
+                    {cert.issuer && <span className="italic"> — {cert.issuer}</span>}
+                  </span>
+                  {cert.year && <span className="font-sans text-gray-700">{cert.year}</span>}
+                </div>
+              ) : null
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Skills */}
       {skillList.length > 0 && (
         <div>
@@ -1029,33 +1524,28 @@ const TemplateClassicSerif = ({ data }) => {
         </div>
       )}
 
-      {/* Projects */}
-      {data.projects?.some((p) => p.title) && (
-        <div>
-          <h2 className="text-xs font-bold uppercase tracking-widest text-black border-b border-gray-400 pb-0.5 mb-1">
-            Projects & Field Trials
-          </h2>
-          <div className="space-y-1.5">
-            {data.projects.map((proj, i) =>
-              proj.title ? (
-                <div key={i} className="text-xs">
-                  <span className="font-bold text-black">{proj.title}: </span>
-                  <span className="text-gray-800">{proj.description}</span>
-                </div>
-              ) : null
-            )}
+      {/* Custom Sections */}
+      {(data.customSections || []).map((sec) =>
+        sec.items?.some((it) => it.title || it.description) ? (
+          <div key={sec.id}>
+            <h2 className="text-xs font-bold uppercase tracking-widest text-black border-b border-gray-400 pb-0.5 mb-1">
+              {sec.heading}
+            </h2>
+            <div className="space-y-1.5">
+              {sec.items.map((it, i) =>
+                it.title || it.description ? (
+                  <div key={i} className="text-xs">
+                    <div className="flex justify-between items-baseline font-bold text-black">
+                      <span>{it.title}</span>
+                      <span className="font-normal font-sans text-gray-700 shrink-0">{it.year}</span>
+                    </div>
+                    {it.description && <p className="text-gray-700 text-xs">{it.description}</p>}
+                  </div>
+                ) : null
+              )}
+            </div>
           </div>
-        </div>
-      )}
-
-      {/* Certifications */}
-      {data.certifications && (
-        <div>
-          <h2 className="text-xs font-bold uppercase tracking-widest text-black border-b border-gray-400 pb-0.5 mb-1">
-            Certifications & Affiliations
-          </h2>
-          <p className="text-xs text-gray-800">{data.certifications}</p>
-        </div>
+        ) : null
       )}
 
       {/* Languages */}
