@@ -960,7 +960,7 @@ const ResumeBuilder = () => {
 
           {/* ══ RIGHT: LIVE PREVIEW CANVAS ══ */}
           <div
-            className={`md:col-span-6 sticky top-20 ${
+            className={`md:col-span-6 sticky top-20 print:static print:block print:w-full print:m-0 print:p-0 ${
               activeTab === "editor" ? "hidden md:block" : "block"
             }`}
           >
@@ -972,7 +972,7 @@ const ResumeBuilder = () => {
             </div>
 
             {/* Resume Sheet Container */}
-            <div className="bg-white border border-gray-300 shadow-xl rounded-xl overflow-hidden print:shadow-none print:border-none print:m-0 print:p-0">
+            <div className="bg-white border border-gray-300 shadow-xl rounded-xl overflow-hidden print:shadow-none print:border-none print:m-0 print:p-0 print:w-full">
               <div id="resume-canvas" className="min-h-[800px] p-8 sm:p-10 text-gray-800">
                 {/* Render Selected Template */}
                 {template === "agri_clean" && <TemplateAgriClean data={data} />}
