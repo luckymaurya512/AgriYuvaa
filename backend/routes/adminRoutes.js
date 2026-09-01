@@ -11,6 +11,7 @@ import {
   getAuditLogs,
 } from "../controllers/adminController.js";
 import { createCategory, updateCategory, deleteCategory } from "../controllers/categoryController.js";
+import { createJob } from "../controllers/jobController.js";
 import { authenticate, authorize } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
@@ -27,6 +28,7 @@ router.route("/employers/:id/verify").patch(verifyEmployer).post(verifyEmployer)
 
 router.get("/jobs/pending", getPendingJobs);
 router.route("/jobs/:id/review").patch(reviewJob).post(reviewJob);
+router.post("/jobs", createJob);
 
 router.post("/categories", createCategory);
 router.patch("/categories/:id", updateCategory);
