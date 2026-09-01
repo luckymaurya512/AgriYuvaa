@@ -12,6 +12,7 @@ import About from "./pages/About.jsx";
 import Contact from "./pages/Contact.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
+import ResumeBuilder from "./pages/ResumeBuilder.jsx";
 
 import SeekerDashboard from "./pages/seeker/SeekerDashboard.jsx";
 
@@ -37,6 +38,7 @@ function App() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/resume-builder" element={<ResumeBuilder />} />
 
           {/* Job Seeker */}
           <Route

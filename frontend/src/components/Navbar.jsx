@@ -29,6 +29,7 @@ const Navbar = () => {
 
   const navLinks = [
     { label: "Find Jobs", to: "/jobs" },
+    { label: "Resume Builder", to: "/resume-builder" },
     { label: "Employers", to: "/employers" },
     { label: "About", to: "/about" },
   ];

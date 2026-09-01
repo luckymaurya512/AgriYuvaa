@@ -28,7 +28,7 @@ const SeekerDashboard = () => {
       <h1 className="text-2xl font-display font-bold mb-1">Welcome back, {user?.name?.split(" ")[0]}</h1>
       <p className="text-sm text-brand-grey mb-8">Track your applications and discover new opportunities</p>
 
-      <div className="grid md:grid-cols-3 gap-5 mb-10">
+      <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-5 mb-10">
         <div className="card p-5">
           <p className="text-xs text-brand-grey uppercase font-semibold">Applications Sent</p>
           <p className="text-3xl font-display font-bold mt-2">{applications.length}</p>
@@ -39,6 +39,13 @@ const SeekerDashboard = () => {
             {applications.filter((a) => a.status === "shortlisted").length}
           </p>
         </div>
+        <Link
+          to="/resume-builder"
+          className="card p-5 flex flex-col justify-center bg-emerald-50 border-emerald-200 hover:border-emerald-400 text-emerald-900 group transition-all"
+        >
+          <p className="text-xs font-bold uppercase tracking-wide text-emerald-700">Resume Builder</p>
+          <p className="font-semibold text-sm mt-1 text-emerald-950 group-hover:underline">Build / Print CV 📄</p>
+        </Link>
         <Link to="/jobs" className="card p-5 flex flex-col justify-center items-center bg-brand-black text-white hover:bg-black/80">
           <p className="font-semibold text-sm">Browse New Jobs →</p>
         </Link>
