@@ -182,15 +182,36 @@ const JobApplicants = () => {
                   </div>
                 )}
 
-                {app.resumeUrl && (
-                  <a
-                    href={app.resumeUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-green-dark hover:underline pt-1"
-                  >
-                    <Download size={13} /> View / Download Resume <ExternalLink size={11} />
-                  </a>
+                {app.resumeUrl ? (
+                  <div className="flex items-center gap-3 pt-1">
+                    <a
+                      href={
+                        app.resumeUrl.startsWith("http://") || app.resumeUrl.startsWith("https://")
+                          ? app.resumeUrl
+                          : `https://${app.resumeUrl}`
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-lg transition-colors"
+                    >
+                      <Download size={13} /> View / Download Resume <ExternalLink size={11} />
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const targetUrl = app.resumeUrl.startsWith("http://") || app.resumeUrl.startsWith("https://")
+                          ? app.resumeUrl
+                          : `https://${app.resumeUrl}`;
+                        navigator.clipboard.writeText(targetUrl);
+                        alert("Resume link copied to clipboard!");
+                      }}
+                      className="text-xs text-brand-grey hover:text-brand-black underline"
+                    >
+                      Copy Link
+                    </button>
+                  </div>
+                ) : (
+                  <span className="text-xs text-brand-grey italic">No resume link provided</span>
                 )}
               </div>
 

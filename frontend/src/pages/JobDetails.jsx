@@ -61,8 +61,12 @@ const JobDetails = () => {
   const handleApply = async (e) => {
     e.preventDefault();
     setError("");
+    let formattedUrl = (resumeUrl || "").trim();
+    if (formattedUrl && !formattedUrl.startsWith("http://") && !formattedUrl.startsWith("https://")) {
+      formattedUrl = `https://${formattedUrl}`;
+    }
     try {
-      await applyToJob(id, { resumeUrl, coverNote });
+      await applyToJob(id, { resumeUrl: formattedUrl, coverNote });
       setApplied(true);
     } catch (err) {
       setError(err.response?.data?.message || "Could not submit application");
