@@ -94,4 +94,17 @@ router.post(
   })
 );
 
+// @route POST /api/users/seeker/me/resume
+router.post(
+  "/seeker/me/resume",
+  authenticate,
+  authorize("seeker"),
+  asyncHandler(async (req, res) => {
+    const profile = await getOrCreateProfile(req.user._id);
+    profile.resumeData = req.body;
+    await profile.save();
+    res.json({ message: "Resume saved successfully", resumeData: profile.resumeData });
+  })
+);
+
 export default router;

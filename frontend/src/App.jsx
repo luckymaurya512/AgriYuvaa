@@ -13,6 +13,8 @@ import Contact from "./pages/Contact.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
 import ResumeBuilder from "./pages/ResumeBuilder.jsx";
+import GovtJobs from "./pages/GovtJobs.jsx";
+import Companies from "./pages/Companies.jsx";
 
 import SeekerDashboard from "./pages/seeker/SeekerDashboard.jsx";
 
@@ -33,7 +35,9 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/jobs" element={<JobListings />} />
           <Route path="/jobs/:id" element={<JobDetails />} />
-          <Route path="/employers" element={<Employers />} />
+          <Route path="/employers" element={<Companies />} />
+          <Route path="/companies" element={<Companies />} />
+          <Route path="/govt-jobs" element={<GovtJobs />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />

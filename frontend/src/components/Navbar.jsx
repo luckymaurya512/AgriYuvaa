@@ -29,8 +29,9 @@ const Navbar = () => {
 
   const navLinks = [
     { label: "Find Jobs", to: "/jobs" },
+    { label: "Govt Jobs", to: "/govt-jobs" },
+    { label: "Companies", to: "/companies" },
     { label: "Resume Builder", to: "/resume-builder" },
-    { label: "Employers", to: "/employers" },
     { label: "About", to: "/about" },
   ];
 

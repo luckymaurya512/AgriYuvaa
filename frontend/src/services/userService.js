@@ -7,3 +7,7 @@ export const updateSeekerProfile = (payload) =>
 
 export const toggleSaveJob = (jobId) =>
   api.post(`/users/seeker/me/toggle-save-job/${jobId}`).then((r) => r.data);
+
+export const saveSeekerResume = (resumeData) =>
+  api.post("/users/seeker/me/resume", resumeData).then((r) => r.data);
+

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Printer,
   Sparkles,
@@ -19,8 +19,50 @@ import {
   BookText,
   FileBadge2,
   FolderPlus,
+  Save,
+  CheckCircle,
+  AlertCircle,
+  HelpCircle,
+  Wand2,
+  X,
+  ChevronRight,
+  Check,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
+import { fetchSeekerProfile, saveSeekerResume } from "../services/userService.js";
+
+const aiBulletSuggestions = {
+  "Agronomy & Crop Production": [
+    "Managed precision irrigation and nutrient scheduling for 35+ acres of field crops, improving water-use efficiency by 18%.",
+    "Executed crop rotation and integrated weed management strategies, resulting in a 12% boost in seasonal grain yields.",
+    "Formulated customized NPK and micronutrient fertilizer recommendations based on GPS-referenced soil health cards.",
+    "Monitored crop phenology and pest thresholds across paddy and wheat, executing timely interventions.",
+  ],
+  "Field Trials & Research": [
+    "Conducted replicated on-farm varietal evaluation trials across 4 agro-ecological zones, documenting data on yield attributes.",
+    "Evaluated bio-stimulants and microbial inoculants under direct-seeded conditions, publishing findings in regional symposium.",
+    "Recorded physiological parameters (leaf area index, SPAD chlorophyll meter readings) for drought-tolerance screening.",
+    "Designed randomized complete block design (RCBD) field experiments and performed statistical analysis using OPSTAT and R.",
+  ],
+  "Farmer Advisory & Agri-Sales": [
+    "Delivered 60+ technical crop advisory sessions, reaching 1,200+ progressive farmers across 15 village clusters.",
+    "Demonstrated hybrid seed performance and specialty crop protection chemicals, exceeding seasonal adoption targets by 22%.",
+    "Trained rural youth and farmer interest groups (FIGs) on micro-irrigation maintenance and fertigation techniques.",
+    "Addressed real-time pest and disease queries via digital farmer advisory groups, reducing response turnaround time to under 2 hours.",
+  ],
+  "Drone, GIS & Precision Tech": [
+    "Operated agricultural spraying drones for precision foliar application of bio-fungicides across 20+ hectares per day.",
+    "Utilized QGIS and satellite NDVI multispectral imagery to map spatial crop vigor variability and nitrogen deficiencies.",
+    "Assisted in ground-truthing and GPS boundary mapping for precision agricultural insurance and yield forecasting.",
+    "Implemented IoT-assisted soil moisture sensors in polyhouse vegetable cultivation, cutting power and water costs by 15%.",
+  ],
+  "Organic Farming & Post-Harvest": [
+    "Supervised organic farm certification protocols according to NPOP standards, maintaining comprehensive audit documentation.",
+    "Implemented farm-level vermicomposting and bio-pesticide preparation units, cutting external input costs by 30%.",
+    "Managed post-harvest grading, sorting, and cold-chain packaging for high-value horticultural commodities, reducing transit loss to <4%.",
+    "Facilitated organic PGS-India group certification for 85 smallholder organic farmers.",
+  ],
+};
 
 const sampleData = {
   fullName: "Rahul Sharma",
@@ -73,11 +115,6 @@ const sampleData = {
       name: "Certificate in Digital Agriculture & Drone Applications",
       issuer: "Coursera / PAU",
       year: "2023",
-    },
-    {
-      name: "Organic Farming & Certification Standards",
-      issuer: "National Centre of Organic Farming (NCOF)",
-      year: "2022",
     },
   ],
   publications: [
@@ -132,10 +169,102 @@ const initialEmptyData = {
   customSections: [],
 };
 
+const calculateATSScore = (data) => {
+  let score = 0;
+  const breakdown = [];
+
+  // 1. Personal Contact Info (20 pts)
+  if (data.fullName && data.fullName.trim().length > 2) {
+    score += 5;
+    breakdown.push({ label: "Full Name included", passed: true, points: 5 });
+  } else {
+    breakdown.push({ label: "Add your Full Name", passed: false, points: 5 });
+  }
+
+  if (data.title && data.title.trim().length > 2) {
+    score += 5;
+    breakdown.push({ label: "Professional Title added", passed: true, points: 5 });
+  } else {
+    breakdown.push({ label: "Add a clear professional title (e.g. Agronomist)", passed: false, points: 5 });
+  }
+
+  if (data.email && data.phone) {
+    score += 10;
+    breakdown.push({ label: "Email & Phone contact details", passed: true, points: 10 });
+  } else {
+    breakdown.push({ label: "Add both Email and Phone number", passed: false, points: 10 });
+  }
+
+  // 2. Career Objective (15 pts)
+  const objectiveWordCount = (data.objective || "").trim().split(/\s+/).filter(Boolean).length;
+  if (objectiveWordCount >= 20) {
+    score += 15;
+    breakdown.push({ label: `Career summary (${objectiveWordCount} words)`, passed: true, points: 15 });
+  } else {
+    breakdown.push({ label: "Write a summary of at least 20 words", passed: false, points: 15 });
+  }
+
+  // 3. Education (15 pts)
+  const hasValidEdu = data.education?.some((e) => e.degree && e.institution);
+  if (hasValidEdu) {
+    score += 15;
+    breakdown.push({ label: "Education / Degree listed", passed: true, points: 15 });
+  } else {
+    breakdown.push({ label: "Add your Degree and University", passed: false, points: 15 });
+  }
+
+  // 4. Experience & Action Verbs (20 pts)
+  const hasExp = data.experience?.some((e) => e.role && e.description);
+  const expText = data.experience?.map((e) => e.description || "").join(" ");
+  const hasMetrics = /\d+%|\d+\+|\d+ acres|\d+ farmers|\d+ hectares/i.test(expText);
+  if (hasExp) {
+    score += 10;
+    if (hasMetrics) {
+      score += 10;
+      breakdown.push({ label: "Work Experience with measurable metrics (%)", passed: true, points: 20 });
+    } else {
+      breakdown.push({ label: "Tip: Add numbers/metrics (% or acres) to experience", passed: false, points: 10 });
+    }
+  } else {
+    breakdown.push({ label: "Add Experience or Internship roles", passed: false, points: 20 });
+  }
+
+  // 5. Skills (15 pts)
+  const skillsCount = (data.skills || "").split(",").filter((s) => s.trim().length > 1).length;
+  if (skillsCount >= 4) {
+    score += 15;
+    breakdown.push({ label: `${skillsCount} Key skills & competencies`, passed: true, points: 15 });
+  } else {
+    breakdown.push({ label: `Add at least 4 key skills (current: ${skillsCount})`, passed: false, points: 15 });
+  }
+
+  // 6. Certifications / Publications / Projects (15 pts)
+  const hasCerts = data.certificationsList?.some((c) => c.name);
+  const hasPubs = data.publications?.some((p) => p.title);
+  const hasProjs = data.projects?.some((p) => p.title);
+  if (hasCerts || hasPubs || hasProjs) {
+    score += 15;
+    breakdown.push({ label: "Certifications / Research / Projects listed", passed: true, points: 15 });
+  } else {
+    breakdown.push({ label: "Add Certifications, ICAR NET, or Projects", passed: false, points: 15 });
+  }
+
+  return { score: Math.min(100, score), breakdown };
+};
+
 const ResumeBuilder = () => {
   const { user } = useAuth();
   const [template, setTemplate] = useState("agri_clean"); // "agri_clean" | "modern_green" | "classic_serif"
   const [activeTab, setActiveTab] = useState("editor"); // For mobile: "editor" | "preview"
+
+  const [saving, setSaving] = useState(false);
+  const [saveToast, setSaveToast] = useState("");
+  const [showScoreModal, setShowScoreModal] = useState(false);
+
+  // AI Bullet modal state
+  const [aiModalOpen, setAiModalOpen] = useState(false);
+  const [activeExpIndexForAi, setActiveExpIndexForAi] = useState(0);
+  const [selectedAiCategory, setSelectedAiCategory] = useState("Agronomy & Crop Production");
 
   const [data, setData] = useState(() => {
     if (user) {
@@ -148,6 +277,38 @@ const ResumeBuilder = () => {
     }
     return sampleData;
   });
+
+  // Pre-load saved resume from MongoDB profile if available
+  useEffect(() => {
+    if (user?.role === "seeker") {
+      fetchSeekerProfile()
+        .then((profile) => {
+          if (profile?.resumeData && Object.keys(profile.resumeData).length > 0) {
+            setData(profile.resumeData);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [user]);
+
+  const ats = calculateATSScore(data);
+
+  const handleSaveToProfile = async () => {
+    if (!user || user.role !== "seeker") {
+      alert("Please log in as a Job Seeker to save your resume to your profile.");
+      return;
+    }
+    setSaving(true);
+    try {
+      await saveSeekerResume(data);
+      setSaveToast("Resume saved to your AgriYuvaa account! 💾");
+      setTimeout(() => setSaveToast(""), 3500);
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to save resume");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handlePrint = () => {
     window.print();
@@ -193,6 +354,13 @@ const ResumeBuilder = () => {
   };
   const removeExp = (index) => {
     setData({ ...data, experience: data.experience.filter((_, i) => i !== index) });
+  };
+
+  const insertAiBullet = (bullet) => {
+    const updated = [...data.experience];
+    const current = updated[activeExpIndexForAi]?.description || "";
+    updated[activeExpIndexForAi].description = current ? `${current}\n• ${bullet}` : `• ${bullet}`;
+    setData({ ...data, experience: updated });
   };
 
   // ── Dynamic Array Handlers: Projects ──
@@ -349,11 +517,43 @@ const ResumeBuilder = () => {
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex items-center gap-2">
+          {/* Action Buttons & ATS Score Badge */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* ATS Score Indicator */}
+            <button
+              onClick={() => setShowScoreModal(true)}
+              className="px-3.5 py-2 rounded-xl border border-gray-200 bg-white hover:border-emerald-300 flex items-center gap-2 transition-colors shadow-2xs"
+              title="Click to view ATS score recommendations"
+            >
+              <div className="text-left">
+                <span className="text-[10px] uppercase font-bold text-gray-400 block leading-none">
+                  ATS Score
+                </span>
+                <span
+                  className={`text-sm font-extrabold ${
+                    ats.score >= 80 ? "text-emerald-700" : ats.score >= 50 ? "text-amber-600" : "text-red-600"
+                  }`}
+                >
+                  {ats.score}/100
+                </span>
+              </div>
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+            </button>
+
+            {user?.role === "seeker" && (
+              <button
+                onClick={handleSaveToProfile}
+                disabled={saving}
+                className="btn-secondary text-xs py-2.5 px-3.5 flex items-center gap-1.5"
+                title="Save your resume data to your AgriYuvaa account"
+              >
+                <Save size={14} className="text-brand-green" /> {saving ? "Saving..." : "Save to Profile"}
+              </button>
+            )}
+
             <button
               onClick={handleAutofill}
-              className="btn-secondary text-xs py-2.5 px-3.5 flex items-center gap-1.5"
+              className="px-3 py-2.5 rounded-xl border border-brand-border text-xs text-brand-grey hover:text-brand-black hover:border-gray-300 transition-colors flex items-center gap-1.5"
               title="Load agriculture graduate sample data"
             >
               <Sparkles size={14} className="text-brand-green" /> Autofill Sample
@@ -375,6 +575,12 @@ const ResumeBuilder = () => {
             </button>
           </div>
         </div>
+
+        {saveToast && (
+          <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-semibold flex items-center gap-2 no-print">
+            <CheckCircle size={15} /> {saveToast}
+          </div>
+        )}
 
         {/* Mobile View Toggle */}
         <div className="flex md:hidden gap-2 no-print">
@@ -576,12 +782,15 @@ const ResumeBuilder = () => {
               ))}
             </div>
 
-            {/* Experience / Internships */}
+            {/* Experience / Internships with AI Bullet Enhancer */}
             <div className="card p-6 space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="font-display font-bold text-sm text-brand-black uppercase tracking-wider flex items-center gap-2">
-                  <Briefcase size={16} className="text-brand-green" /> Experience & Internships
-                </h2>
+                <div>
+                  <h2 className="font-display font-bold text-sm text-brand-black uppercase tracking-wider flex items-center gap-2">
+                    <Briefcase size={16} className="text-brand-green" /> Experience & Internships
+                  </h2>
+                  <p className="text-xs text-brand-grey">Add your farm roles, internships, or RAWE training</p>
+                </div>
                 <button
                   type="button"
                   onClick={addExp}
@@ -633,11 +842,23 @@ const ResumeBuilder = () => {
                     />
                   </div>
                   <div>
-                    <label className="text-[11px] font-semibold text-brand-grey uppercase">
-                      Key Responsibilities & Achievements
-                    </label>
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11px] font-semibold text-brand-grey uppercase">
+                        Key Responsibilities & Achievements
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveExpIndexForAi(idx);
+                          setAiModalOpen(true);
+                        }}
+                        className="text-[11px] font-bold text-emerald-800 hover:underline flex items-center gap-1 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md"
+                      >
+                        <Wand2 size={11} className="text-emerald-700" /> AI Bullets & Action Verbs
+                      </button>
+                    </div>
                     <textarea
-                      rows={2}
+                      rows={3}
                       className="input-field mt-1 text-xs bg-white"
                       value={exp.description}
                       onChange={(e) => handleExpChange(idx, "description", e.target.value)}
@@ -863,7 +1084,7 @@ const ResumeBuilder = () => {
               />
             </div>
 
-            {/* ── CUSTOM SECTIONS (ADD ANY OTHER FIELD) ── */}
+            {/* Custom Sections */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -983,12 +1204,156 @@ const ResumeBuilder = () => {
           </div>
         </div>
       </div>
+
+      {/* ── AI BULLET SUGGESTER MODAL ── */}
+      {aiModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-2xl w-full p-6 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center">
+                  <Wand2 size={18} />
+                </div>
+                <div>
+                  <h3 className="font-display font-bold text-base text-gray-900">
+                    AI Agriculture Action Verbs & Bullets
+                  </h3>
+                  <p className="text-xs text-gray-500">
+                    Click any high-impact metric bullet point to insert into your experience description
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setAiModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600 p-1"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Category Tabs */}
+            <div className="flex flex-wrap gap-2">
+              {Object.keys(aiBulletSuggestions).map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedAiCategory(cat)}
+                  className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${
+                    selectedAiCategory === cat
+                      ? "bg-emerald-800 text-white shadow-xs font-semibold"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+
+            {/* Bullet Point Options */}
+            <div className="space-y-2.5">
+              {aiBulletSuggestions[selectedAiCategory]?.map((bullet, idx) => (
+                <div
+                  key={idx}
+                  onClick={() => {
+                    insertAiBullet(bullet);
+                    alert("Added bullet point to experience!");
+                  }}
+                  className="p-3.5 bg-gray-50 hover:bg-emerald-50/70 border border-gray-200 hover:border-emerald-300 rounded-xl text-xs text-gray-800 leading-relaxed cursor-pointer group flex items-start justify-between gap-3 transition-all"
+                >
+                  <p className="flex-1">
+                    <span className="font-semibold text-emerald-800">
+                      {bullet.split(" ")[0]} {bullet.split(" ")[1]}
+                    </span>{" "}
+                    {bullet.split(" ").slice(2).join(" ")}
+                  </p>
+                  <span className="text-[11px] font-bold text-emerald-700 shrink-0 group-hover:underline flex items-center gap-0.5">
+                    Insert <Plus size={12} />
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <div className="border-t border-gray-100 pt-3 flex justify-end">
+              <button
+                onClick={() => setAiModalOpen(false)}
+                className="btn-primary text-xs py-2 px-4"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── ATS SCORE BREAKDOWN MODAL ── */}
+      {showScoreModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <div>
+                <h3 className="font-display font-bold text-base text-gray-900 flex items-center gap-2">
+                  <Award size={18} className="text-emerald-700" /> ATS Compatibility Report
+                </h3>
+                <p className="text-xs text-gray-500">Applicant Tracking System review for AgriYuvaa</p>
+              </div>
+              <button
+                onClick={() => setShowScoreModal(false)}
+                className="text-gray-400 hover:text-gray-600 p-1"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-4 bg-emerald-50 rounded-xl flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase text-emerald-800">Overall ATS Score</p>
+                <p className="text-3xl font-extrabold text-emerald-950 mt-0.5">{ats.score} / 100</p>
+              </div>
+              <span className="text-xs font-bold bg-white text-emerald-800 px-3 py-1.5 rounded-lg border border-emerald-200 shadow-2xs">
+                {ats.score >= 80 ? "🌟 Excellent" : ats.score >= 50 ? "👍 Good" : "⚠️ Needs Improvement"}
+              </span>
+            </div>
+
+            {/* Checklist */}
+            <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+              {ats.breakdown.map((item, idx) => (
+                <div
+                  key={idx}
+                  className={`p-2.5 rounded-lg border text-xs flex items-center justify-between gap-2 ${
+                    item.passed
+                      ? "bg-emerald-50/50 border-emerald-100 text-emerald-950"
+                      : "bg-amber-50/50 border-amber-100 text-amber-950"
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    {item.passed ? (
+                      <Check size={14} className="text-emerald-700 shrink-0 font-bold" />
+                    ) : (
+                      <AlertCircle size={14} className="text-amber-600 shrink-0" />
+                    )}
+                    {item.label}
+                  </span>
+                  <span className="font-semibold shrink-0 text-[11px] opacity-75">
+                    {item.passed ? `+${item.points} pts` : `0 pts`}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={() => setShowScoreModal(false)}
+              className="btn-primary w-full text-xs py-2.5"
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// TEMPLATE 1: AGRI CLEAN (Minimalist, Crisp Green Accents, Clean Dividers)
+// TEMPLATE 1: AGRI CLEAN
 // ═══════════════════════════════════════════════════════════════════════════════
 const TemplateAgriClean = ({ data }) => {
   const skillList = data.skills
@@ -1190,7 +1555,7 @@ const TemplateAgriClean = ({ data }) => {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// TEMPLATE 2: MODERN GREEN (Dark Emerald Header Banner, Pill Tags, Modern Layout)
+// TEMPLATE 2: MODERN GREEN
 // ═══════════════════════════════════════════════════════════════════════════════
 const TemplateModernGreen = ({ data }) => {
   const skillList = data.skills
@@ -1380,7 +1745,7 @@ const TemplateModernGreen = ({ data }) => {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// TEMPLATE 3: CLASSIC SERIF (Formal, Academic / Government / Traditional CV)
+// TEMPLATE 3: CLASSIC SERIF
 // ═══════════════════════════════════════════════════════════════════════════════
 const TemplateClassicSerif = ({ data }) => {
   const skillList = data.skills

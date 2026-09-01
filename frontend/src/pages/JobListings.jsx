@@ -216,7 +216,82 @@ const JobListings = () => {
         </aside>
 
         {/* Results */}
-        <div className="md:col-span-3">
+        <div className="md:col-span-3 space-y-4">
+          {/* Season & Sector Quick Filter Chips */}
+          <div className="p-3.5 bg-gray-50/80 rounded-2xl border border-brand-border space-y-2">
+            <div className="flex flex-wrap items-center gap-1.5 text-xs">
+              <span className="font-bold text-[11px] uppercase tracking-wider text-brand-grey mr-1">
+                🌾 Season:
+              </span>
+              {[
+                { label: "Kharif (Monsoon)", val: "Kharif" },
+                { label: "Rabi (Winter)", val: "Rabi" },
+                { label: "Zaid (Summer)", val: "Zaid" },
+              ].map((s) => (
+                <button
+                  key={s.val}
+                  onClick={() => {
+                    const next = new URLSearchParams(searchParams);
+                    if (currentKeyword === s.val) {
+                      next.delete("keyword");
+                      setKeywordInput("");
+                    } else {
+                      next.set("keyword", s.val);
+                      setKeywordInput(s.val);
+                    }
+                    setPage(1);
+                    setSearchParams(next);
+                  }}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                    currentKeyword === s.val
+                      ? "bg-emerald-800 text-white shadow-xs"
+                      : "bg-white text-gray-700 border border-gray-200 hover:border-emerald-300"
+                  }`}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-1.5 text-xs pt-1.5 border-t border-gray-200/60">
+              <span className="font-bold text-[11px] uppercase tracking-wider text-brand-grey mr-1">
+                🌱 Sectors:
+              </span>
+              {[
+                "Agronomy",
+                "Horticulture",
+                "Drone",
+                "Agri-Fintech",
+                "Organic",
+                "Dairy",
+                "Soil Science",
+              ].map((sector) => (
+                <button
+                  key={sector}
+                  onClick={() => {
+                    const next = new URLSearchParams(searchParams);
+                    if (currentKeyword === sector) {
+                      next.delete("keyword");
+                      setKeywordInput("");
+                    } else {
+                      next.set("keyword", sector);
+                      setKeywordInput(sector);
+                    }
+                    setPage(1);
+                    setSearchParams(next);
+                  }}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                    currentKeyword === sector
+                      ? "bg-brand-black text-white shadow-xs"
+                      : "bg-white text-gray-700 border border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  {sector}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {loading ? (
             <div className="py-24 text-center text-brand-grey flex flex-col items-center justify-center gap-3">
               <div className="w-8 h-8 border-3 border-brand-green border-t-transparent rounded-full animate-spin"></div>
