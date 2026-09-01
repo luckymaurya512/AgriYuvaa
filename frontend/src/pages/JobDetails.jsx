@@ -70,13 +70,20 @@ const JobDetails = () => {
   const companyDisplayName = job.companyName || job.employer?.name || "Hiring Company";
   const defaultEmailSubject =
     job.applyEmailSubject || `Application for ${job.title} - ${user?.name || "Applicant"}`;
+  
+  const emailBody = `Dear HR,\n\nPlease find attached my resume for the ${job.title} position at ${companyDisplayName}.\n\nName: ${
+    user?.name || ""
+  }\nEmail: ${user?.email || ""}\n\nBest regards,\n${user?.name || ""}`;
+
+  // 1. Direct Web Gmail composer URL (opens in browser tab, 100% reliable on desktop)
+  const gmailWebLink = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
+    job.applyEmail || ""
+  )}&su=${encodeURIComponent(defaultEmailSubject)}&body=${encodeURIComponent(emailBody)}`;
+
+  // 2. Desktop/mobile OS mail client protocol
   const mailtoLink = `mailto:${job.applyEmail}?subject=${encodeURIComponent(
     defaultEmailSubject
-  )}&body=${encodeURIComponent(
-    `Dear HR,\n\nPlease find attached my resume for the ${job.title} position at ${companyDisplayName}.\n\nName: ${
-      user?.name || ""
-    }\nEmail: ${user?.email || ""}\n\nBest regards,\n${user?.name || ""}`
-  )}`;
+  )}&body=${encodeURIComponent(emailBody)}`;
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 grid md:grid-cols-3 gap-8">
@@ -175,7 +182,7 @@ const JobDetails = () => {
               {/* Instructions Callout */}
               <div className="p-3.5 bg-blue-50/70 border border-blue-100 rounded-xl text-xs text-blue-900 space-y-1.5">
                 <p className="font-semibold flex items-center gap-1.5 text-blue-800">
-                  <Info size={14} /> How to Apply:
+                  <Info size={14} /> Instructions:
                 </p>
                 <p className="leading-relaxed">
                   {job.applyEmailInstructions ||
@@ -192,7 +199,7 @@ const JobDetails = () => {
                   <input
                     readOnly
                     value={job.applyEmail || ""}
-                    className="input-field text-sm font-medium bg-gray-50 flex-1 cursor-text"
+                    className="input-field text-sm font-medium bg-gray-50 flex-1 cursor-text select-all"
                   />
                   <button
                     onClick={() => handleCopy(job.applyEmail, "email")}
@@ -221,7 +228,7 @@ const JobDetails = () => {
                   <input
                     readOnly
                     value={defaultEmailSubject}
-                    className="input-field text-xs bg-gray-50 flex-1 cursor-text"
+                    className="input-field text-xs bg-gray-50 flex-1 cursor-text select-all"
                   />
                   <button
                     onClick={() => handleCopy(defaultEmailSubject, "subject")}
@@ -241,13 +248,26 @@ const JobDetails = () => {
                 </div>
               </div>
 
-              {/* Launch Email App CTA */}
-              <a
-                href={mailtoLink}
-                className="btn-primary w-full text-center flex items-center justify-center gap-2 py-3 mt-2"
-              >
-                <Mail size={16} /> Open Email & Send Resume
-              </a>
+              {/* Action Buttons: Web Gmail + Default App */}
+              <div className="space-y-2 pt-1">
+                {/* 1. Direct Web Gmail composer */}
+                <a
+                  href={gmailWebLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-primary w-full text-center flex items-center justify-center gap-2 py-2.5"
+                >
+                  <Mail size={16} /> Compose in Gmail (Web) ↗
+                </a>
+
+                {/* 2. Default Desktop/Mobile App */}
+                <a
+                  href={mailtoLink}
+                  className="btn-secondary w-full text-center flex items-center justify-center gap-2 py-2 text-xs text-brand-grey hover:text-brand-black"
+                >
+                  Open in Default Mail App (Outlook/Apple)
+                </a>
+              </div>
             </div>
           ) : /* ── CASE 2: COMPANY WEBSITE LINK ── */
           job.applyType === "external_link" ? (
