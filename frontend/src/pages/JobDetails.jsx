@@ -62,8 +62,16 @@ const JobDetails = () => {
     e.preventDefault();
     setError("");
     let formattedUrl = (resumeUrl || "").trim();
-    if (formattedUrl && !formattedUrl.startsWith("http://") && !formattedUrl.startsWith("https://")) {
+    if (!formattedUrl) {
+      setError("Please provide your resume URL.");
+      return;
+    }
+    if (!formattedUrl.startsWith("http://") && !formattedUrl.startsWith("https://")) {
       formattedUrl = `https://${formattedUrl}`;
+    }
+    if (!formattedUrl.includes(".") || formattedUrl.length < 8) {
+      setError("Please enter a valid resume link (e.g., https://drive.google.com/file/... or Dropbox link)");
+      return;
     }
     try {
       await applyToJob(id, { resumeUrl: formattedUrl, coverNote });
@@ -373,16 +381,28 @@ const JobDetails = () => {
               ) : (
                 <form onSubmit={handleApply} className="space-y-3">
                   <div>
-                    <label className="text-xs font-semibold text-brand-grey uppercase tracking-wide">
-                      Resume URL
-                    </label>
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-semibold text-brand-grey uppercase tracking-wide">
+                        Resume URL *
+                      </label>
+                      <Link
+                        to="/resume-builder"
+                        target="_blank"
+                        className="text-[11px] font-bold text-brand-green-dark hover:underline"
+                      >
+                        Build CV here ↗
+                      </Link>
+                    </div>
                     <input
                       required
                       className="input-field mt-1 text-sm"
-                      placeholder="Link to your resume (Google Drive, PDF)"
+                      placeholder="e.g. https://drive.google.com/file/d/..."
                       value={resumeUrl}
                       onChange={(e) => setResumeUrl(e.target.value)}
                     />
+                    <p className="text-[11px] text-brand-grey mt-1">
+                      Paste a shareable Google Drive, Dropbox, or Cloud PDF link.
+                    </p>
                   </div>
                   <div>
                     <label className="text-xs font-semibold text-brand-grey uppercase tracking-wide">

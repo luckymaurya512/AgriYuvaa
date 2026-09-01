@@ -183,33 +183,42 @@ const JobApplicants = () => {
                 )}
 
                 {app.resumeUrl ? (
-                  <div className="flex items-center gap-3 pt-1">
-                    <a
-                      href={
-                        app.resumeUrl.startsWith("http://") || app.resumeUrl.startsWith("https://")
-                          ? app.resumeUrl
-                          : `https://${app.resumeUrl}`
-                      }
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-lg transition-colors"
-                    >
-                      <Download size={13} /> View / Download Resume <ExternalLink size={11} />
-                    </a>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const targetUrl = app.resumeUrl.startsWith("http://") || app.resumeUrl.startsWith("https://")
-                          ? app.resumeUrl
-                          : `https://${app.resumeUrl}`;
-                        navigator.clipboard.writeText(targetUrl);
-                        alert("Resume link copied to clipboard!");
-                      }}
-                      className="text-xs text-brand-grey hover:text-brand-black underline"
-                    >
-                      Copy Link
-                    </button>
-                  </div>
+                  (() => {
+                    const raw = app.resumeUrl.trim();
+                    const isValidWebUrl = raw.includes(".") && raw.length >= 6;
+                    const fullUrl = raw.startsWith("http://") || raw.startsWith("https://") ? raw : `https://${raw}`;
+
+                    if (!isValidWebUrl) {
+                      return (
+                        <div className="flex items-center gap-2 pt-1 text-xs text-amber-800 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-lg">
+                          <span>⚠️ Test link/text submitted: <strong>"{raw}"</strong></span>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="flex items-center gap-3 pt-1">
+                        <a
+                          href={fullUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-lg transition-colors"
+                        >
+                          <Download size={13} /> View / Download Resume <ExternalLink size={11} />
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(fullUrl);
+                            alert("Resume link copied to clipboard!");
+                          }}
+                          className="text-xs text-brand-grey hover:text-brand-black underline"
+                        >
+                          Copy Link
+                        </button>
+                      </div>
+                    );
+                  })()
                 ) : (
                   <span className="text-xs text-brand-grey italic">No resume link provided</span>
                 )}
