@@ -41,6 +41,7 @@ const jobSchema = new mongoose.Schema(
     applyEmailInstructions: { type: String, trim: true },
     applyUrl: { type: String, trim: true },
     isFeatured: { type: Boolean, default: false },
+    isUrgent: { type: Boolean, default: false },
     views: { type: Number, default: 0 },
     applicationDeadline: { type: Date },
     expiresAt: { type: Date },

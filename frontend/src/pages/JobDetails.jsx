@@ -13,8 +13,12 @@ import {
   Check,
   Building2,
   Info,
+  Bookmark,
+  Zap,
+  Star,
 } from "lucide-react";
 import { fetchJobById, applyToJob } from "../services/jobService.js";
+import { toggleSaveJob, fetchSeekerProfile } from "../services/userService.js";
 import { useAuth } from "../context/AuthContext.jsx";
 
 const JobDetails = () => {
@@ -27,6 +31,10 @@ const JobDetails = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
+  // Bookmark / Save state
+  const [isSaved, setIsSaved] = useState(false);
+  const [savingBookmark, setSavingBookmark] = useState(false);
+
   // Copy states
   const [copiedEmail, setCopiedEmail] = useState(false);
   const [copiedSubject, setCopiedSubject] = useState(false);
@@ -37,7 +45,18 @@ const JobDetails = () => {
       .then(setJob)
       .catch(() => setError("This job could not be found."))
       .finally(() => setLoading(false));
-  }, [id]);
+
+    if (user?.role === "seeker") {
+      fetchSeekerProfile()
+        .then((profile) => {
+          if (profile?.savedJobs) {
+            const saved = profile.savedJobs.some((j) => (j._id || j).toString() === id);
+            setIsSaved(saved);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [id, user]);
 
   const handleApply = async (e) => {
     e.preventDefault();
@@ -47,6 +66,22 @@ const JobDetails = () => {
       setApplied(true);
     } catch (err) {
       setError(err.response?.data?.message || "Could not submit application");
+    }
+  };
+
+  const handleToggleBookmark = async () => {
+    if (!user || user.role !== "seeker") {
+      alert("Please log in as a Job Seeker to bookmark jobs.");
+      return;
+    }
+    setSavingBookmark(true);
+    try {
+      const res = await toggleSaveJob(id);
+      setIsSaved(res.isSaved);
+    } catch (err) {
+      console.error("Failed to toggle bookmark:", err);
+    } finally {
+      setSavingBookmark(false);
     }
   };
 
@@ -70,17 +105,15 @@ const JobDetails = () => {
   const companyDisplayName = job.companyName || job.employer?.name || "Hiring Company";
   const defaultEmailSubject =
     job.applyEmailSubject || `Application for ${job.title} - ${user?.name || "Applicant"}`;
-  
+
   const emailBody = `Dear HR,\n\nPlease find attached my resume for the ${job.title} position at ${companyDisplayName}.\n\nName: ${
     user?.name || ""
   }\nEmail: ${user?.email || ""}\n\nBest regards,\n${user?.name || ""}`;
 
-  // 1. Direct Web Gmail composer URL (opens in browser tab, 100% reliable on desktop)
   const gmailWebLink = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
     job.applyEmail || ""
   )}&su=${encodeURIComponent(defaultEmailSubject)}&body=${encodeURIComponent(emailBody)}`;
 
-  // 2. Desktop/mobile OS mail client protocol
   const mailtoLink = `mailto:${job.applyEmail}?subject=${encodeURIComponent(
     defaultEmailSubject
   )}&body=${encodeURIComponent(emailBody)}`;
@@ -90,7 +123,19 @@ const JobDetails = () => {
       {/* Left Column: Job Info */}
       <div className="md:col-span-2 space-y-6">
         <div>
-          {job.isFeatured && <span className="badge-featured mb-3 inline-block">Featured</span>}
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            {job.isFeatured && (
+              <span className="inline-flex items-center gap-1 bg-amber-500 text-white text-xs font-bold px-2.5 py-1 rounded-md shadow-xs">
+                <Star size={13} fill="currentColor" /> Featured
+              </span>
+            )}
+            {job.isUrgent && (
+              <span className="inline-flex items-center gap-1 bg-orange-600 text-white text-xs font-bold px-2.5 py-1 rounded-md animate-pulse">
+                <Zap size={13} fill="currentColor" /> Urgent Hiring
+              </span>
+            )}
+          </div>
+
           <h1 className="text-2xl md:text-3xl font-display font-bold mb-2">{job.title}</h1>
           <p className="text-base font-semibold text-brand-black/90 flex items-center gap-1.5">
             <Building2 size={18} className="text-brand-green" /> {companyDisplayName}
@@ -250,7 +295,6 @@ const JobDetails = () => {
 
               {/* Action Buttons: Web Gmail + Default App */}
               <div className="space-y-2 pt-1">
-                {/* 1. Direct Web Gmail composer */}
                 <a
                   href={gmailWebLink}
                   target="_blank"
@@ -260,7 +304,6 @@ const JobDetails = () => {
                   <Mail size={16} /> Compose in Gmail (Web) ↗
                 </a>
 
-                {/* 2. Default Desktop/Mobile App */}
                 <a
                   href={mailtoLink}
                   className="btn-secondary w-full text-center flex items-center justify-center gap-2 py-2 text-xs text-brand-grey hover:text-brand-black"
@@ -358,21 +401,39 @@ const JobDetails = () => {
             </div>
           )}
 
-          {/* Share button */}
-          <button
-            onClick={() => handleCopy(window.location.href, "share")}
-            className="btn-secondary w-full mt-3 text-sm flex items-center justify-center gap-1.5"
-          >
-            {copiedShare ? (
-              <>
-                <Check size={16} className="text-brand-green" /> Link Copied to Clipboard
-              </>
-            ) : (
-              <>
-                <Share2 size={16} /> Share this job
-              </>
+          {/* Action Row: Save Job + Share */}
+          <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-brand-border">
+            {user?.role === "seeker" && (
+              <button
+                type="button"
+                onClick={handleToggleBookmark}
+                disabled={savingBookmark}
+                className={`btn-secondary text-xs py-2.5 flex items-center justify-center gap-1.5 ${
+                  isSaved ? "bg-emerald-50 border-emerald-300 text-emerald-800" : ""
+                }`}
+              >
+                <Bookmark size={15} fill={isSaved ? "currentColor" : "none"} />
+                {isSaved ? "Saved" : "Save Job"}
+              </button>
             )}
-          </button>
+
+            <button
+              onClick={() => handleCopy(window.location.href, "share")}
+              className={`btn-secondary text-xs py-2.5 flex items-center justify-center gap-1.5 ${
+                user?.role !== "seeker" ? "col-span-2" : ""
+              }`}
+            >
+              {copiedShare ? (
+                <>
+                  <Check size={15} className="text-brand-green" /> Link Copied
+                </>
+              ) : (
+                <>
+                  <Share2 size={15} /> Share Job
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>

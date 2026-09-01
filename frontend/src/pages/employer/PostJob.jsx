@@ -374,6 +374,32 @@ const PostJob = () => {
           />
         </div>
 
+        {/* Featured & Urgent Badges */}
+        <div className="p-4 bg-gray-50 rounded-xl border border-brand-border space-y-3">
+          <p className="text-xs font-bold uppercase tracking-wider text-brand-grey">Visibility & Boost</p>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <label className="flex items-center gap-2.5 text-xs font-medium cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={form.isFeatured || false}
+                onChange={(e) => setForm({ ...form, isFeatured: e.target.checked })}
+                className="w-4 h-4 rounded text-brand-green focus:ring-brand-green"
+              />
+              <span>⭐ <strong>Featured Job</strong> (Top listing & badge)</span>
+            </label>
+
+            <label className="flex items-center gap-2.5 text-xs font-medium cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={form.isUrgent || false}
+                onChange={(e) => setForm({ ...form, isUrgent: e.target.checked })}
+                className="w-4 h-4 rounded text-orange-600 focus:ring-orange-500"
+              />
+              <span>⚡ <strong>Urgent Hiring</strong> (Priority badge)</span>
+            </label>
+          </div>
+        </div>
+
         {error && <p className="text-xs text-red-600">{error}</p>}
 
         <button disabled={loading} type="submit" className="btn-primary w-full py-3">

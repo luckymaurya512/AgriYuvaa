@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { MapPin, Briefcase, IndianRupee } from "lucide-react";
+import { MapPin, Briefcase, IndianRupee, Bookmark, Zap, Star } from "lucide-react";
+import { toggleSaveJob } from "../services/userService.js";
+import { useAuth } from "../context/AuthContext.jsx";
 
 const formatSalary = (min, max) => {
   if (!min && !max) return "Salary not disclosed";
@@ -8,13 +10,68 @@ const formatSalary = (min, max) => {
   return `₹${(min || max).toLocaleString("en-IN")}+`;
 };
 
-const JobCard = ({ job }) => {
+const JobCard = ({ job, isSavedInitial = false, onBookmarkChange }) => {
+  const { user } = useAuth();
+  const [isSaved, setIsSaved] = useState(isSavedInitial);
+  const [saving, setSaving] = useState(false);
+
+  const handleBookmark = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user || user.role !== "seeker") {
+      alert("Please log in as a Job Seeker to bookmark jobs.");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const res = await toggleSaveJob(job._id);
+      setIsSaved(res.isSaved);
+      if (onBookmarkChange) onBookmarkChange(job._id, res.isSaved);
+    } catch (err) {
+      console.error("Failed to bookmark job:", err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
-    <Link to={`/jobs/${job._id}`} className="card p-5 flex flex-col gap-3 h-full">
+    <Link to={`/jobs/${job._id}`} className="card p-5 flex flex-col gap-3 h-full relative group">
+      {/* Top row: Badges & Bookmark Icon */}
       <div className="flex items-start justify-between gap-2">
-        <h3 className="font-display font-semibold text-base leading-snug">{job.title}</h3>
-        {job.isFeatured && <span className="badge-featured shrink-0">Featured</span>}
+        <div className="flex flex-wrap items-center gap-1.5">
+          {job.isFeatured && (
+            <span className="inline-flex items-center gap-1 bg-amber-500 text-white text-[11px] font-bold px-2.5 py-0.5 rounded-md shadow-xs">
+              <Star size={11} fill="currentColor" /> Featured
+            </span>
+          )}
+          {job.isUrgent && (
+            <span className="inline-flex items-center gap-1 bg-orange-600 text-white text-[11px] font-bold px-2.5 py-0.5 rounded-md animate-pulse">
+              <Zap size={11} fill="currentColor" /> Urgent
+            </span>
+          )}
+        </div>
+
+        {user?.role === "seeker" && (
+          <button
+            type="button"
+            onClick={handleBookmark}
+            disabled={saving}
+            className={`p-1.5 rounded-lg border transition-all shrink-0 ${
+              isSaved
+                ? "bg-emerald-50 border-emerald-300 text-emerald-700"
+                : "bg-white border-gray-200 text-gray-400 hover:text-emerald-700 hover:border-emerald-200"
+            }`}
+            title={isSaved ? "Remove from saved jobs" : "Save this job"}
+          >
+            <Bookmark size={16} fill={isSaved ? "currentColor" : "none"} />
+          </button>
+        )}
       </div>
+
+      <h3 className="font-display font-semibold text-base leading-snug group-hover:text-brand-green-dark transition-colors">
+        {job.title}
+      </h3>
 
       <p className="text-sm font-medium text-brand-black/90">
         {job.companyName || job.employer?.name || "AgriYuvaa Employer"}

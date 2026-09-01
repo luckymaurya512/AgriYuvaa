@@ -1,6 +1,7 @@
 import asyncHandler from "express-async-handler";
 import Application from "../models/Application.js";
 import Job from "../models/Job.js";
+import sendEmail from "../utils/sendEmail.js";
 
 // @desc  Apply to a job (job seeker only)
 // @route POST /api/applications/jobs/:jobId
@@ -31,7 +32,11 @@ export const applyToJob = asyncHandler(async (req, res) => {
 // @route GET /api/applications/mine
 export const getMyApplications = asyncHandler(async (req, res) => {
   const applications = await Application.find({ seeker: req.user._id })
-    .populate({ path: "job", select: "title location employer", populate: { path: "employer", select: "name" } })
+    .populate({
+      path: "job",
+      select: "title location employer companyName isFeatured isUrgent",
+      populate: { path: "employer", select: "name" },
+    })
     .sort("-createdAt");
   res.json(applications);
 });
@@ -59,7 +64,7 @@ export const getApplicationsForJob = asyncHandler(async (req, res) => {
   res.json(applications);
 });
 
-// @desc  Update an application's status (shortlist / reject / hire)
+// @desc  Update an application's status (shortlist / reject / hire) & notify candidate
 // @route PATCH /api/applications/:id/status
 export const updateApplicationStatus = asyncHandler(async (req, res) => {
   const { status } = req.body;
@@ -69,7 +74,10 @@ export const updateApplicationStatus = asyncHandler(async (req, res) => {
     throw new Error("Invalid status value");
   }
 
-  const application = await Application.findById(req.params.id).populate("job");
+  const application = await Application.findById(req.params.id)
+    .populate("job")
+    .populate("seeker", "name email");
+
   if (!application) {
     res.status(404);
     throw new Error("Application not found");
@@ -82,7 +90,64 @@ export const updateApplicationStatus = asyncHandler(async (req, res) => {
     throw new Error("You do not have permission to update this application");
   }
 
+  const previousStatus = application.status;
   application.status = status;
   await application.save();
+
+  // Send email notification to candidate on status update (shortlisted, hired, rejected)
+  if (previousStatus !== status && ["shortlisted", "hired", "rejected"].includes(status)) {
+    const candidateEmail = application.seeker?.email;
+    const candidateName = application.seeker?.name || "Applicant";
+    const jobTitle = application.job?.title || "Agriculture Position";
+    const company = application.job?.companyName || "Hiring Employer";
+
+    if (candidateEmail) {
+      const statusTitle =
+        status === "shortlisted"
+          ? "🎉 Congratulations! You have been Shortlisted"
+          : status === "hired"
+          ? "🏆 Congratulations! You have been Selected"
+          : "Update regarding your job application";
+
+      const statusBadgeColor =
+        status === "shortlisted" ? "#15803d" : status === "hired" ? "#047857" : "#dc2626";
+
+      const messageBody =
+        status === "shortlisted"
+          ? `Great news! Your profile has been <strong>shortlisted</strong> for the <strong>${jobTitle}</strong> role by <strong>${company}</strong>. The employer team will contact you soon for the next steps.`
+          : status === "hired"
+          ? `Congratulations! <strong>${company}</strong> has selected you for the position of <strong>${jobTitle}</strong>. We wish you immense success in your new journey!`
+          : `Thank you for taking the time to apply for <strong>${jobTitle}</strong> at <strong>${company}</strong>. While they have decided to move forward with other candidates at this time, we encourage you to keep exploring exciting agriculture opportunities on AgriYuvaa.`;
+
+      const emailHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 12px; background-color: #ffffff;">
+          <div style="text-align: center; margin-bottom: 24px;">
+            <h2 style="color: #15803d; margin: 0; font-size: 22px;">AgriYuvaa Careers</h2>
+            <p style="color: #6b7280; font-size: 13px; margin-top: 4px;">Empowering Youth in Agriculture</p>
+          </div>
+          
+          <div style="padding: 18px; background-color: #f9fafb; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid ${statusBadgeColor};">
+            <h3 style="margin: 0 0 8px 0; color: #111827; font-size: 16px;">${statusTitle}</h3>
+            <p style="margin: 0; color: #374151; font-size: 14px; line-height: 1.5;">Dear ${candidateName},</p>
+            <p style="margin: 12px 0 0 0; color: #374151; font-size: 14px; line-height: 1.5;">${messageBody}</p>
+          </div>
+
+          <div style="text-align: center; margin: 28px 0 12px 0;">
+            <a href="https://frontend-lime-nine-60.vercel.app/seeker" style="display: inline-block; background-color: #15803d; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px;">View Application Dashboard</a>
+          </div>
+
+          <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
+          <p style="color: #9ca3af; font-size: 12px; text-align: center; margin: 0;">© ${new Date().getFullYear()} AgriYuvaa. All rights reserved.</p>
+        </div>
+      `;
+
+      sendEmail({
+        to: candidateEmail,
+        subject: `[AgriYuvaa] Application Update: ${jobTitle} at ${company}`,
+        html: emailHtml,
+      }).catch((err) => console.error("Error sending status notification email:", err.message));
+    }
+  }
+
   res.json(application);
 });
