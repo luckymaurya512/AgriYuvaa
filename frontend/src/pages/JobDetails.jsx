@@ -21,7 +21,7 @@ import {
   FileText,
   Loader2,
 } from "lucide-react";
-import { fetchJobById, applyToJob } from "../services/jobService.js";
+import { fetchJobById, applyToJob, fetchMyApplications } from "../services/jobService.js";
 import { fetchSeekerProfile, toggleSaveJob, uploadSeekerResume } from "../services/userService.js";
 import { toggleFollowEmployer, enablePushNotifications } from "../services/notificationService.js";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -36,6 +36,7 @@ const JobDetails = () => {
   const [uploadedFileName, setUploadedFileName] = useState("");
   const [coverNote, setCoverNote] = useState("");
   const [applied, setApplied] = useState(false);
+  const [existingApplication, setExistingApplication] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -56,26 +57,40 @@ const JobDetails = () => {
     fetchJobById(id)
       .then((fetchedJob) => {
         setJob(fetchedJob);
-        if (user?.role === "seeker" && fetchedJob?.employer) {
-          const empId = fetchedJob.employer._id || fetchedJob.employer;
-          fetchSeekerProfile()
-            .then((profile) => {
-              if (profile?.savedJobs) {
-                const saved = profile.savedJobs.some((j) => (j._id || j).toString() === id);
-                setIsSaved(saved);
-              }
-              if (profile?.followedEmployers) {
-                const following = profile.followedEmployers.some(
-                  (e) => (e._id || e).toString() === empId.toString()
-                );
-                setIsFollowing(following);
-              }
-              if (profile?.resumeUrl) {
-                setResumeUrl(profile.resumeUrl);
-                setUploadedFileName("Profile Resume (Ready)");
+        if (user?.role === "seeker") {
+          // 1. Check if seeker has already applied for this job
+          fetchMyApplications()
+            .then((apps) => {
+              const matched = (apps || []).find((a) => (a.job?._id || a.job)?.toString() === id);
+              if (matched) {
+                setApplied(true);
+                setExistingApplication(matched);
               }
             })
             .catch(() => {});
+
+          // 2. Fetch seeker profile for saved jobs, follow status & resume
+          if (fetchedJob?.employer) {
+            const empId = fetchedJob.employer._id || fetchedJob.employer;
+            fetchSeekerProfile()
+              .then((profile) => {
+                if (profile?.savedJobs) {
+                  const saved = profile.savedJobs.some((j) => (j._id || j).toString() === id);
+                  setIsSaved(saved);
+                }
+                if (profile?.followedEmployers) {
+                  const following = profile.followedEmployers.some(
+                    (e) => (e._id || e).toString() === empId.toString()
+                  );
+                  setIsFollowing(following);
+                }
+                if (profile?.resumeUrl) {
+                  setResumeUrl(profile.resumeUrl);
+                  setUploadedFileName("Profile Resume (Ready)");
+                }
+              })
+              .catch(() => {});
+          }
         }
       })
       .catch(() => setError("This job could not be found."))
@@ -490,9 +505,49 @@ const JobDetails = () => {
               ) : user.role !== "seeker" ? (
                 <p className="text-sm text-brand-grey">Only job seeker accounts can apply to jobs.</p>
               ) : applied ? (
-                <p className="text-sm text-brand-green-dark font-semibold">
-                  Application submitted! You can track its status from your dashboard.
-                </p>
+                <div className="p-5 bg-emerald-50/80 border border-emerald-200 rounded-2xl space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                      <CheckCircle2 size={22} />
+                    </div>
+                    <div>
+                      <h3 className="font-display font-bold text-base text-emerald-950">
+                        Application Submitted
+                      </h3>
+                      <p className="text-xs text-emerald-800/90 mt-0.5">
+                        You have already applied for this position.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-white rounded-xl border border-emerald-100 text-xs space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-500 font-medium">Application Status:</span>
+                      <span className="font-bold capitalize px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px]">
+                        {existingApplication?.status || "Applied"}
+                      </span>
+                    </div>
+                    {existingApplication?.createdAt && (
+                      <div className="flex items-center justify-between text-[11px] text-gray-400">
+                        <span>Submitted On:</span>
+                        <span className="text-gray-600 font-medium">
+                          {new Date(existingApplication.createdAt).toLocaleDateString("en-IN", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <Link
+                    to="/seeker"
+                    className="btn-primary w-full text-center py-2.5 text-xs flex items-center justify-center gap-1.5"
+                  >
+                    Track in Seeker Dashboard →
+                  </Link>
+                </div>
               ) : (
                 <form onSubmit={handleApply} className="space-y-4">
                   <div>
