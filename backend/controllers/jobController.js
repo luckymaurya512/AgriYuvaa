@@ -1,7 +1,9 @@
 import asyncHandler from "express-async-handler";
 import Job from "../models/Job.js";
+import User from "../models/User.js";
 import EmployerProfile from "../models/EmployerProfile.js";
 import { broadcastNewJobAlert } from "../utils/webPush.js";
+import sendEmail from "../utils/sendEmail.js";
 
 // @desc  Create a job (employer or admin/superadmin)
 // @route POST /api/jobs
@@ -34,6 +36,42 @@ export const createJob = asyncHandler(async (req, res) => {
 
   if (initialStatus === "approved") {
     broadcastNewJobAlert(job, employerProfile).catch(() => {});
+  } else {
+    // 📧 Notify Admins and Superadmins of new job listing awaiting moderation
+    try {
+      const admins = await User.find({ role: { $in: ["admin", "superadmin"] } }).select("email name");
+      const companyDisplayName = job.companyName || employerProfile?.companyName || req.user.name || "Employer";
+      for (const admin of admins) {
+        sendEmail({
+          to: admin.email,
+          subject: `📋 New Job Awaiting Approval: "${job.title}" by ${companyDisplayName}`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 12px; background-color: #ffffff;">
+              <div style="text-align: center; margin-bottom: 20px;">
+                <h2 style="color: #15803d; margin: 0; font-size: 22px;">AgriYuvaa Admin Alert 🌾</h2>
+                <p style="color: #6b7280; font-size: 13px; margin-top: 4px;">New Job Listing Pending Moderation</p>
+              </div>
+              
+              <div style="padding: 16px; background-color: #fefce8; border-radius: 8px; border-left: 4px solid #eab308; margin-bottom: 16px;">
+                <h3 style="margin: 0 0 8px 0; color: #854d0e; font-size: 16px;">${job.title}</h3>
+                <p style="margin: 4px 0; color: #374151; font-size: 14px;"><strong>Company:</strong> ${companyDisplayName}</p>
+                <p style="margin: 4px 0; color: #374151; font-size: 14px;"><strong>Location:</strong> ${job.location || "Not specified"}</p>
+                <p style="margin: 4px 0; color: #374151; font-size: 14px;"><strong>Type:</strong> ${job.employmentType || "Full-time"}</p>
+                ${job.salaryMin || job.salaryMax ? `<p style="margin: 4px 0; color: #374151; font-size: 14px;"><strong>Salary:</strong> ₹${job.salaryMin?.toLocaleString("en-IN") || 0} - ₹${job.salaryMax?.toLocaleString("en-IN") || ""}</p>` : ""}
+              </div>
+
+              <p style="color: #4b5563; font-size: 13px; line-height: 1.5;">Please review the job details, verify compliance, and approve the posting so it goes live for candidates.</p>
+
+              <div style="text-align: center; margin-top: 24px;">
+                <a href="https://frontend-lime-nine-60.vercel.app/admin" style="display: inline-block; background-color: #15803d; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px;">Review in Admin Panel →</a>
+              </div>
+            </div>
+          `,
+        }).catch((err) => console.error("Admin job alert email error:", err));
+      }
+    } catch (adminAlertError) {
+      console.error("Error fetching admins for job notification:", adminAlertError);
+    }
   }
 
   res.status(201).json(job);

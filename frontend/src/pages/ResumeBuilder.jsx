@@ -19,6 +19,8 @@ import {
   BookText,
   FileBadge2,
   FolderPlus,
+  Download,
+  Loader2,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
 
@@ -143,6 +145,44 @@ const ResumeBuilder = () => {
     }
     return sampleData;
   });
+
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+
+  const handleDownloadPDF = async () => {
+    const element = document.getElementById("resume-canvas");
+    if (!element) {
+      window.print();
+      return;
+    }
+
+    setDownloadingPdf(true);
+    try {
+      if (!window.html2pdf) {
+        await new Promise((resolve, reject) => {
+          const script = document.createElement("script");
+          script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
+          script.onload = resolve;
+          script.onerror = reject;
+          document.head.appendChild(script);
+        });
+      }
+
+      const opt = {
+        margin: [4, 4, 4, 4],
+        filename: `${(data.fullName || "Resume").replace(/[^a-z0-9]/gi, "_")}_AgriYuvaa_Resume.pdf`,
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+      };
+
+      await window.html2pdf().set(opt).from(element).save();
+    } catch (err) {
+      console.error("Direct PDF generation error, falling back to window.print()", err);
+      window.print();
+    } finally {
+      setDownloadingPdf(false);
+    }
+  };
 
   const handlePrint = () => {
     window.print();
@@ -348,10 +388,10 @@ const ResumeBuilder = () => {
           <div className="flex flex-wrap items-center gap-2.5">
             <button
               onClick={handleAutofill}
-              className="px-3.5 py-2.5 rounded-xl border border-brand-border text-xs text-brand-grey hover:text-brand-black hover:border-gray-300 transition-colors flex items-center gap-1.5"
+              className="px-3 py-2.5 rounded-xl border border-brand-border text-xs text-brand-grey hover:text-brand-black hover:border-gray-300 transition-colors flex items-center gap-1.5"
               title="Load sample agriculture graduate data"
             >
-              <Sparkles size={14} className="text-brand-green" /> Autofill Sample
+              <Sparkles size={14} className="text-brand-green" /> Autofill
             </button>
 
             <button
@@ -364,9 +404,27 @@ const ResumeBuilder = () => {
 
             <button
               onClick={handlePrint}
-              className="btn-primary text-xs py-2.5 px-4 flex items-center gap-1.5 shadow-sm"
+              className="btn-secondary text-xs py-2.5 px-3 flex items-center gap-1.5 shadow-2xs"
+              title="Open browser print dialog"
             >
-              <Printer size={15} /> Download PDF / Print
+              <Printer size={14} /> Print
+            </button>
+
+            <button
+              onClick={handleDownloadPDF}
+              disabled={downloadingPdf}
+              className="btn-primary text-xs py-2.5 px-4 flex items-center gap-1.5 shadow-sm"
+              title="Download formatted resume as a PDF file"
+            >
+              {downloadingPdf ? (
+                <>
+                  <Loader2 size={14} className="animate-spin" /> Generating PDF...
+                </>
+              ) : (
+                <>
+                  <Download size={14} /> Download PDF
+                </>
+              )}
             </button>
           </div>
         </div>
