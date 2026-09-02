@@ -14,6 +14,7 @@ import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
 import ForgotPassword from "./pages/ForgotPassword.jsx";
 import ResumeBuilder from "./pages/ResumeBuilder.jsx";
+import GovtJobs from "./pages/GovtJobs.jsx";
 
 import SeekerDashboard from "./pages/seeker/SeekerDashboard.jsx";
 
@@ -34,6 +35,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/jobs" element={<JobListings />} />
           <Route path="/jobs/:id" element={<JobDetails />} />
+          <Route path="/govt-jobs" element={<GovtJobs />} />
           <Route path="/employers" element={<Employers />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />

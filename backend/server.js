@@ -17,6 +17,7 @@ import categoryRoutes from "./routes/categoryRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
+import govtJobRoutes from "./routes/govtJobRoutes.js";
 
 dotenv.config();
 connectDB();
@@ -62,6 +63,7 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/govt-jobs", govtJobRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

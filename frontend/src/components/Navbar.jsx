@@ -95,6 +95,7 @@ const Navbar = () => {
 
   const navLinks = [
     { label: "Find Jobs", to: "/jobs" },
+    { label: "Govt Vacancies", to: "/govt-jobs", isGovt: true },
     { label: "Resume Builder", to: "/resume-builder" },
     { label: "Employers", to: "/employers" },
     { label: "About", to: "/about" },
@@ -110,14 +111,23 @@ const Navbar = () => {
           </span>
         </Link>
 
-        <nav className="hidden md:flex items-center gap-8">
+        <nav className="hidden md:flex items-center gap-7">
           {navLinks.map((link) => (
             <Link
               key={link.to}
               to={link.to}
-              className="text-sm font-medium text-brand-black/80 hover:text-brand-green-dark transition-colors"
+              className={`text-sm font-medium transition-colors flex items-center gap-1.5 ${
+                link.isGovt
+                  ? "text-emerald-800 font-semibold hover:text-emerald-950"
+                  : "text-brand-black/80 hover:text-brand-green-dark"
+              }`}
             >
-              {link.label}
+              <span>{link.label}</span>
+              {link.isGovt && (
+                <span className="bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-bold px-1.5 py-0.5 rounded-full tracking-wide uppercase shadow-2xs">
+                  Govt
+                </span>
+              )}
             </Link>
           ))}
         </nav>
