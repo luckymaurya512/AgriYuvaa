@@ -27,6 +27,7 @@ import { fetchSeekerProfile, toggleSaveJob, uploadSeekerResume } from "../servic
 import { toggleFollowEmployer, enablePushNotifications } from "../services/notificationService.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import JobCard from "../components/JobCard.jsx";
+import WhatsAppIcon from "../components/WhatsAppIcon.jsx";
 
 const JobDetails = () => {
   const { id } = useParams();
@@ -767,7 +768,7 @@ const JobDetails = () => {
               }}
               className="w-full py-2.5 px-4 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-2 transition-colors"
             >
-              <span className="text-sm">📲</span> Share on WhatsApp
+              <WhatsAppIcon size={16} /> Share on WhatsApp
             </button>
 
             <div className="grid grid-cols-2 gap-2">

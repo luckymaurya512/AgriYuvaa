@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { MapPin, Briefcase, IndianRupee, Bookmark, Zap, Star } from "lucide-react";
 import { toggleSaveJob } from "../services/userService.js";
 import { useAuth } from "../context/AuthContext.jsx";
+import WhatsAppIcon from "./WhatsAppIcon.jsx";
 
 const formatSalary = (min, max) => {
   if (!min && !max) return "Salary not disclosed";
@@ -63,10 +64,10 @@ const JobCard = ({ job, isSavedInitial = false, onBookmarkChange }) => {
               const text = `🌾 *Agriculture Hiring Alert on AgriYuvaa*:\n\n📌 *${job.title}*\n🏢 *Company:* ${company}\n📍 *Location:* ${job.location || "India"}\n💼 *Type:* ${job.employmentType || "Full-time"}${salaryInfo}\n\n👉 *View & Apply:* https://frontend-lime-nine-60.vercel.app/jobs/${job._id}`;
               window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank");
             }}
-            className="p-1.5 rounded-lg border border-emerald-200 bg-emerald-50/70 hover:bg-emerald-100 text-emerald-800 transition-colors"
+            className="p-1.5 rounded-lg border border-emerald-200 bg-emerald-50/70 hover:bg-[#25D366]/15 text-[#25D366] hover:border-[#25D366]/40 transition-colors flex items-center justify-center"
             title="Share on WhatsApp"
           >
-            <span className="text-[13px] leading-none">📲</span>
+            <WhatsAppIcon size={14} className="text-[#25D366]" />
           </button>
 
           {user?.role === "seeker" && (
