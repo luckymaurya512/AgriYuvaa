@@ -20,16 +20,19 @@ import {
   UploadCloud,
   FileText,
   Loader2,
+  ArrowRight,
 } from "lucide-react";
-import { fetchJobById, applyToJob, fetchMyApplications } from "../services/jobService.js";
+import { fetchJobById, applyToJob, fetchMyApplications, fetchJobs } from "../services/jobService.js";
 import { fetchSeekerProfile, toggleSaveJob, uploadSeekerResume } from "../services/userService.js";
 import { toggleFollowEmployer, enablePushNotifications } from "../services/notificationService.js";
 import { useAuth } from "../context/AuthContext.jsx";
+import JobCard from "../components/JobCard.jsx";
 
 const JobDetails = () => {
   const { id } = useParams();
   const { user } = useAuth();
   const [job, setJob] = useState(null);
+  const [similarJobs, setSimilarJobs] = useState([]);
   const [resumeUrl, setResumeUrl] = useState("");
   const [resumeMode, setResumeMode] = useState("upload"); // "upload" | "link"
   const [uploadingResume, setUploadingResume] = useState(false);
@@ -92,6 +95,17 @@ const JobDetails = () => {
               .catch(() => {});
           }
         }
+
+        // 3. Fetch similar agriculture jobs in the same category or location
+        const catId = fetchedJob?.category?._id || fetchedJob?.category;
+        fetchJobs(catId ? { category: catId, limit: 6 } : { limit: 6 })
+          .then((data) => {
+            const list = (data.jobs || data || []).filter(
+              (j) => (j._id || j)?.toString() !== id.toString()
+            );
+            setSimilarJobs(list.slice(0, 3));
+          })
+          .catch(() => {});
       })
       .catch(() => setError("This job could not be found."))
       .finally(() => setLoading(false));
@@ -547,6 +561,36 @@ const JobDetails = () => {
                   >
                     Track in Seeker Dashboard →
                   </Link>
+
+                  {/* 🌾 Similar Jobs Mini Recommendations */}
+                  {similarJobs.length > 0 && (
+                    <div className="pt-3 border-t border-emerald-200 space-y-2.5">
+                      <p className="text-xs font-bold text-emerald-950 flex items-center gap-1.5">
+                        🌾 Similar Agriculture Openings:
+                      </p>
+                      <div className="space-y-2">
+                        {similarJobs.map((simJob) => (
+                          <Link
+                            key={simJob._id}
+                            to={`/jobs/${simJob._id}`}
+                            className="p-2.5 bg-white rounded-xl border border-emerald-100 hover:border-emerald-400 flex items-start justify-between gap-2 transition-all block group shadow-2xs"
+                          >
+                            <div className="min-w-0">
+                              <p className="text-xs font-bold text-brand-black group-hover:text-brand-green-dark truncate">
+                                {simJob.title}
+                              </p>
+                              <p className="text-[11px] text-brand-grey truncate">
+                                {simJob.companyName || simJob.employer?.name} · {simJob.location}
+                              </p>
+                            </div>
+                            <span className="text-[11px] font-bold text-brand-green-dark shrink-0 mt-0.5 group-hover:translate-x-0.5 transition-transform">
+                              View →
+                            </span>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <form onSubmit={handleApply} className="space-y-4">
@@ -758,6 +802,34 @@ const JobDetails = () => {
           </div>
         </div>
       </div>
+
+      {/* 🌾 Bottom Section: Similar Agriculture Jobs You May Like */}
+      {similarJobs.length > 0 && (
+        <div className="md:col-span-3 pt-10 mt-6 border-t border-brand-border space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h2 className="text-xl md:text-2xl font-display font-bold text-brand-black flex items-center gap-2">
+                <span>🌾</span> Similar Agriculture Jobs You May Like
+              </h2>
+              <p className="text-xs sm:text-sm text-brand-grey mt-0.5">
+                Explore more verified openings in {job.category?.name || "Agriculture & Agribusiness"}.
+              </p>
+            </div>
+            <Link
+              to={`/jobs?category=${job.category?._id || ""}`}
+              className="text-xs sm:text-sm font-bold text-brand-green-dark hover:underline flex items-center gap-1"
+            >
+              Explore all openings <ArrowRight size={15} />
+            </Link>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {similarJobs.map((simJob) => (
+              <JobCard key={simJob._id} job={simJob} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
