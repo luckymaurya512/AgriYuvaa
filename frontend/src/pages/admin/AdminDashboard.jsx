@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { PlusCircle, Star, CheckCircle, XCircle } from "lucide-react";
+import { PlusCircle, Star, CheckCircle, XCircle, Landmark } from "lucide-react";
 import {
   fetchPlatformStats,
   fetchPendingEmployers,
@@ -47,12 +47,20 @@ const AdminDashboard = () => {
           <p className="text-sm text-brand-grey">Review employer verifications and job approvals</p>
         </div>
 
-        <Link
-          to="/employer/post-job"
-          className="btn-primary text-sm flex items-center gap-2 py-2.5 px-4 shadow-sm"
-        >
-          <PlusCircle size={16} /> Post Direct Job / Hiring Alert
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            to="/govt-jobs"
+            className="btn-secondary text-sm flex items-center gap-2 py-2.5 px-4 shadow-2xs"
+          >
+            <Landmark size={16} /> Manage Govt Vacancies
+          </Link>
+          <Link
+            to="/employer/post-job"
+            className="btn-primary text-sm flex items-center gap-2 py-2.5 px-4 shadow-sm"
+          >
+            <PlusCircle size={16} /> Post Direct Job / Hiring Alert
+          </Link>
+        </div>
       </div>
 
       {stats && (
