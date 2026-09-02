@@ -67,6 +67,73 @@ export const updateUserStatus = asyncHandler(async (req, res) => {
   res.json({ message: "User status updated", user });
 });
 
+const sendRoleUpdateEmail = async (user, newRole, previousRole) => {
+  try {
+    const isUpgradedToAdmin = newRole === "admin";
+    const subject = isUpgradedToAdmin
+      ? "🎉 You have been granted Admin privileges on AgriYuvaa"
+      : `ℹ️ Your AgriYuvaa account role has been updated to ${newRole === "seeker" ? "Job Seeker" : "Employer"}`;
+
+    const html = isUpgradedToAdmin
+      ? `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 12px; background-color: #ffffff;">
+          <div style="text-align: center; margin-bottom: 24px;">
+            <h2 style="color: #15803d; margin: 0; font-size: 22px;">AgriYuvaa 🌾</h2>
+            <p style="color: #6b7280; font-size: 13px; margin-top: 4px;">Role Update Notification</p>
+          </div>
+          
+          <div style="padding: 18px; background-color: #f0fdf4; border-radius: 8px; border-left: 4px solid #16a34a; margin-bottom: 20px;">
+            <h3 style="margin: 0 0 8px 0; color: #166534; font-size: 16px;">Congratulations, ${user.name}!</h3>
+            <p style="margin: 0; color: #374151; font-size: 14px; line-height: 1.5;">
+              Your registered AgriYuvaa account has been upgraded to <strong>Admin</strong> by the Super Admin.
+            </p>
+          </div>
+
+          <div style="padding: 16px; background-color: #f9fafb; border-radius: 8px; margin-bottom: 20px; font-size: 13px; color: #374151;">
+            <p style="margin: 0 0 6px 0;"><strong>How to login:</strong></p>
+            <p style="margin: 0;">Log in using your existing email (<strong>${user.email}</strong>) and your current account password. You now have access to:</p>
+            <ul style="margin: 8px 0 0 0; padding-left: 20px; color: #4b5563;">
+              <li>Admin Dashboard & platform stats</li>
+              <li>Employer verification approvals</li>
+              <li>Job listing reviews & moderation</li>
+              <li>Direct job posting without moderation</li>
+            </ul>
+          </div>
+
+          <div style="text-align: center; margin-top: 24px;">
+            <a href="https://frontend-lime-nine-60.vercel.app/admin" style="display: inline-block; background-color: #15803d; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px;">Access Admin Dashboard →</a>
+          </div>
+        </div>
+      `
+      : `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 12px; background-color: #ffffff;">
+          <div style="text-align: center; margin-bottom: 24px;">
+            <h2 style="color: #15803d; margin: 0; font-size: 22px;">AgriYuvaa 🌾</h2>
+            <p style="color: #6b7280; font-size: 13px; margin-top: 4px;">Account Role Update</p>
+          </div>
+          
+          <div style="padding: 18px; background-color: #f9fafb; border-radius: 8px; border-left: 4px solid #6b7280; margin-bottom: 20px;">
+            <h3 style="margin: 0 0 8px 0; color: #111827; font-size: 16px;">Hello, ${user.name}</h3>
+            <p style="margin: 0; color: #374151; font-size: 14px; line-height: 1.5;">
+              Your AgriYuvaa account role has been updated from <strong>${previousRole}</strong> to <strong>${newRole === "seeker" ? "Job Seeker" : "Employer"}</strong>.
+            </p>
+          </div>
+
+          <p style="font-size: 13px; color: #4b5563;">You can continue logging in with your registered email and password to access your dashboard.</p>
+
+          <div style="text-align: center; margin-top: 24px;">
+            <a href="https://frontend-lime-nine-60.vercel.app/login" style="display: inline-block; background-color: #15803d; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px;">Go to AgriYuvaa →</a>
+          </div>
+        </div>
+      `;
+
+    await sendEmail({ to: user.email, subject, html });
+    console.log(`Role update email sent to ${user.email} (new role: ${newRole})`);
+  } catch (err) {
+    console.error(`Failed to send role update email to ${user.email}:`, err);
+  }
+};
+
 // @desc  Upgrade an existing registered user to Admin (Super Admin only)
 // @route POST /api/admin/admins
 export const createAdmin = asyncHandler(async (req, res) => {
@@ -100,40 +167,7 @@ export const createAdmin = asyncHandler(async (req, res) => {
   await logAction(req.user, "upgrade_to_admin", "User", user._id, { previousRole, newRole: "admin" });
 
   // 📧 Send email notification to the newly upgraded admin
-  sendEmail({
-    to: user.email,
-    subject: "🎉 You have been granted Admin privileges on AgriYuvaa",
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 12px; background-color: #ffffff;">
-        <div style="text-align: center; margin-bottom: 24px;">
-          <h2 style="color: #15803d; margin: 0; font-size: 22px;">AgriYuvaa 🌾</h2>
-          <p style="color: #6b7280; font-size: 13px; margin-top: 4px;">Role Update Notification</p>
-        </div>
-        
-        <div style="padding: 18px; background-color: #f0fdf4; border-radius: 8px; border-left: 4px solid #16a34a; margin-bottom: 20px;">
-          <h3 style="margin: 0 0 8px 0; color: #166534; font-size: 16px;">Congratulations, ${user.name}!</h3>
-          <p style="margin: 0; color: #374151; font-size: 14px; line-height: 1.5;">
-            Your registered AgriYuvaa account has been upgraded to <strong>Admin</strong> by the Super Admin.
-          </p>
-        </div>
-
-        <div style="padding: 16px; background-color: #f9fafb; border-radius: 8px; margin-bottom: 20px; font-size: 13px; color: #374151;">
-          <p style="margin: 0 0 6px 0;"><strong>How to login:</strong></p>
-          <p style="margin: 0;">Log in using your existing email (<strong>${user.email}</strong>) and your current account password. You now have full access to:</p>
-          <ul style="margin: 8px 0 0 0; padding-left: 20px; color: #4b5563;">
-            <li>Admin Dashboard & analytics</li>
-            <li>Employer verification approvals</li>
-            <li>Job listing reviews & moderation</li>
-            <li>Direct job posting without moderation</li>
-          </ul>
-        </div>
-
-        <div style="text-align: center; margin-top: 24px;">
-          <a href="https://frontend-lime-nine-60.vercel.app/admin" style="display: inline-block; background-color: #15803d; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px;">Access Admin Dashboard →</a>
-        </div>
-      </div>
-    `,
-  }).catch((err) => console.error("Admin upgrade email notification error:", err));
+  await sendRoleUpdateEmail(user, "admin", previousRole);
 
   res.json({
     message: `"${user.name}" (${user.email}) has been successfully upgraded to Admin!`,
@@ -166,6 +200,9 @@ export const updateUserRole = asyncHandler(async (req, res) => {
   await user.save();
 
   await logAction(req.user, "update_user_role", "User", user._id, { previousRole, newRole: role });
+
+  // 📧 Send email notification on role change (promotion or demotion)
+  await sendRoleUpdateEmail(user, role, previousRole);
 
   res.json({ message: `User role updated to ${role}`, user });
 });
