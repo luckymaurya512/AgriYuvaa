@@ -58,9 +58,14 @@ const SeekerDashboard = () => {
     loadData();
   }, []);
 
-  const handleResumeUpload = async (e) => {
-    const file = e.target.files?.[0];
+  const [isDragging, setIsDragging] = useState(false);
+
+  const processResumeFile = async (file) => {
     if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      alert("File size exceeds 10MB. Please choose a smaller PDF or document.");
+      return;
+    }
     setUploadingResume(true);
     try {
       const res = await uploadSeekerResume(file);
@@ -71,6 +76,31 @@ const SeekerDashboard = () => {
     } finally {
       setUploadingResume(false);
     }
+  };
+
+  const handleResumeUpload = (e) => {
+    const file = e.target.files?.[0];
+    processResumeFile(file);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    const file = e.dataTransfer?.files?.[0];
+    processResumeFile(file);
   };
 
   const handleUnfollow = async (empId) => {
@@ -368,10 +398,25 @@ const SeekerDashboard = () => {
                 Upload / Update PDF Resume
               </label>
 
-              <label className="border-2 border-dashed border-gray-300 hover:border-emerald-500 rounded-2xl p-6 flex flex-col items-center justify-center gap-2 bg-gray-50/50 hover:bg-emerald-50/30 cursor-pointer transition-all">
+              <label
+                onDragOver={handleDragOver}
+                onDragEnter={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                className={`border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all ${
+                  isDragging
+                    ? "border-emerald-600 bg-emerald-100/70 scale-[1.02] shadow-sm"
+                    : "border-gray-300 hover:border-emerald-500 bg-gray-50/50 hover:bg-emerald-50/30"
+                }`}
+              >
                 {uploadingResume ? (
                   <div className="flex items-center gap-2 text-sm font-bold text-emerald-800 py-4">
                     <Loader2 size={20} className="animate-spin text-emerald-600" /> Uploading resume...
+                  </div>
+                ) : isDragging ? (
+                  <div className="flex flex-col items-center gap-1 text-emerald-800 py-3 animate-bounce">
+                    <UploadCloud size={32} className="text-emerald-600" />
+                    <p className="text-sm font-bold">Drop resume file here to upload</p>
                   </div>
                 ) : (
                   <>
@@ -379,7 +424,7 @@ const SeekerDashboard = () => {
                       <UploadCloud size={24} />
                     </div>
                     <p className="text-sm font-bold text-brand-black text-center">
-                      Click to upload new resume
+                      Click to upload or drag & drop resume
                     </p>
                     <p className="text-xs text-gray-500 text-center">
                       PDF, DOCX, or DOC (Max 10MB)

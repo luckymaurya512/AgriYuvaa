@@ -82,8 +82,9 @@ const JobDetails = () => {
       .finally(() => setLoading(false));
   }, [id, user]);
 
-  const handleFileUpload = async (e) => {
-    const file = e.target.files?.[0];
+  const [isDragging, setIsDragging] = useState(false);
+
+  const processFile = async (file) => {
     if (!file) return;
 
     if (file.size > 10 * 1024 * 1024) {
@@ -102,6 +103,31 @@ const JobDetails = () => {
     } finally {
       setUploadingResume(false);
     }
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    processFile(file);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    const file = e.dataTransfer?.files?.[0];
+    processFile(file);
   };
 
   const handleApply = async (e) => {
@@ -534,16 +560,31 @@ const JobDetails = () => {
                             </label>
                           </div>
                         ) : (
-                          <label className="border-2 border-dashed border-gray-300 hover:border-emerald-500 rounded-xl p-4 flex flex-col items-center justify-center gap-1.5 bg-gray-50/50 hover:bg-emerald-50/30 cursor-pointer transition-all">
+                          <label
+                            onDragOver={handleDragOver}
+                            onDragEnter={handleDragOver}
+                            onDragLeave={handleDragLeave}
+                            onDrop={handleDrop}
+                            className={`border-2 border-dashed rounded-xl p-5 flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all ${
+                              isDragging
+                                ? "border-emerald-600 bg-emerald-100/70 scale-[1.02] shadow-sm"
+                                : "border-gray-300 hover:border-emerald-500 bg-gray-50/50 hover:bg-emerald-50/30"
+                            }`}
+                          >
                             {uploadingResume ? (
                               <div className="flex items-center gap-2 text-xs font-bold text-emerald-800 py-2">
                                 <Loader2 size={18} className="animate-spin text-emerald-600" /> Uploading resume...
+                              </div>
+                            ) : isDragging ? (
+                              <div className="flex flex-col items-center gap-1 text-emerald-800 py-1 animate-bounce">
+                                <UploadCloud size={28} className="text-emerald-600" />
+                                <p className="text-xs font-bold">Drop resume file here to upload</p>
                               </div>
                             ) : (
                               <>
                                 <UploadCloud size={24} className="text-gray-400" />
                                 <p className="text-xs font-bold text-brand-black text-center">
-                                  Click to browse or drop resume
+                                  Click to browse or drag & drop resume
                                 </p>
                                 <p className="text-[10px] text-gray-500 text-center">
                                   PDF, DOCX, or DOC (Max 10MB)
