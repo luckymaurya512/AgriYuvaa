@@ -6,6 +6,8 @@ import Application from "../models/Application.js";
 import AuditLog from "../models/AuditLog.js";
 import { broadcastNewJobAlert } from "../utils/webPush.js";
 
+import sendEmail from "../utils/sendEmail.js";
+
 const logAction = async (actor, action, targetType, targetId, meta = {}) => {
   await AuditLog.create({ actor: actor._id, action, targetType, targetId, meta });
 };
@@ -65,18 +67,107 @@ export const updateUserStatus = asyncHandler(async (req, res) => {
   res.json({ message: "User status updated", user });
 });
 
-// @desc  Create a new Admin account (Super Admin only)
+// @desc  Upgrade an existing registered user to Admin (Super Admin only)
 // @route POST /api/admin/admins
 export const createAdmin = asyncHandler(async (req, res) => {
-  const { name, email, password, phone } = req.body;
-  const existing = await User.findOne({ email: email.toLowerCase() });
-  if (existing) {
+  const { email } = req.body;
+  if (!email || !email.trim()) {
     res.status(400);
-    throw new Error("An account with this email already exists");
+    throw new Error("Please enter the registered user's email address");
   }
-  const admin = await User.create({ name, email, phone, passwordHash: password, role: "admin" });
-  await logAction(req.user, "create_admin", "User", admin._id);
-  res.status(201).json({ id: admin._id, name: admin.name, email: admin.email, role: admin.role });
+
+  const user = await User.findOne({ email: email.trim().toLowerCase() });
+  if (!user) {
+    res.status(404);
+    throw new Error(`No registered user found with email "${email}". The user must create an account first.`);
+  }
+
+  if (user.role === "admin") {
+    res.status(400);
+    throw new Error(`"${user.name}" (${user.email}) is already an Admin.`);
+  }
+
+  if (user.role === "superadmin") {
+    res.status(400);
+    throw new Error("This user is already a Super Admin.");
+  }
+
+  const previousRole = user.role;
+  user.role = "admin";
+  user.status = "active";
+  await user.save();
+
+  await logAction(req.user, "upgrade_to_admin", "User", user._id, { previousRole, newRole: "admin" });
+
+  // 📧 Send email notification to the newly upgraded admin
+  sendEmail({
+    to: user.email,
+    subject: "🎉 You have been granted Admin privileges on AgriYuvaa",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 12px; background-color: #ffffff;">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <h2 style="color: #15803d; margin: 0; font-size: 22px;">AgriYuvaa 🌾</h2>
+          <p style="color: #6b7280; font-size: 13px; margin-top: 4px;">Role Update Notification</p>
+        </div>
+        
+        <div style="padding: 18px; background-color: #f0fdf4; border-radius: 8px; border-left: 4px solid #16a34a; margin-bottom: 20px;">
+          <h3 style="margin: 0 0 8px 0; color: #166534; font-size: 16px;">Congratulations, ${user.name}!</h3>
+          <p style="margin: 0; color: #374151; font-size: 14px; line-height: 1.5;">
+            Your registered AgriYuvaa account has been upgraded to <strong>Admin</strong> by the Super Admin.
+          </p>
+        </div>
+
+        <div style="padding: 16px; background-color: #f9fafb; border-radius: 8px; margin-bottom: 20px; font-size: 13px; color: #374151;">
+          <p style="margin: 0 0 6px 0;"><strong>How to login:</strong></p>
+          <p style="margin: 0;">Log in using your existing email (<strong>${user.email}</strong>) and your current account password. You now have full access to:</p>
+          <ul style="margin: 8px 0 0 0; padding-left: 20px; color: #4b5563;">
+            <li>Admin Dashboard & analytics</li>
+            <li>Employer verification approvals</li>
+            <li>Job listing reviews & moderation</li>
+            <li>Direct job posting without moderation</li>
+          </ul>
+        </div>
+
+        <div style="text-align: center; margin-top: 24px;">
+          <a href="https://frontend-lime-nine-60.vercel.app/admin" style="display: inline-block; background-color: #15803d; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px;">Access Admin Dashboard →</a>
+        </div>
+      </div>
+    `,
+  }).catch((err) => console.error("Admin upgrade email notification error:", err));
+
+  res.json({
+    message: `"${user.name}" (${user.email}) has been successfully upgraded to Admin!`,
+    user: { id: user._id, name: user.name, email: user.email, role: user.role },
+  });
+});
+
+// @desc  Update user role (Super Admin only - e.g. demote admin to seeker or promote)
+// @route PATCH /api/admin/users/:id/role
+export const updateUserRole = asyncHandler(async (req, res) => {
+  const { role } = req.body;
+  if (!["seeker", "employer", "admin"].includes(role)) {
+    res.status(400);
+    throw new Error("Invalid role specified");
+  }
+
+  const user = await User.findById(req.params.id);
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  }
+
+  if (user.role === "superadmin") {
+    res.status(403);
+    throw new Error("Super Admin role cannot be modified");
+  }
+
+  const previousRole = user.role;
+  user.role = role;
+  await user.save();
+
+  await logAction(req.user, "update_user_role", "User", user._id, { previousRole, newRole: role });
+
+  res.json({ message: `User role updated to ${role}`, user });
 });
 
 // @desc  List pending employer verifications

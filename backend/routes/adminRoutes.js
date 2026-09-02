@@ -1,9 +1,9 @@
-import express from "express";
 import {
   getPlatformStats,
   listUsers,
   updateUserStatus,
   createAdmin,
+  updateUserRole,
   getPendingEmployers,
   verifyEmployer,
   getPendingJobs,
@@ -40,5 +40,6 @@ router.get("/audit-logs", getAuditLogs);
 
 // Super Admin only
 router.post("/admins", authorize("superadmin"), createAdmin);
+router.patch("/users/:id/role", authorize("superadmin"), updateUserRole);
 
 export default router;

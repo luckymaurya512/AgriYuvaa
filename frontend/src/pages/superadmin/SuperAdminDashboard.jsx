@@ -1,21 +1,31 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { PlusCircle, UserPlus } from "lucide-react";
-import { fetchPlatformStats, fetchUsers, updateUserStatus, createAdmin } from "../../services/adminService.js";
+import { PlusCircle, ShieldCheck, ShieldAlert, CheckCircle2, UserCheck, AlertCircle } from "lucide-react";
+import {
+  fetchPlatformStats,
+  fetchUsers,
+  updateUserStatus,
+  createAdmin,
+  updateUserRole,
+} from "../../services/adminService.js";
 
 const SuperAdminDashboard = () => {
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
   const [showAdminForm, setShowAdminForm] = useState(false);
-  const [adminForm, setAdminForm] = useState({ name: "", email: "", password: "" });
+  const [adminEmail, setAdminEmail] = useState("");
   const [error, setError] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
+  const [loadingAction, setLoadingAction] = useState(false);
 
   const loadAll = () => {
     fetchPlatformStats().then(setStats).catch(() => {});
     fetchUsers().then(setUsers).catch(() => {});
   };
 
-  useEffect(() => { loadAll(); }, []);
+  useEffect(() => {
+    loadAll();
+  }, []);
 
   const handleStatusToggle = async (user) => {
     const next = user.status === "active" ? "suspended" : "active";
@@ -23,16 +33,34 @@ const SuperAdminDashboard = () => {
     loadAll();
   };
 
-  const handleCreateAdmin = async (e) => {
-    e.preventDefault();
-    setError("");
+  const handleRoleToggle = async (user, newRole) => {
+    if (!window.confirm(`Are you sure you want to change ${user.name}'s role to "${newRole}"?`)) return;
     try {
-      await createAdmin(adminForm);
-      setShowAdminForm(false);
-      setAdminForm({ name: "", email: "", password: "" });
+      await updateUserRole(user._id, newRole);
+      setSuccessMsg(`Role for ${user.name} updated to "${newRole}".`);
+      setTimeout(() => setSuccessMsg(""), 4000);
       loadAll();
     } catch (err) {
-      setError(err.response?.data?.message || "Could not create admin");
+      alert(err.response?.data?.message || "Failed to update role");
+    }
+  };
+
+  const handleUpgradeAdmin = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccessMsg("");
+    setLoadingAction(true);
+    try {
+      const res = await createAdmin({ email: adminEmail });
+      setSuccessMsg(res.message || "User successfully upgraded to Admin! ✉️ Confirmation email sent.");
+      setShowAdminForm(false);
+      setAdminEmail("");
+      loadAll();
+      setTimeout(() => setSuccessMsg(""), 5000);
+    } catch (err) {
+      setError(err.response?.data?.message || "Could not upgrade user to Admin");
+    } finally {
+      setLoadingAction(false);
     }
   };
 
@@ -41,7 +69,7 @@ const SuperAdminDashboard = () => {
       <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-display font-bold mb-1">Super Admin Dashboard</h1>
-          <p className="text-sm text-brand-grey">Full platform control and oversight</p>
+          <p className="text-sm text-brand-grey">Full platform control, user roles, and moderation oversight</p>
         </div>
         <div className="flex items-center gap-3">
           <Link
@@ -50,29 +78,69 @@ const SuperAdminDashboard = () => {
           >
             <PlusCircle size={16} /> Post Direct Job
           </Link>
-          <button onClick={() => setShowAdminForm(!showAdminForm)} className="btn-secondary text-sm flex items-center gap-2 py-2.5 px-4">
-            <UserPlus size={16} /> + New Admin
+          <button
+            onClick={() => {
+              setShowAdminForm(!showAdminForm);
+              setError("");
+            }}
+            className="btn-secondary text-sm flex items-center gap-2 py-2.5 px-4"
+          >
+            <ShieldCheck size={16} className="text-brand-green" /> + Upgrade User to Admin
           </button>
         </div>
       </div>
 
+      {successMsg && (
+        <div className="p-4 mb-6 bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-xl text-xs font-semibold flex items-center gap-2 shadow-xs">
+          <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
+          <span>{successMsg}</span>
+        </div>
+      )}
+
       {showAdminForm && (
-        <form onSubmit={handleCreateAdmin} className="card p-5 mb-8 grid md:grid-cols-4 gap-3 items-end">
-          <div>
-            <label className="text-xs font-semibold text-brand-grey uppercase">Name</label>
-            <input required className="input-field mt-1 text-sm" value={adminForm.name} onChange={(e) => setAdminForm({ ...adminForm, name: e.target.value })} />
+        <div className="card p-6 mb-8 border-2 border-emerald-100 bg-emerald-50/20 space-y-4">
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <h3 className="font-display font-bold text-base text-brand-black flex items-center gap-2">
+                <ShieldCheck size={18} className="text-brand-green" /> Upgrade Registered User to Admin
+              </h3>
+              <p className="text-xs text-brand-grey mt-0.5">
+                The user must have an existing registered account. Once upgraded, they can log in using their own email and password to access the Admin Panel.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowAdminForm(false)}
+              className="text-xs text-brand-grey hover:text-brand-black"
+            >
+              Cancel
+            </button>
           </div>
-          <div>
-            <label className="text-xs font-semibold text-brand-grey uppercase">Email</label>
-            <input required type="email" className="input-field mt-1 text-sm" value={adminForm.email} onChange={(e) => setAdminForm({ ...adminForm, email: e.target.value })} />
-          </div>
-          <div>
-            <label className="text-xs font-semibold text-brand-grey uppercase">Password</label>
-            <input required type="password" className="input-field mt-1 text-sm" value={adminForm.password} onChange={(e) => setAdminForm({ ...adminForm, password: e.target.value })} />
-          </div>
-          <button type="submit" className="btn-secondary h-fit">Create Admin</button>
-          {error && <p className="text-xs text-red-600 md:col-span-4">{error}</p>}
-        </form>
+
+          <form onSubmit={handleUpgradeAdmin} className="flex flex-col sm:flex-row gap-3">
+            <input
+              required
+              type="email"
+              placeholder="Enter registered user's email address (e.g. name@gmail.com)"
+              className="input-field text-sm bg-white flex-1"
+              value={adminEmail}
+              onChange={(e) => setAdminEmail(e.target.value)}
+            />
+            <button
+              disabled={loadingAction}
+              type="submit"
+              className="btn-primary text-xs py-2.5 px-5 shrink-0 flex items-center justify-center gap-1.5"
+            >
+              {loadingAction ? "Upgrading..." : "Grant Admin Privileges"}
+            </button>
+          </form>
+
+          {error && (
+            <p className="text-xs text-red-600 font-medium flex items-center gap-1.5">
+              <AlertCircle size={14} /> {error}
+            </p>
+          )}
+        </div>
       )}
 
       {stats && (
@@ -85,41 +153,91 @@ const SuperAdminDashboard = () => {
       )}
 
       <div className="card overflow-hidden">
-        <div className="px-5 py-4 border-b border-brand-border font-semibold text-sm">All Users</div>
-        <table className="w-full text-sm">
-          <thead className="bg-brand-surface text-xs uppercase text-brand-grey">
-            <tr>
-              <th className="text-left px-5 py-3">Name</th>
-              <th className="text-left px-5 py-3">Email</th>
-              <th className="text-left px-5 py-3">Role</th>
-              <th className="text-left px-5 py-3">Status</th>
-              <th className="text-left px-5 py-3">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((u) => (
-              <tr key={u._id} className="border-t border-brand-border">
-                <td className="px-5 py-3 font-medium">{u.name}</td>
-                <td className="px-5 py-3 text-brand-grey">{u.email}</td>
-                <td className="px-5 py-3 capitalize text-brand-grey">{u.role}</td>
-                <td className="px-5 py-3">
-                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full capitalize ${
-                    u.status === "active" ? "bg-brand-green-light text-brand-green-dark" : "bg-red-100 text-red-700"
-                  }`}>
-                    {u.status}
-                  </span>
-                </td>
-                <td className="px-5 py-3">
-                  {u.role !== "superadmin" && (
-                    <button onClick={() => handleStatusToggle(u)} className="text-xs font-semibold text-brand-green-dark hover:underline">
-                      {u.status === "active" ? "Suspend" : "Reactivate"}
-                    </button>
-                  )}
-                </td>
+        <div className="px-5 py-4 border-b border-brand-border font-semibold text-sm flex items-center justify-between">
+          <span>All Registered Users ({users.length})</span>
+          <span className="text-xs text-brand-grey font-normal">Super Admin role manager</span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-brand-surface text-xs uppercase text-brand-grey">
+              <tr>
+                <th className="text-left px-5 py-3">Name</th>
+                <th className="text-left px-5 py-3">Email</th>
+                <th className="text-left px-5 py-3">Role</th>
+                <th className="text-left px-5 py-3">Status</th>
+                <th className="text-right px-5 py-3">Role Actions</th>
+                <th className="text-right px-5 py-3">Account Status</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {users.map((u) => (
+                <tr key={u._id} className="border-t border-brand-border hover:bg-gray-50/50 transition-colors">
+                  <td className="px-5 py-3 font-medium text-brand-black">{u.name}</td>
+                  <td className="px-5 py-3 text-brand-grey">{u.email}</td>
+                  <td className="px-5 py-3">
+                    <span
+                      className={`text-[11px] font-bold px-2.5 py-0.5 rounded-md capitalize ${
+                        u.role === "superadmin"
+                          ? "bg-purple-100 text-purple-900 border border-purple-200"
+                          : u.role === "admin"
+                          ? "bg-emerald-100 text-emerald-900 border border-emerald-200"
+                          : u.role === "employer"
+                          ? "bg-blue-50 text-blue-800 border border-blue-200"
+                          : "bg-gray-100 text-gray-700"
+                      }`}
+                    >
+                      {u.role}
+                    </span>
+                  </td>
+                  <td className="px-5 py-3">
+                    <span
+                      className={`text-xs font-semibold px-2.5 py-1 rounded-full capitalize ${
+                        u.status === "active"
+                          ? "bg-brand-green-light text-brand-green-dark"
+                          : "bg-red-100 text-red-700"
+                      }`}
+                    >
+                      {u.status}
+                    </span>
+                  </td>
+                  <td className="px-5 py-3 text-right">
+                    {u.role === "admin" ? (
+                      <button
+                        onClick={() => handleRoleToggle(u, "seeker")}
+                        className="text-xs font-semibold text-amber-700 hover:text-amber-900 hover:underline inline-flex items-center gap-1"
+                        title="Demote this admin back to standard Job Seeker"
+                      >
+                        <ShieldAlert size={13} /> Demote to Seeker
+                      </button>
+                    ) : u.role !== "superadmin" ? (
+                      <button
+                        onClick={() => handleRoleToggle(u, "admin")}
+                        className="text-xs font-semibold text-emerald-800 hover:text-emerald-950 hover:underline inline-flex items-center gap-1"
+                        title="Grant full Admin privileges"
+                      >
+                        <ShieldCheck size={13} className="text-emerald-600" /> Make Admin
+                      </button>
+                    ) : (
+                      <span className="text-xs text-gray-400 italic">Primary Owner</span>
+                    )}
+                  </td>
+                  <td className="px-5 py-3 text-right">
+                    {u.role !== "superadmin" && (
+                      <button
+                        onClick={() => handleStatusToggle(u)}
+                        className={`text-xs font-semibold hover:underline ${
+                          u.status === "active" ? "text-red-600" : "text-brand-green-dark"
+                        }`}
+                      >
+                        {u.status === "active" ? "Suspend" : "Reactivate"}
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
