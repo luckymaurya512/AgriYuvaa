@@ -20,13 +20,15 @@ router.get(
   authenticate,
   authorize("seeker"),
   asyncHandler(async (req, res) => {
-    let profile = await SeekerProfile.findOne({ user: req.user._id }).populate({
-      path: "savedJobs",
-      populate: { path: "employer", select: "name" },
-    });
+    let profile = await SeekerProfile.findOne({ user: req.user._id })
+      .populate({
+        path: "savedJobs",
+        populate: { path: "employer", select: "name" },
+      })
+      .populate("followedEmployers", "companyName sector location logo");
 
     if (!profile) {
-      profile = await SeekerProfile.create({ user: req.user._id, savedJobs: [] });
+      profile = await SeekerProfile.create({ user: req.user._id, savedJobs: [], followedEmployers: [] });
     }
 
     res.json(profile);
@@ -104,6 +106,65 @@ router.post(
     profile.resumeData = req.body;
     await profile.save();
     res.json({ message: "Resume saved successfully", resumeData: profile.resumeData });
+  })
+);
+
+// @route POST /api/users/seeker/me/toggle-follow-employer/:employerId
+router.post(
+  "/seeker/me/toggle-follow-employer/:employerId",
+  authenticate,
+  authorize("seeker"),
+  asyncHandler(async (req, res) => {
+    const { employerId } = req.params;
+    const profile = await getOrCreateProfile(req.user._id);
+
+    if (!profile.followedEmployers) profile.followedEmployers = [];
+    const stringIds = profile.followedEmployers.map((id) => id.toString());
+    const isFollowing = stringIds.includes(employerId);
+
+    if (isFollowing) {
+      profile.followedEmployers = profile.followedEmployers.filter((id) => id.toString() !== employerId);
+    } else {
+      profile.followedEmployers.push(employerId);
+    }
+
+    await profile.save();
+
+    const updatedProfile = await SeekerProfile.findById(profile._id).populate(
+      "followedEmployers",
+      "companyName sector location logo"
+    );
+
+    res.json({
+      followedEmployers: updatedProfile.followedEmployers,
+      isFollowing: !isFollowing,
+    });
+  })
+);
+
+// @route POST /api/users/seeker/me/push-subscription
+router.post(
+  "/seeker/me/push-subscription",
+  authenticate,
+  authorize("seeker"),
+  asyncHandler(async (req, res) => {
+    const { subscription } = req.body;
+    if (!subscription || !subscription.endpoint) {
+      res.status(400);
+      throw new Error("Invalid push subscription");
+    }
+
+    const profile = await getOrCreateProfile(req.user._id);
+    if (!profile.pushSubscriptions) profile.pushSubscriptions = [];
+
+    // Filter out existing duplicate endpoint if present
+    profile.pushSubscriptions = profile.pushSubscriptions.filter(
+      (sub) => sub.endpoint !== subscription.endpoint
+    );
+    profile.pushSubscriptions.push(subscription);
+
+    await profile.save();
+    res.json({ message: "Push notification subscription saved successfully" });
   })
 );
 

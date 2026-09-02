@@ -1,7 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Menu, X, User, LogOut } from "lucide-react";
+import { Menu, X, User, LogOut, Bell, Check, ExternalLink, Sparkles } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
+import {
+  fetchNotifications,
+  markNotificationRead,
+  markAllNotificationsRead,
+  enablePushNotifications,
+} from "../services/notificationService.js";
 import logo from "../assets/logo.png";
 
 const dashboardPathForRole = (role) => {
@@ -20,7 +26,67 @@ const dashboardPathForRole = (role) => {
 const Navbar = () => {
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [pushStatus, setPushStatus] = useState("");
+  const notifRef = useRef(null);
   const navigate = useNavigate();
+
+  const loadNotifications = () => {
+    if (user) {
+      fetchNotifications()
+        .then((data) => {
+          setNotifications(data.notifications || []);
+          setUnreadCount(data.unreadCount || 0);
+        })
+        .catch(() => {});
+    }
+  };
+
+  useEffect(() => {
+    loadNotifications();
+  }, [user]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (notifRef.current && !notifRef.current.contains(e.target)) {
+        setNotifOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleEnablePush = async () => {
+    setPushStatus("requesting");
+    const res = await enablePushNotifications();
+    if (res.success) {
+      setPushStatus("enabled");
+      alert("✅ Web Push Notifications enabled! You will receive instant device alerts when employers you follow post new jobs.");
+    } else {
+      setPushStatus("denied");
+      alert(res.reason || "Notification permission denied");
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    await markAllNotificationsRead().catch(() => {});
+    setUnreadCount(0);
+    setNotifications(notifications.map((n) => ({ ...n, isRead: true })));
+  };
+
+  const handleNotificationClick = async (notif) => {
+    if (!notif.isRead) {
+      await markNotificationRead(notif._id).catch(() => {});
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+    }
+    setNotifOpen(false);
+    if (notif.link) {
+      navigate(notif.link);
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -29,9 +95,8 @@ const Navbar = () => {
 
   const navLinks = [
     { label: "Find Jobs", to: "/jobs" },
-    { label: "Govt Jobs", to: "/govt-jobs" },
-    { label: "Companies", to: "/companies" },
     { label: "Resume Builder", to: "/resume-builder" },
+    { label: "Employers", to: "/employers" },
     { label: "About", to: "/about" },
   ];
 
@@ -60,6 +125,99 @@ const Navbar = () => {
         <div className="hidden md:flex items-center gap-3">
           {user ? (
             <>
+              {/* Notification Bell */}
+              <div className="relative" ref={notifRef}>
+                <button
+                  onClick={() => setNotifOpen(!notifOpen)}
+                  className="p-2 rounded-xl border border-brand-border hover:border-brand-green/50 text-gray-700 hover:text-brand-black transition-colors relative"
+                  aria-label="Notifications"
+                >
+                  <Bell size={18} />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-bold h-4 w-4 rounded-full flex items-center justify-center">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
+                </button>
+
+                {/* Notifications Dropdown */}
+                {notifOpen && (
+                  <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-xl border border-brand-border overflow-hidden z-50">
+                    <div className="p-3.5 bg-gray-50 border-b border-brand-border flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="font-display font-bold text-xs uppercase tracking-wider text-brand-black">
+                          Notifications
+                        </span>
+                        {unreadCount > 0 && (
+                          <span className="bg-red-100 text-red-700 text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                            {unreadCount} new
+                          </span>
+                        )}
+                      </div>
+                      {unreadCount > 0 && (
+                        <button
+                          onClick={handleMarkAllRead}
+                          className="text-[11px] font-semibold text-brand-green-dark hover:underline flex items-center gap-1"
+                        >
+                          <Check size={12} /> Mark all read
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Enable Device Push Notification Banner */}
+                    <div className="p-3 bg-emerald-50/70 border-b border-emerald-100 flex items-center justify-between gap-2">
+                      <div className="text-[11px] text-emerald-950 leading-tight">
+                        <strong>Get Instant Device Alerts</strong>
+                        <p className="text-[10px] text-emerald-800/80">Push alerts on mobile & desktop</p>
+                      </div>
+                      <button
+                        onClick={handleEnablePush}
+                        className="text-[11px] font-bold bg-emerald-800 text-white px-2.5 py-1 rounded-lg hover:bg-emerald-900 transition-colors shrink-0 shadow-2xs"
+                      >
+                        Enable 🔔
+                      </button>
+                    </div>
+
+                    {/* Notifications List */}
+                    <div className="max-h-80 overflow-y-auto divide-y divide-gray-100">
+                      {notifications.length === 0 ? (
+                        <div className="p-6 text-center text-xs text-brand-grey space-y-1">
+                          <Bell size={20} className="mx-auto text-gray-300" />
+                          <p>No notifications yet.</p>
+                          <p className="text-[11px]">Follow employers to get notified when they post jobs!</p>
+                        </div>
+                      ) : (
+                        notifications.map((n) => (
+                          <div
+                            key={n._id}
+                            onClick={() => handleNotificationClick(n)}
+                            className={`p-3.5 text-xs hover:bg-gray-50 cursor-pointer transition-colors space-y-1 ${
+                              !n.isRead ? "bg-emerald-50/30 font-medium" : ""
+                            }`}
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <p className="font-semibold text-brand-black">{n.title}</p>
+                              {!n.isRead && (
+                                <span className="h-2 w-2 rounded-full bg-emerald-600 shrink-0 mt-1"></span>
+                              )}
+                            </div>
+                            <p className="text-gray-600 text-[11px] leading-relaxed">{n.message}</p>
+                            <span className="text-[10px] text-brand-grey block">
+                              {new Date(n.createdAt).toLocaleDateString("en-IN", {
+                                day: "numeric",
+                                month: "short",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <Link to={dashboardPathForRole(user.role)} className="btn-secondary text-sm py-2">
                 <User size={16} /> Dashboard
               </Link>

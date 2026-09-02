@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Bookmark, Briefcase, MapPin, Trash2, ArrowRight } from "lucide-react";
+import { Bookmark, Briefcase, MapPin, Trash2, ArrowRight, Building2, Bell, ExternalLink } from "lucide-react";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { fetchMyApplications } from "../../services/jobService.js";
 import { fetchSeekerProfile, toggleSaveJob } from "../../services/userService.js";
+import { toggleFollowEmployer } from "../../services/notificationService.js";
 import JobCard from "../../components/JobCard.jsx";
 
 const statusColors = {
@@ -16,9 +17,10 @@ const statusColors = {
 
 const SeekerDashboard = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState("applications"); // "applications" | "saved"
+  const [activeTab, setActiveTab] = useState("applications"); // "applications" | "saved" | "following"
   const [applications, setApplications] = useState([]);
   const [savedJobs, setSavedJobs] = useState([]);
+  const [followedEmployers, setFollowedEmployers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const loadData = async () => {
@@ -30,6 +32,7 @@ const SeekerDashboard = () => {
       ]);
       setApplications(apps || []);
       setSavedJobs(profile?.savedJobs || []);
+      setFollowedEmployers(profile?.followedEmployers || []);
     } finally {
       setLoading(false);
     }
@@ -39,12 +42,12 @@ const SeekerDashboard = () => {
     loadData();
   }, []);
 
-  const handleRemoveSavedJob = async (jobId) => {
+  const handleUnfollow = async (empId) => {
     try {
-      await toggleSaveJob(jobId);
-      setSavedJobs((prev) => prev.filter((j) => (j._id || j) !== jobId));
+      await toggleFollowEmployer(empId);
+      setFollowedEmployers((prev) => prev.filter((e) => (e._id || e) !== empId));
     } catch (err) {
-      console.error("Failed to remove saved job:", err);
+      console.error("Failed to unfollow employer:", err);
     }
   };
 
@@ -54,7 +57,7 @@ const SeekerDashboard = () => {
         Welcome back, {user?.name?.split(" ")[0]}
       </h1>
       <p className="text-sm text-brand-grey mb-8">
-        Track your job applications, saved postings, and resume.
+        Track your job applications, saved postings, followed employers, and resume.
       </p>
 
       {/* Top 4 Stats Cards */}
@@ -78,15 +81,15 @@ const SeekerDashboard = () => {
           </p>
           <p className="text-3xl font-display font-bold mt-2 text-brand-black">{savedJobs.length}</p>
         </div>
-        <Link
-          to="/resume-builder"
-          className="card p-5 flex flex-col justify-center bg-emerald-50 border-emerald-200 hover:border-emerald-400 text-emerald-900 group transition-all"
+        <div
+          onClick={() => setActiveTab("following")}
+          className="card p-5 cursor-pointer hover:border-emerald-400 transition-colors"
         >
-          <p className="text-xs font-bold uppercase tracking-wide text-emerald-700">Resume Builder</p>
-          <p className="font-semibold text-sm mt-1 text-emerald-950 group-hover:underline flex items-center justify-between">
-            Build / Print CV 📄 <ArrowRight size={15} />
+          <p className="text-xs text-brand-grey uppercase font-semibold flex items-center gap-1">
+            <Bell size={13} className="text-emerald-700" /> Followed Companies
           </p>
-        </Link>
+          <p className="text-3xl font-display font-bold mt-2 text-brand-black">{followedEmployers.length}</p>
+        </div>
       </div>
 
       {/* Tab Navigation */}
@@ -116,6 +119,20 @@ const SeekerDashboard = () => {
           Saved Jobs
           <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold">
             {savedJobs.length}
+          </span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("following")}
+          className={`px-5 py-3 text-sm font-bold border-b-2 transition-all flex items-center gap-2 ${
+            activeTab === "following"
+              ? "border-brand-green text-brand-green-dark"
+              : "border-transparent text-brand-grey hover:text-brand-black"
+          }`}
+        >
+          Followed Companies
+          <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold">
+            {followedEmployers.length}
           </span>
         </button>
       </div>
@@ -221,6 +238,62 @@ const SeekerDashboard = () => {
                       }
                     }}
                   />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* TAB 3: FOLLOWED COMPANIES */}
+      {activeTab === "following" && (
+        <div>
+          {loading ? (
+            <p className="p-8 text-center text-sm text-brand-grey">Loading followed companies...</p>
+          ) : followedEmployers.length === 0 ? (
+            <div className="card p-12 text-center space-y-3">
+              <Building2 size={36} className="mx-auto text-gray-300" />
+              <p className="text-sm font-medium text-brand-black">You are not following any employers yet.</p>
+              <p className="text-xs text-brand-grey">
+                Follow your favorite farms & agri-businesses on the Employers page or Job Details page to get instant push & email alerts whenever they post jobs!
+              </p>
+              <Link to="/employers" className="btn-primary text-xs inline-flex py-2 px-4 mt-2">
+                Discover Employers
+              </Link>
+            </div>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {followedEmployers.map((emp) => (
+                <div key={emp._id} className="card p-5 flex flex-col justify-between border border-brand-border space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-emerald-50 text-emerald-800 flex items-center justify-center font-bold text-base shrink-0">
+                      {emp.companyName ? emp.companyName[0] : "E"}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-bold text-sm text-brand-black truncate">{emp.companyName}</h3>
+                      <p className="text-xs text-brand-grey">{emp.sector || "Agriculture"}</p>
+                      {emp.location && (
+                        <p className="text-xs text-brand-grey flex items-center gap-1 mt-0.5">
+                          <MapPin size={11} className="text-brand-green" /> {emp.location}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                    <button
+                      onClick={() => handleUnfollow(emp._id)}
+                      className="text-xs text-gray-500 hover:text-red-600 font-medium"
+                    >
+                      Unfollow
+                    </button>
+                    <Link
+                      to={`/jobs?keyword=${encodeURIComponent(emp.companyName)}`}
+                      className="text-xs font-bold text-brand-green-dark hover:underline flex items-center gap-1"
+                    >
+                      View Jobs →
+                    </Link>
+                  </div>
                 </div>
               ))}
             </div>

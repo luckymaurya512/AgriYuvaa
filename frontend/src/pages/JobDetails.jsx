@@ -18,7 +18,8 @@ import {
   Star,
 } from "lucide-react";
 import { fetchJobById, applyToJob } from "../services/jobService.js";
-import { toggleSaveJob, fetchSeekerProfile } from "../services/userService.js";
+import { fetchSeekerProfile, toggleSaveJob } from "../services/userService.js";
+import { toggleFollowEmployer, enablePushNotifications } from "../services/notificationService.js";
 import { useAuth } from "../context/AuthContext.jsx";
 
 const JobDetails = () => {
@@ -35,6 +36,10 @@ const JobDetails = () => {
   const [isSaved, setIsSaved] = useState(false);
   const [savingBookmark, setSavingBookmark] = useState(false);
 
+  // Follow Employer state
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followingLoading, setFollowingLoading] = useState(false);
+
   // Copy states
   const [copiedEmail, setCopiedEmail] = useState(false);
   const [copiedSubject, setCopiedSubject] = useState(false);
@@ -42,20 +47,28 @@ const JobDetails = () => {
 
   useEffect(() => {
     fetchJobById(id)
-      .then(setJob)
+      .then((fetchedJob) => {
+        setJob(fetchedJob);
+        if (user?.role === "seeker" && fetchedJob?.employer) {
+          const empId = fetchedJob.employer._id || fetchedJob.employer;
+          fetchSeekerProfile()
+            .then((profile) => {
+              if (profile?.savedJobs) {
+                const saved = profile.savedJobs.some((j) => (j._id || j).toString() === id);
+                setIsSaved(saved);
+              }
+              if (profile?.followedEmployers) {
+                const following = profile.followedEmployers.some(
+                  (e) => (e._id || e).toString() === empId.toString()
+                );
+                setIsFollowing(following);
+              }
+            })
+            .catch(() => {});
+        }
+      })
       .catch(() => setError("This job could not be found."))
       .finally(() => setLoading(false));
-
-    if (user?.role === "seeker") {
-      fetchSeekerProfile()
-        .then((profile) => {
-          if (profile?.savedJobs) {
-            const saved = profile.savedJobs.some((j) => (j._id || j).toString() === id);
-            setIsSaved(saved);
-          }
-        })
-        .catch(() => {});
-    }
   }, [id, user]);
 
   const handleApply = async (e) => {
@@ -94,6 +107,30 @@ const JobDetails = () => {
       console.error("Failed to toggle bookmark:", err);
     } finally {
       setSavingBookmark(false);
+    }
+  };
+
+  const handleToggleFollow = async () => {
+    if (!user || user.role !== "seeker") {
+      alert("Please log in as a Job Seeker to follow employers and get job alerts.");
+      return;
+    }
+    const empId = job?.employer?._id || job?.employer;
+    if (!empId) return;
+
+    setFollowingLoading(true);
+    try {
+      const res = await toggleFollowEmployer(empId);
+      setIsFollowing(res.isFollowing);
+      if (res.isFollowing) {
+        // Automatically ask for push notifications if not already enabled
+        enablePushNotifications().catch(() => {});
+        alert(`🔔 You are now following ${companyDisplayName}! You will receive instant push & email alerts when they post new jobs.`);
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to update follow status");
+    } finally {
+      setFollowingLoading(false);
     }
   };
 
@@ -149,9 +186,28 @@ const JobDetails = () => {
           </div>
 
           <h1 className="text-2xl md:text-3xl font-display font-bold mb-2">{job.title}</h1>
-          <p className="text-base font-semibold text-brand-black/90 flex items-center gap-1.5">
-            <Building2 size={18} className="text-brand-green" /> {companyDisplayName}
-          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <p className="text-base font-semibold text-brand-black/90 flex items-center gap-1.5">
+              <Building2 size={18} className="text-brand-green" /> {companyDisplayName}
+            </p>
+
+            {user?.role === "seeker" && (
+              <button
+                type="button"
+                onClick={handleToggleFollow}
+                disabled={followingLoading}
+                className={`text-xs font-bold px-2.5 py-1 rounded-lg border transition-all flex items-center gap-1 ${
+                  isFollowing
+                    ? "bg-emerald-50 text-emerald-800 border-emerald-300"
+                    : "bg-white text-gray-700 border-gray-300 hover:border-emerald-500 hover:text-emerald-800"
+                }`}
+                title={isFollowing ? "You follow this employer" : "Follow to get push alerts when they post jobs"}
+              >
+                <Bell size={12} fill={isFollowing ? "currentColor" : "none"} />
+                {followingLoading ? "..." : isFollowing ? "Following ✓" : "Follow Employer"}
+              </button>
+            )}
+          </div>
 
           <div className="flex flex-wrap gap-4 text-sm text-brand-grey mt-4">
             <span className="inline-flex items-center gap-1">

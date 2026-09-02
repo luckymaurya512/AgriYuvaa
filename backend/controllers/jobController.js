@@ -1,18 +1,22 @@
 import asyncHandler from "express-async-handler";
 import Job from "../models/Job.js";
 import EmployerProfile from "../models/EmployerProfile.js";
+import { broadcastNewJobAlert } from "../utils/webPush.js";
 
 // @desc  Create a job (employer or admin/superadmin)
 // @route POST /api/jobs
 export const createJob = asyncHandler(async (req, res) => {
   const isPrivileged = ["admin", "superadmin"].includes(req.user.role);
 
+  let employerProfile = null;
   if (!isPrivileged) {
-    const employerProfile = await EmployerProfile.findOne({ user: req.user._id });
+    employerProfile = await EmployerProfile.findOne({ user: req.user._id });
     if (!employerProfile || employerProfile.verificationStatus !== "approved") {
       res.status(403);
       throw new Error("Your employer account must be verified before posting jobs");
     }
+  } else {
+    employerProfile = await EmployerProfile.findOne({ user: req.user._id });
   }
 
   // Admin-created jobs are automatically approved; employer jobs are pending review
@@ -27,6 +31,10 @@ export const createJob = asyncHandler(async (req, res) => {
     isFeatured,
     featuredRequested,
   });
+
+  if (initialStatus === "approved") {
+    broadcastNewJobAlert(job, employerProfile).catch(() => {});
+  }
 
   res.status(201).json(job);
 });

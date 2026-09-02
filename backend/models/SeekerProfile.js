@@ -24,6 +24,8 @@ const seekerProfileSchema = new mongoose.Schema(
     preferredCategories: [{ type: mongoose.Schema.Types.ObjectId, ref: "Category" }],
     location: { type: String },
     savedJobs: [{ type: mongoose.Schema.Types.ObjectId, ref: "Job" }],
+    followedEmployers: [{ type: mongoose.Schema.Types.ObjectId, ref: "EmployerProfile" }],
+    pushSubscriptions: [{ type: mongoose.Schema.Types.Mixed }],
     resumeData: { type: mongoose.Schema.Types.Mixed },
     jobAlertPreferences: {
       categories: [{ type: mongoose.Schema.Types.ObjectId, ref: "Category" }],

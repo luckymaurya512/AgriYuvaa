@@ -4,6 +4,7 @@ import EmployerProfile from "../models/EmployerProfile.js";
 import Job from "../models/Job.js";
 import Application from "../models/Application.js";
 import AuditLog from "../models/AuditLog.js";
+import { broadcastNewJobAlert } from "../utils/webPush.js";
 
 const logAction = async (actor, action, targetType, targetId, meta = {}) => {
   await AuditLog.create({ actor: actor._id, action, targetType, targetId, meta });
@@ -128,6 +129,12 @@ export const reviewJob = asyncHandler(async (req, res) => {
   }
   if (decision === "rejected") job.rejectionReason = rejectionReason || "Did not meet posting guidelines";
   await job.save();
+
+  if (decision === "approved") {
+    const employerProfile = await EmployerProfile.findOne({ user: job.employer });
+    broadcastNewJobAlert(job, employerProfile).catch(() => {});
+  }
+
   await logAction(req.user, "review_job", "Job", job._id, { decision, isFeatured: job.isFeatured });
   res.json(job);
 });
