@@ -41,6 +41,9 @@ router.get("/audit-logs", getAuditLogs);
 
 // Super Admin only
 router.post("/admins", authorize("superadmin"), createAdmin);
-router.patch("/users/:id/role", authorize("superadmin"), updateUserRole);
+router
+  .route("/users/:id/role")
+  .patch(authorize("superadmin"), updateUserRole)
+  .post(authorize("superadmin"), updateUserRole);
 
 export default router;

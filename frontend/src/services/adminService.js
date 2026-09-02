@@ -6,7 +6,10 @@ export const updateUserStatus = (id, status) =>
   api.post(`/admin/users/${id}/status`, { status }).then((r) => r.data);
 export const createAdmin = (payload) => api.post("/admin/admins", payload).then((r) => r.data);
 export const updateUserRole = (id, role) =>
-  api.patch(`/admin/users/${id}/role`, { role }).then((r) => r.data);
+  api
+    .post(`/admin/users/${id}/role`, { role })
+    .catch(() => api.patch(`/admin/users/${id}/role`, { role }))
+    .then((r) => r.data);
 
 export const fetchPendingEmployers = () => api.get("/admin/employers/pending").then((r) => r.data);
 export const verifyEmployer = (id, decision) =>
