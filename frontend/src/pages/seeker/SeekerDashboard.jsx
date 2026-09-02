@@ -106,7 +106,14 @@ const SeekerDashboard = () => {
   const handleUnfollow = async (empId) => {
     try {
       await toggleFollowEmployer(empId);
-      setFollowedEmployers((prev) => prev.filter((e) => (e._id || e) !== empId));
+      setFollowedEmployers((prev) =>
+        prev.filter((e) => {
+          const eId = (e._id || e)?.toString();
+          const eUserId = (e.user?._id || e.user)?.toString();
+          const target = empId.toString();
+          return eId !== target && (!eUserId || eUserId !== target);
+        })
+      );
     } catch (err) {
       console.error("Failed to unfollow employer:", err);
     }

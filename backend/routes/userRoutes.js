@@ -2,6 +2,7 @@ import express from "express";
 import asyncHandler from "express-async-handler";
 import { authenticate, authorize } from "../middleware/authMiddleware.js";
 import SeekerProfile from "../models/SeekerProfile.js";
+import EmployerProfile from "../models/EmployerProfile.js";
 import { upload, uploadFileToCloud } from "../middleware/uploadMiddleware.js";
 
 const router = express.Router();
@@ -10,7 +11,7 @@ const router = express.Router();
 const getOrCreateProfile = async (userId) => {
   let profile = await SeekerProfile.findOne({ user: userId });
   if (!profile) {
-    profile = await SeekerProfile.create({ user: userId, savedJobs: [] });
+    profile = await SeekerProfile.create({ user: userId, savedJobs: [], followedEmployers: [] });
   }
   return profile;
 };
@@ -26,7 +27,7 @@ router.get(
         path: "savedJobs",
         populate: { path: "employer", select: "name" },
       })
-      .populate("followedEmployers", "companyName sector location logo");
+      .populate("followedEmployers", "companyName sector location logo user");
 
     if (!profile) {
       profile = await SeekerProfile.create({ user: req.user._id, savedJobs: [], followedEmployers: [] });
@@ -119,21 +120,36 @@ router.post(
     const { employerId } = req.params;
     const profile = await getOrCreateProfile(req.user._id);
 
+    // Resolve whether employerId is an EmployerProfile _id or User _id
+    let employerProfile = await EmployerProfile.findById(employerId);
+    if (!employerProfile) {
+      employerProfile = await EmployerProfile.findOne({ user: employerId });
+    }
+
+    const targetProfileId = employerProfile ? employerProfile._id.toString() : employerId.toString();
+    const targetUserId = employerProfile?.user?.toString();
+
     if (!profile.followedEmployers) profile.followedEmployers = [];
-    const stringIds = profile.followedEmployers.map((id) => id.toString());
-    const isFollowing = stringIds.includes(employerId);
+
+    const isFollowing = profile.followedEmployers.some((id) => {
+      const idStr = (id._id || id).toString();
+      return idStr === targetProfileId || (targetUserId && idStr === targetUserId);
+    });
 
     if (isFollowing) {
-      profile.followedEmployers = profile.followedEmployers.filter((id) => id.toString() !== employerId);
+      profile.followedEmployers = profile.followedEmployers.filter((id) => {
+        const idStr = (id._id || id).toString();
+        return idStr !== targetProfileId && idStr !== targetUserId && idStr !== employerId.toString();
+      });
     } else {
-      profile.followedEmployers.push(employerId);
+      profile.followedEmployers.push(targetProfileId);
     }
 
     await profile.save();
 
     const updatedProfile = await SeekerProfile.findById(profile._id).populate(
       "followedEmployers",
-      "companyName sector location logo"
+      "companyName sector location logo user"
     );
 
     res.json({

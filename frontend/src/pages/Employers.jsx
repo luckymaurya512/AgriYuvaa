@@ -22,7 +22,13 @@ const Employers = () => {
       fetchSeekerProfile()
         .then((p) => {
           if (p?.followedEmployers) {
-            setFollowedIds(p.followedEmployers.map((e) => (e._id || e).toString()));
+            const ids = [];
+            p.followedEmployers.forEach((e) => {
+              if (e?._id) ids.push(e._id.toString());
+              if (e?.user) ids.push((e.user._id || e.user).toString());
+              if (typeof e === "string") ids.push(e);
+            });
+            setFollowedIds(ids);
           }
         })
         .catch(() => {});

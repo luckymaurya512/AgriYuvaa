@@ -82,9 +82,12 @@ const JobDetails = () => {
                   setIsSaved(saved);
                 }
                 if (profile?.followedEmployers) {
-                  const following = profile.followedEmployers.some(
-                    (e) => (e._id || e).toString() === empId.toString()
-                  );
+                  const following = profile.followedEmployers.some((e) => {
+                    const eId = (e._id || e)?.toString();
+                    const eUserId = (e.user?._id || e.user)?.toString();
+                    const target = empId.toString();
+                    return eId === target || (eUserId && eUserId === target);
+                  });
                   setIsFollowing(following);
                 }
                 if (profile?.resumeUrl) {
