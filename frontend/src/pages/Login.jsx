@@ -53,10 +53,16 @@ const Login = () => {
           />
         </div>
         <div>
-          <label className="text-xs font-semibold text-brand-grey uppercase tracking-wide">Password</label>
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-semibold text-brand-grey uppercase tracking-wide">Password</label>
+            <Link to="/forgot-password" className="text-xs text-brand-green-dark hover:underline font-medium">
+              Forgot password?
+            </Link>
+          </div>
           <input
             type="password"
             required
+            placeholder="••••••••"
             className="input-field mt-1 text-sm"
             value={form.password}
             onChange={(e) => setForm({ ...form, password: e.target.value })}

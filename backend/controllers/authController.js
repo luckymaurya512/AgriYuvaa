@@ -337,3 +337,140 @@ export const refreshToken = asyncHandler(async (req, res) => {
 export const getMe = asyncHandler(async (req, res) => {
   res.json({ user: req.user });
 });
+
+/** Build the HTML email body for Password Reset OTP */
+const resetPasswordEmailHtml = (name, otp) => `
+  <div style="font-family: Arial, sans-serif; max-width: 480px; margin: auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 12px; background-color: #ffffff;">
+    <div style="text-align: center; margin-bottom: 20px;">
+      <h2 style="color: #166534; margin: 0; font-size: 22px;">AgriYuvaa 🌾</h2>
+      <p style="color: #6b7280; font-size: 13px; margin-top: 4px;">Password Reset Request</p>
+    </div>
+    
+    <p style="color: #374151; font-size: 14px;">Hi <strong>${name}</strong>,</p>
+    <p style="color: #374151; font-size: 14px; line-height: 1.5;">We received a request to reset your password. Use the 6-digit verification code below to set a new password:</p>
+    
+    <div style="font-size: 32px; font-weight: bold; letter-spacing: 8px; text-align: center; padding: 18px; background: #f0fdf4; border: 1px dashed #16a34a; border-radius: 8px; color: #166534; margin: 20px 0;">
+      ${otp}
+    </div>
+    
+    <p style="margin-top: 16px; font-size: 13px; color: #6b7280; line-height: 1.4;">
+      This code is valid for <strong>10 minutes</strong>. Do not share this OTP with anyone.
+    </p>
+    <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;" />
+    <p style="font-size: 12px; color: #9ca3af; line-height: 1.4;">
+      If you did not request a password reset, you can safely ignore this email. Your password will remain unchanged.
+    </p>
+  </div>
+`;
+
+// @desc  Initiate forgot password (send 6-digit OTP to email)
+// @route POST /api/auth/forgot-password
+export const forgotPassword = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  if (!email || !email.trim()) {
+    res.status(400);
+    throw new Error("Please enter your registered email address");
+  }
+
+  const user = await User.findOne({ email: email.trim().toLowerCase() });
+  if (!user) {
+    res.status(404);
+    throw new Error("No account found with this email address");
+  }
+
+  if (user.status === "suspended") {
+    res.status(403);
+    throw new Error("This account is suspended. Please contact support.");
+  }
+
+  // Rate limit: prevent requesting within 60s
+  if (user.resetPasswordOtpExpires) {
+    const timeSinceLastOtp = Date.now() - (user.resetPasswordOtpExpires.getTime() - 10 * 60 * 1000);
+    if (timeSinceLastOtp < 60 * 1000) {
+      res.status(429);
+      throw new Error("Please wait 60 seconds before requesting another reset code.");
+    }
+  }
+
+  const otp = generateOtp();
+  const hashedOtp = await hashOtp(otp);
+
+  user.resetPasswordOtp = hashedOtp;
+  user.resetPasswordOtpExpires = new Date(Date.now() + 10 * 60 * 1000);
+  user.resetPasswordOtpAttempts = 0;
+  await user.save();
+
+  try {
+    await sendEmail({
+      to: user.email,
+      subject: "🔐 AgriYuvaa Password Reset Code",
+      html: resetPasswordEmailHtml(user.name, otp),
+    });
+  } catch (emailError) {
+    console.error("Failed to send password reset email:", emailError);
+    res.status(500);
+    throw new Error(`Failed to send email: ${emailError.message}`);
+  }
+
+  res.json({ message: "Password reset code sent to your email. Please check your inbox.", email: user.email });
+});
+
+// @desc  Verify OTP and reset password
+// @route POST /api/auth/reset-password
+export const resetPassword = asyncHandler(async (req, res) => {
+  const { email, otp, newPassword } = req.body;
+  if (!email || !otp || !newPassword) {
+    res.status(400);
+    throw new Error("Email, OTP code, and new password are required");
+  }
+
+  if (newPassword.length < 6) {
+    res.status(400);
+    throw new Error("Password must be at least 6 characters long");
+  }
+
+  const user = await User.findOne({ email: email.trim().toLowerCase() });
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  }
+
+  if (!user.resetPasswordOtp || !user.resetPasswordOtpExpires) {
+    res.status(400);
+    throw new Error("No password reset request found. Please request a new code.");
+  }
+
+  if (user.resetPasswordOtpExpires < new Date()) {
+    user.resetPasswordOtp = undefined;
+    user.resetPasswordOtpExpires = undefined;
+    await user.save();
+    res.status(400);
+    throw new Error("Reset code has expired. Please request a new one.");
+  }
+
+  if (user.resetPasswordOtpAttempts >= 5) {
+    user.resetPasswordOtp = undefined;
+    user.resetPasswordOtpExpires = undefined;
+    await user.save();
+    res.status(400);
+    throw new Error("Too many incorrect attempts. Please request a new reset code.");
+  }
+
+  const isMatch = await bcrypt.compare(otp.trim(), user.resetPasswordOtp);
+  if (!isMatch) {
+    user.resetPasswordOtpAttempts = (user.resetPasswordOtpAttempts || 0) + 1;
+    await user.save();
+    const remaining = 5 - user.resetPasswordOtpAttempts;
+    res.status(400);
+    throw new Error(`Invalid code. ${remaining} attempt(s) remaining.`);
+  }
+
+  // Update password & clear reset OTP
+  user.passwordHash = newPassword; // Will be hashed by pre-save hook
+  user.resetPasswordOtp = undefined;
+  user.resetPasswordOtpExpires = undefined;
+  user.resetPasswordOtpAttempts = 0;
+  await user.save();
+
+  res.json({ message: "Password has been successfully reset! You can now log in with your new password." });
+});

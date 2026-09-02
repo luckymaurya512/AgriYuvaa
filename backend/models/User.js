@@ -21,6 +21,9 @@ const userSchema = new mongoose.Schema(
     emailOtp: { type: String },
     emailOtpExpires: { type: Date },
     emailOtpAttempts: { type: Number, default: 0 },
+    resetPasswordOtp: { type: String },
+    resetPasswordOtpExpires: { type: Date },
+    resetPasswordOtpAttempts: { type: Number, default: 0 },
     avatarUrl: { type: String },
   },
   { timestamps: true }
