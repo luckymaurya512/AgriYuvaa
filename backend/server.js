@@ -49,6 +49,7 @@ app.use((req, res, next) => {
 });
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use("/uploads", express.static("uploads"));
 if (process.env.NODE_ENV !== "production") app.use(morgan("dev"));
 
 app.get("/api/health", (req, res) => res.json({ status: "ok", service: "AgriYuvaa API" }));

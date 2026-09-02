@@ -2,6 +2,7 @@ import express from "express";
 import asyncHandler from "express-async-handler";
 import { authenticate, authorize } from "../middleware/authMiddleware.js";
 import SeekerProfile from "../models/SeekerProfile.js";
+import { upload, uploadFileToCloud } from "../middleware/uploadMiddleware.js";
 
 const router = express.Router();
 
@@ -165,6 +166,31 @@ router.post(
 
     await profile.save();
     res.json({ message: "Push notification subscription saved successfully" });
+  })
+);
+
+// @route POST /api/users/seeker/upload-resume
+router.post(
+  "/seeker/upload-resume",
+  authenticate,
+  authorize("seeker"),
+  upload.single("resume"),
+  asyncHandler(async (req, res) => {
+    if (!req.file) {
+      res.status(400);
+      throw new Error("Please select a resume file (PDF, DOCX, DOC, or Image) to upload");
+    }
+
+    const fileUrl = await uploadFileToCloud(req.file.buffer, req.file.originalname, "agriyuvaa/resumes");
+    const profile = await getOrCreateProfile(req.user._id);
+    profile.resumeUrl = fileUrl;
+    await profile.save();
+
+    res.json({
+      url: fileUrl,
+      filename: req.file.originalname,
+      message: "Resume uploaded successfully",
+    });
   })
 );
 

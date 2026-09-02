@@ -3,8 +3,9 @@ import { Link } from "react-router-dom";
 import { Bookmark, Briefcase, MapPin, Trash2, ArrowRight, Building2, Bell, ExternalLink } from "lucide-react";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { fetchMyApplications } from "../../services/jobService.js";
-import { fetchSeekerProfile, toggleSaveJob } from "../../services/userService.js";
+import { fetchSeekerProfile, toggleSaveJob, uploadSeekerResume } from "../../services/userService.js";
 import { toggleFollowEmployer } from "../../services/notificationService.js";
+import { FileText, UploadCloud, Loader2, CheckCircle2 } from "lucide-react";
 import JobCard from "../../components/JobCard.jsx";
 
 const statusColors = {
@@ -17,10 +18,12 @@ const statusColors = {
 
 const SeekerDashboard = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState("applications"); // "applications" | "saved" | "following"
+  const [activeTab, setActiveTab] = useState("applications"); // "applications" | "saved" | "following" | "resume"
   const [applications, setApplications] = useState([]);
   const [savedJobs, setSavedJobs] = useState([]);
   const [followedEmployers, setFollowedEmployers] = useState([]);
+  const [resumeUrl, setResumeUrl] = useState("");
+  const [uploadingResume, setUploadingResume] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const loadData = async () => {
@@ -33,6 +36,7 @@ const SeekerDashboard = () => {
       setApplications(apps || []);
       setSavedJobs(profile?.savedJobs || []);
       setFollowedEmployers(profile?.followedEmployers || []);
+      setResumeUrl(profile?.resumeUrl || "");
     } finally {
       setLoading(false);
     }
@@ -41,6 +45,21 @@ const SeekerDashboard = () => {
   useEffect(() => {
     loadData();
   }, []);
+
+  const handleResumeUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingResume(true);
+    try {
+      const res = await uploadSeekerResume(file);
+      setResumeUrl(res.url);
+      alert("✅ Resume uploaded and saved to your profile successfully!");
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to upload resume");
+    } finally {
+      setUploadingResume(false);
+    }
+  };
 
   const handleUnfollow = async (empId) => {
     try {
@@ -134,6 +153,17 @@ const SeekerDashboard = () => {
           <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold">
             {followedEmployers.length}
           </span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("resume")}
+          className={`px-5 py-3 text-sm font-bold border-b-2 transition-all flex items-center gap-2 ${
+            activeTab === "resume"
+              ? "border-brand-green text-brand-green-dark"
+              : "border-transparent text-brand-grey hover:text-brand-black"
+          }`}
+        >
+          My Resume 📄
         </button>
       </div>
 
@@ -298,6 +328,106 @@ const SeekerDashboard = () => {
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* TAB 4: MY RESUME */}
+      {activeTab === "resume" && (
+        <div className="card p-6 md:p-8 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-brand-border">
+            <div>
+              <h2 className="text-lg font-bold font-display text-brand-black">Your Agriculture Resume</h2>
+              <p className="text-xs text-brand-grey mt-0.5">
+                Upload your master CV or design one using our Agriculture Resume Builder.
+              </p>
+            </div>
+            <Link
+              to="/resume-builder"
+              className="btn-primary text-xs py-2.5 px-4 flex items-center justify-center gap-1.5 shrink-0"
+            >
+              Launch Resume Builder 📄
+            </Link>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Upload Box */}
+            <div className="space-y-3">
+              <label className="text-xs font-bold text-brand-grey uppercase tracking-wide">
+                Upload / Update PDF Resume
+              </label>
+
+              <label className="border-2 border-dashed border-gray-300 hover:border-emerald-500 rounded-2xl p-6 flex flex-col items-center justify-center gap-2 bg-gray-50/50 hover:bg-emerald-50/30 cursor-pointer transition-all">
+                {uploadingResume ? (
+                  <div className="flex items-center gap-2 text-sm font-bold text-emerald-800 py-4">
+                    <Loader2 size={20} className="animate-spin text-emerald-600" /> Uploading resume...
+                  </div>
+                ) : (
+                  <>
+                    <div className="h-12 w-12 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
+                      <UploadCloud size={24} />
+                    </div>
+                    <p className="text-sm font-bold text-brand-black text-center">
+                      Click to upload new resume
+                    </p>
+                    <p className="text-xs text-gray-500 text-center">
+                      PDF, DOCX, or DOC (Max 10MB)
+                    </p>
+                  </>
+                )}
+                <input
+                  type="file"
+                  accept=".pdf,.doc,.docx"
+                  className="hidden"
+                  disabled={uploadingResume}
+                  onChange={handleResumeUpload}
+                />
+              </label>
+            </div>
+
+            {/* Current Resume Preview / Status */}
+            <div className="space-y-3 flex flex-col justify-between">
+              <label className="text-xs font-bold text-brand-grey uppercase tracking-wide">
+                Active Resume on Profile
+              </label>
+
+              {resumeUrl ? (
+                <div className="p-5 rounded-2xl bg-emerald-50/70 border border-emerald-200 space-y-4 flex-1 flex flex-col justify-between">
+                  <div className="flex items-start gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-white border border-emerald-300 text-emerald-800 flex items-center justify-center shrink-0 shadow-2xs">
+                      <FileText size={20} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-emerald-950 flex items-center gap-1">
+                        <CheckCircle2 size={14} className="text-emerald-600" /> Resume Attached
+                      </p>
+                      <p className="text-[11px] text-emerald-800/80 truncate mt-0.5 max-w-[280px]">
+                        {resumeUrl}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-3 border-t border-emerald-200">
+                    <a
+                      href={resumeUrl.startsWith("http") ? resumeUrl : `https://${resumeUrl}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-secondary text-xs py-2 px-3 flex-1 text-center bg-white"
+                    >
+                      View / Download Resume 📥
+                    </a>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-6 rounded-2xl bg-gray-50 border border-brand-border text-center space-y-2 flex-1 flex flex-col items-center justify-center">
+                  <FileText size={28} className="text-gray-300" />
+                  <p className="text-xs text-brand-grey">No resume uploaded yet.</p>
+                  <p className="text-[11px] text-gray-400">
+                    Upload a file on the left or create one using the builder.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>

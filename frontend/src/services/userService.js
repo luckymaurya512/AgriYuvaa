@@ -11,3 +11,13 @@ export const toggleSaveJob = (jobId) =>
 export const saveSeekerResume = (resumeData) =>
   api.post("/users/seeker/me/resume", resumeData).then((r) => r.data);
 
+export const uploadSeekerResume = (file) => {
+  const formData = new FormData();
+  formData.append("resume", file);
+  return api
+    .post("/users/seeker/upload-resume", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    })
+    .then((r) => r.data);
+};
+

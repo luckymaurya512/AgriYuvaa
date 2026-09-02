@@ -17,9 +17,12 @@ import {
   Zap,
   Star,
   Bell,
+  UploadCloud,
+  FileText,
+  Loader2,
 } from "lucide-react";
 import { fetchJobById, applyToJob } from "../services/jobService.js";
-import { fetchSeekerProfile, toggleSaveJob } from "../services/userService.js";
+import { fetchSeekerProfile, toggleSaveJob, uploadSeekerResume } from "../services/userService.js";
 import { toggleFollowEmployer, enablePushNotifications } from "../services/notificationService.js";
 import { useAuth } from "../context/AuthContext.jsx";
 
@@ -28,6 +31,9 @@ const JobDetails = () => {
   const { user } = useAuth();
   const [job, setJob] = useState(null);
   const [resumeUrl, setResumeUrl] = useState("");
+  const [resumeMode, setResumeMode] = useState("upload"); // "upload" | "link"
+  const [uploadingResume, setUploadingResume] = useState(false);
+  const [uploadedFileName, setUploadedFileName] = useState("");
   const [coverNote, setCoverNote] = useState("");
   const [applied, setApplied] = useState(false);
   const [error, setError] = useState("");
@@ -64,6 +70,10 @@ const JobDetails = () => {
                 );
                 setIsFollowing(following);
               }
+              if (profile?.resumeUrl) {
+                setResumeUrl(profile.resumeUrl);
+                setUploadedFileName("Profile Resume (Ready)");
+              }
             })
             .catch(() => {});
         }
@@ -71,6 +81,28 @@ const JobDetails = () => {
       .catch(() => setError("This job could not be found."))
       .finally(() => setLoading(false));
   }, [id, user]);
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      setError("File size exceeds 10MB. Please choose a smaller PDF or document.");
+      return;
+    }
+
+    setUploadingResume(true);
+    setError("");
+    try {
+      const res = await uploadSeekerResume(file);
+      setResumeUrl(res.url);
+      setUploadedFileName(file.name);
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to upload resume file. Please select a valid PDF or DOCX file.");
+    } finally {
+      setUploadingResume(false);
+    }
+  };
 
   const handleApply = async (e) => {
     e.preventDefault();
@@ -436,11 +468,12 @@ const JobDetails = () => {
                   Application submitted! You can track its status from your dashboard.
                 </p>
               ) : (
-                <form onSubmit={handleApply} className="space-y-3">
+              ) : (
+                <form onSubmit={handleApply} className="space-y-4">
                   <div>
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-semibold text-brand-grey uppercase tracking-wide">
-                        Resume URL *
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-xs font-bold text-brand-black uppercase tracking-wide">
+                        Your Resume *
                       </label>
                       <Link
                         to="/resume-builder"
@@ -450,70 +483,183 @@ const JobDetails = () => {
                         Build CV here ↗
                       </Link>
                     </div>
-                    <input
-                      required
-                      className="input-field mt-1 text-sm"
-                      placeholder="e.g. https://drive.google.com/file/d/..."
-                      value={resumeUrl}
-                      onChange={(e) => setResumeUrl(e.target.value)}
-                    />
-                    <p className="text-[11px] text-brand-grey mt-1">
-                      Paste a shareable Google Drive, Dropbox, or Cloud PDF link.
-                    </p>
+
+                    {/* Dual Mode Switcher */}
+                    <div className="grid grid-cols-2 gap-1 bg-gray-100 p-1 rounded-xl mb-3 text-xs">
+                      <button
+                        type="button"
+                        onClick={() => setResumeMode("upload")}
+                        className={`py-1.5 font-semibold rounded-lg transition-all flex items-center justify-center gap-1 ${
+                          resumeMode === "upload"
+                            ? "bg-white text-emerald-800 shadow-xs"
+                            : "text-gray-600 hover:text-brand-black"
+                        }`}
+                      >
+                        <UploadCloud size={13} /> Upload File (PDF)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setResumeMode("link")}
+                        className={`py-1.5 font-semibold rounded-lg transition-all flex items-center justify-center gap-1 ${
+                          resumeMode === "link"
+                            ? "bg-white text-emerald-800 shadow-xs"
+                            : "text-gray-600 hover:text-brand-black"
+                        }`}
+                      >
+                        <ExternalLink size={13} /> Paste Link
+                      </button>
+                    </div>
+
+                    {/* Mode 1: Direct File Upload */}
+                    {resumeMode === "upload" ? (
+                      <div>
+                        {resumeUrl && uploadedFileName ? (
+                          <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <FileText size={18} className="text-emerald-700 shrink-0" />
+                              <div className="min-w-0">
+                                <p className="text-xs font-bold text-emerald-950 truncate">
+                                  {uploadedFileName}
+                                </p>
+                                <span className="text-[10px] text-emerald-700">✓ Ready to submit</span>
+                              </div>
+                            </div>
+                            <label className="text-[11px] font-bold text-emerald-800 bg-white border border-emerald-300 hover:bg-emerald-100 px-2.5 py-1 rounded-lg cursor-pointer shrink-0">
+                              Change
+                              <input
+                                type="file"
+                                accept=".pdf,.doc,.docx"
+                                className="hidden"
+                                onChange={handleFileUpload}
+                              />
+                            </label>
+                          </div>
+                        ) : (
+                          <label className="border-2 border-dashed border-gray-300 hover:border-emerald-500 rounded-xl p-4 flex flex-col items-center justify-center gap-1.5 bg-gray-50/50 hover:bg-emerald-50/30 cursor-pointer transition-all">
+                            {uploadingResume ? (
+                              <div className="flex items-center gap-2 text-xs font-bold text-emerald-800 py-2">
+                                <Loader2 size={18} className="animate-spin text-emerald-600" /> Uploading resume...
+                              </div>
+                            ) : (
+                              <>
+                                <UploadCloud size={24} className="text-gray-400" />
+                                <p className="text-xs font-bold text-brand-black text-center">
+                                  Click to browse or drop resume
+                                </p>
+                                <p className="text-[10px] text-gray-500 text-center">
+                                  PDF, DOCX, or DOC (Max 10MB)
+                                </p>
+                              </>
+                            )}
+                            <input
+                              type="file"
+                              accept=".pdf,.doc,.docx"
+                              className="hidden"
+                              disabled={uploadingResume}
+                              onChange={handleFileUpload}
+                            />
+                          </label>
+                        )}
+                      </div>
+                    ) : (
+                      /* Mode 2: Paste URL */
+                      <div>
+                        <input
+                          required
+                          className="input-field text-sm"
+                          placeholder="e.g. https://drive.google.com/file/d/..."
+                          value={resumeUrl}
+                          onChange={(e) => setResumeUrl(e.target.value)}
+                        />
+                        <p className="text-[11px] text-brand-grey mt-1">
+                          Ensure link access is set to "Anyone with the link".
+                        </p>
+                      </div>
+                    )}
                   </div>
+
                   <div>
-                    <label className="text-xs font-semibold text-brand-grey uppercase tracking-wide">
+                    <label className="text-xs font-bold text-brand-grey uppercase tracking-wide">
                       Cover Note (optional)
                     </label>
                     <textarea
                       className="input-field mt-1 text-sm"
-                      rows={4}
-                      placeholder="Why are you a good fit for this role?"
+                      rows={3}
+                      placeholder="Brief note to the hiring manager..."
                       value={coverNote}
                       onChange={(e) => setCoverNote(e.target.value)}
                     />
                   </div>
-                  {error && <p className="text-xs text-red-600">{error}</p>}
-                  <button type="submit" className="btn-primary w-full">
-                    Submit Application
+
+                  {error && <p className="text-xs text-red-600 font-medium">{error}</p>}
+
+                  <button
+                    type="submit"
+                    disabled={uploadingResume || !resumeUrl}
+                    className="btn-primary w-full py-3 text-sm font-bold shadow-sm disabled:opacity-50"
+                  >
+                    {uploadingResume ? "Uploading Resume..." : "Submit Application 🚀"}
                   </button>
                 </form>
               )}
             </div>
           )}
 
-          {/* Action Row: Save Job + Share */}
-          <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-brand-border">
-            {user?.role === "seeker" && (
+          {/* Action Row: WhatsApp Share + Bookmark + Copy */}
+          <div className="space-y-2 mt-4 pt-3 border-t border-brand-border">
+            {/* 📲 Primary WhatsApp Share Button */}
+            <button
+              type="button"
+              onClick={() => {
+                const salaryInfo =
+                  job.salaryMin || job.salaryMax
+                    ? `\n💰 *Salary:* ${
+                        job.salaryMin && job.salaryMax
+                          ? `₹${job.salaryMin.toLocaleString("en-IN")} - ₹${job.salaryMax.toLocaleString("en-IN")}`
+                          : `₹${(job.salaryMin || job.salaryMax).toLocaleString("en-IN")}+`
+                      }`
+                    : "";
+                const company = companyDisplayName;
+                const text = `🌾 *Agriculture Hiring Alert on AgriYuvaa*:\n\n📌 *${job.title}*\n🏢 *Company:* ${company}\n📍 *Location:* ${job.location || "India"}\n💼 *Type:* ${job.employmentType || "Full-time"}${salaryInfo}\n\n👉 *View & Apply:* ${window.location.href}`;
+                window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank");
+              }}
+              className="w-full py-2.5 px-4 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-2 transition-colors"
+            >
+              <span className="text-sm">📲</span> Share on WhatsApp
+            </button>
+
+            <div className="grid grid-cols-2 gap-2">
+              {user?.role === "seeker" && (
+                <button
+                  type="button"
+                  onClick={handleToggleBookmark}
+                  disabled={savingBookmark}
+                  className={`btn-secondary text-xs py-2 flex items-center justify-center gap-1.5 ${
+                    isSaved ? "bg-emerald-50 border-emerald-300 text-emerald-800" : ""
+                  }`}
+                >
+                  <Bookmark size={14} fill={isSaved ? "currentColor" : "none"} />
+                  {isSaved ? "Saved" : "Save Job"}
+                </button>
+              )}
+
               <button
-                type="button"
-                onClick={handleToggleBookmark}
-                disabled={savingBookmark}
-                className={`btn-secondary text-xs py-2.5 flex items-center justify-center gap-1.5 ${
-                  isSaved ? "bg-emerald-50 border-emerald-300 text-emerald-800" : ""
+                onClick={() => handleCopy(window.location.href, "share")}
+                className={`btn-secondary text-xs py-2 flex items-center justify-center gap-1.5 ${
+                  user?.role !== "seeker" ? "col-span-2" : ""
                 }`}
               >
-                <Bookmark size={15} fill={isSaved ? "currentColor" : "none"} />
-                {isSaved ? "Saved" : "Save Job"}
+                {copiedShare ? (
+                  <>
+                    <Check size={14} className="text-brand-green" /> Link Copied
+                  </>
+                ) : (
+                  <>
+                    <Share2 size={14} /> Copy Link
+                  </>
+                )}
               </button>
-            )}
-
-            <button
-              onClick={() => handleCopy(window.location.href, "share")}
-              className={`btn-secondary text-xs py-2.5 flex items-center justify-center gap-1.5 ${
-                user?.role !== "seeker" ? "col-span-2" : ""
-              }`}
-            >
-              {copiedShare ? (
-                <>
-                  <Check size={15} className="text-brand-green" /> Link Copied
-                </>
-              ) : (
-                <>
-                  <Share2 size={15} /> Share Job
-                </>
-              )}
-            </button>
+            </div>
           </div>
         </div>
       </div>

@@ -52,21 +52,39 @@ const JobCard = ({ job, isSavedInitial = false, onBookmarkChange }) => {
           )}
         </div>
 
-        {user?.role === "seeker" && (
+        <div className="flex items-center gap-1.5 shrink-0">
           <button
             type="button"
-            onClick={handleBookmark}
-            disabled={saving}
-            className={`p-1.5 rounded-lg border transition-all shrink-0 ${
-              isSaved
-                ? "bg-emerald-50 border-emerald-300 text-emerald-700"
-                : "bg-white border-gray-200 text-gray-400 hover:text-emerald-700 hover:border-emerald-200"
-            }`}
-            title={isSaved ? "Remove from saved jobs" : "Save this job"}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const salaryInfo = job.salaryMin || job.salaryMax ? `\n💰 *Salary:* ${formatSalary(job.salaryMin, job.salaryMax)}` : "";
+              const company = job.companyName || job.employer?.name || "Agri Company";
+              const text = `🌾 *Agriculture Hiring Alert on AgriYuvaa*:\n\n📌 *${job.title}*\n🏢 *Company:* ${company}\n📍 *Location:* ${job.location || "India"}\n💼 *Type:* ${job.employmentType || "Full-time"}${salaryInfo}\n\n👉 *View & Apply:* https://frontend-lime-nine-60.vercel.app/jobs/${job._id}`;
+              window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank");
+            }}
+            className="p-1.5 rounded-lg border border-emerald-200 bg-emerald-50/70 hover:bg-emerald-100 text-emerald-800 transition-colors"
+            title="Share on WhatsApp"
           >
-            <Bookmark size={16} fill={isSaved ? "currentColor" : "none"} />
+            <span className="text-[13px] leading-none">📲</span>
           </button>
-        )}
+
+          {user?.role === "seeker" && (
+            <button
+              type="button"
+              onClick={handleBookmark}
+              disabled={saving}
+              className={`p-1.5 rounded-lg border transition-all shrink-0 ${
+                isSaved
+                  ? "bg-emerald-50 border-emerald-300 text-emerald-700"
+                  : "bg-white border-gray-200 text-gray-400 hover:text-emerald-700 hover:border-emerald-200"
+              }`}
+              title={isSaved ? "Remove from saved jobs" : "Save this job"}
+            >
+              <Bookmark size={15} fill={isSaved ? "currentColor" : "none"} />
+            </button>
+          )}
+        </div>
       </div>
 
       <h3 className="font-display font-semibold text-base leading-snug group-hover:text-brand-green-dark transition-colors">
