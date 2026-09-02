@@ -20,6 +20,9 @@ const PostJob = () => {
     title: "",
     companyName: "",
     description: "",
+    responsibilities: "",
+    requirements: "",
+    benefits: "",
     category: "",
     employmentType: "full-time",
     experienceLevel: "any",
@@ -37,6 +40,12 @@ const PostJob = () => {
   useEffect(() => {
     fetchCategories().then(setCategories).catch(() => setCategories([]));
   }, []);
+
+  const parseList = (text) =>
+    (text || "")
+      .split("\n")
+      .map((s) => s.replace(/^[-*•\d.]+\s*/, "").trim())
+      .filter(Boolean);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -56,6 +65,9 @@ const PostJob = () => {
     try {
       await createJob({
         ...form,
+        responsibilities: parseList(form.responsibilities),
+        requirements: parseList(form.requirements),
+        benefits: parseList(form.benefits),
         salaryMin: form.salaryMin ? Number(form.salaryMin) : undefined,
         salaryMax: form.salaryMax ? Number(form.salaryMax) : undefined,
         cropTags: form.cropTags ? form.cropTags.split(",").map((t) => t.trim()).filter(Boolean) : [],
@@ -251,15 +263,60 @@ const PostJob = () => {
         {/* Description */}
         <div>
           <label className="text-xs font-semibold text-brand-grey uppercase tracking-wide">
-            Job Description *
+            Job Overview / Description *
           </label>
           <textarea
             required
-            rows={5}
-            placeholder="Describe the role, responsibilities, and qualifications..."
+            rows={4}
+            placeholder="Brief overview of the role, team, and company mission..."
             className="input-field mt-1 text-sm"
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
+          />
+        </div>
+
+        {/* Responsibilities */}
+        <div>
+          <label className="text-xs font-semibold text-brand-grey uppercase tracking-wide flex items-center justify-between">
+            <span>Key Responsibilities</span>
+            <span className="text-[11px] text-brand-grey font-normal lowercase">(1 bullet point per line)</span>
+          </label>
+          <textarea
+            rows={4}
+            placeholder="• Lead soil nutrient analysis and fertigation schedule&#10;• Coordinate with farm supervisors on harvesting timelines&#10;• Maintain compliance records per SOP"
+            className="input-field mt-1 text-sm"
+            value={form.responsibilities}
+            onChange={(e) => setForm({ ...form, responsibilities: e.target.value })}
+          />
+        </div>
+
+        {/* Requirements */}
+        <div>
+          <label className="text-xs font-semibold text-brand-grey uppercase tracking-wide flex items-center justify-between">
+            <span>Requirements & Qualifications</span>
+            <span className="text-[11px] text-brand-grey font-normal lowercase">(1 bullet point per line)</span>
+          </label>
+          <textarea
+            rows={4}
+            placeholder="• B.Sc / M.Sc in Agriculture, Agronomy, or related discipline&#10;• 1+ years experience in polyhouse or field operations&#10;• Good communication skills in Hindi & English"
+            className="input-field mt-1 text-sm"
+            value={form.requirements}
+            onChange={(e) => setForm({ ...form, requirements: e.target.value })}
+          />
+        </div>
+
+        {/* Benefits & Perks */}
+        <div>
+          <label className="text-xs font-semibold text-brand-grey uppercase tracking-wide flex items-center justify-between">
+            <span>Perks & Benefits (Optional)</span>
+            <span className="text-[11px] text-brand-grey font-normal lowercase">(1 bullet point per line)</span>
+          </label>
+          <textarea
+            rows={3}
+            placeholder="• On-farm accommodation & meals provided&#10;• Performance bonus & travel allowance&#10;• Health & accidental insurance"
+            className="input-field mt-1 text-sm"
+            value={form.benefits}
+            onChange={(e) => setForm({ ...form, benefits: e.target.value })}
           />
         </div>
 
