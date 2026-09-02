@@ -176,18 +176,31 @@ const GovtJobs = () => {
 
       {/* Search & Filter Bar */}
       <div className="card p-5 mb-8 space-y-4 shadow-sm border border-brand-border">
-        <form onSubmit={handleSearchSubmit} className="flex gap-3">
-          <div className="relative flex-1">
-            <Search size={18} className="absolute left-3.5 top-3 text-brand-grey" />
+        <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row gap-3">
+          <div className="flex items-center gap-3 flex-1 bg-white border border-brand-border rounded-xl px-4 py-2.5 focus-within:ring-2 focus-within:ring-brand-green focus-within:border-transparent transition-all shadow-2xs">
+            <Search size={18} className="text-brand-grey shrink-0" />
             <input
               type="text"
               placeholder="Search by job title, organization, or state (e.g. IBPS, UPPSC, ICAR, AFO)..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="input-field pl-10 text-sm"
+              className="w-full bg-transparent text-sm focus:outline-none placeholder:text-gray-400"
             />
+            {search && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearch("");
+                  loadGovtJobs();
+                }}
+                className="text-xs text-gray-400 hover:text-gray-600 p-0.5"
+                title="Clear search"
+              >
+                <X size={15} />
+              </button>
+            )}
           </div>
-          <button type="submit" className="btn-primary text-sm px-6 py-2.5 shrink-0">
+          <button type="submit" className="btn-primary text-sm px-7 py-2.5 shrink-0">
             Search
           </button>
         </form>
