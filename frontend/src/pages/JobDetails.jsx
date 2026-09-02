@@ -468,7 +468,6 @@ const JobDetails = () => {
                   Application submitted! You can track its status from your dashboard.
                 </p>
               ) : (
-              ) : (
                 <form onSubmit={handleApply} className="space-y-4">
                   <div>
                     <div className="flex items-center justify-between mb-1.5">

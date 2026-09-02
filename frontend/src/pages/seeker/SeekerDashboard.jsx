@@ -1,11 +1,23 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Bookmark, Briefcase, MapPin, Trash2, ArrowRight, Building2, Bell, ExternalLink } from "lucide-react";
+import {
+  Bookmark,
+  Briefcase,
+  MapPin,
+  Trash2,
+  ArrowRight,
+  Building2,
+  Bell,
+  ExternalLink,
+  FileText,
+  UploadCloud,
+  Loader2,
+  CheckCircle2,
+} from "lucide-react";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { fetchMyApplications } from "../../services/jobService.js";
 import { fetchSeekerProfile, toggleSaveJob, uploadSeekerResume } from "../../services/userService.js";
 import { toggleFollowEmployer } from "../../services/notificationService.js";
-import { FileText, UploadCloud, Loader2, CheckCircle2 } from "lucide-react";
 import JobCard from "../../components/JobCard.jsx";
 
 const statusColors = {
