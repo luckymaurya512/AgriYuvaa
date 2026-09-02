@@ -16,6 +16,7 @@ import {
   Bookmark,
   Zap,
   Star,
+  Bell,
 } from "lucide-react";
 import { fetchJobById, applyToJob } from "../services/jobService.js";
 import { fetchSeekerProfile, toggleSaveJob } from "../services/userService.js";
