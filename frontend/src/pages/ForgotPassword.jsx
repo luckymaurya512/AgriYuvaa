@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Mail, Lock, KeyRound, ArrowLeft, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { forgotPassword, resetPassword, resendOtp } from "../services/authService.js";
 import logo from "../assets/logo.png";
 
@@ -105,17 +105,14 @@ const ForgotPassword = () => {
               <label className="text-xs font-semibold text-brand-grey uppercase tracking-wide">
                 Registered Email Address *
               </label>
-              <div className="relative mt-1">
-                <input
-                  type="email"
-                  required
-                  placeholder="e.g. rahul@example.com"
-                  className="input-field text-sm pl-9"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-                <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              </div>
+              <input
+                type="email"
+                required
+                placeholder="e.g. rahul@example.com"
+                className="input-field mt-1 text-sm"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
             </div>
 
             <button disabled={loading} type="submit" className="btn-primary w-full py-2.5 flex items-center justify-center gap-2">
@@ -137,54 +134,45 @@ const ForgotPassword = () => {
               <label className="text-xs font-semibold text-brand-grey uppercase tracking-wide">
                 6-Digit Verification Code *
               </label>
-              <div className="relative mt-1">
-                <input
-                  type="text"
-                  maxLength={6}
-                  required
-                  placeholder="123456"
-                  className="input-field text-center font-mono text-lg tracking-widest pl-9"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                />
-                <KeyRound size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              </div>
+              <input
+                type="text"
+                maxLength={6}
+                required
+                placeholder="123456"
+                className="input-field mt-1 text-center font-mono text-xl tracking-widest font-bold"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+              />
             </div>
 
             <div>
               <label className="text-xs font-semibold text-brand-grey uppercase tracking-wide">
                 New Password *
               </label>
-              <div className="relative mt-1">
-                <input
-                  type="password"
-                  required
-                  minLength={6}
-                  placeholder="Min. 6 characters"
-                  className="input-field text-sm pl-9"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                />
-                <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              </div>
+              <input
+                type="password"
+                required
+                minLength={6}
+                placeholder="Min. 6 characters"
+                className="input-field mt-1 text-sm"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+              />
             </div>
 
             <div>
               <label className="text-xs font-semibold text-brand-grey uppercase tracking-wide">
                 Confirm New Password *
               </label>
-              <div className="relative mt-1">
-                <input
-                  type="password"
-                  required
-                  minLength={6}
-                  placeholder="Re-type new password"
-                  className="input-field text-sm pl-9"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                />
-                <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              </div>
+              <input
+                type="password"
+                required
+                minLength={6}
+                placeholder="Re-type new password"
+                className="input-field mt-1 text-sm"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
             </div>
 
             <button disabled={loading} type="submit" className="btn-primary w-full py-2.5 flex items-center justify-center gap-2">
