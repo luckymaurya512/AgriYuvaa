@@ -42,8 +42,23 @@ export const listUsers = asyncHandler(async (req, res) => {
     query.role = { $in: ["employer", "seeker"] };
   }
 
-  const users = await User.find(query).select("-passwordHash").sort("-createdAt");
-  res.json(users);
+  const users = await User.find(query).select("-passwordHash").sort("-createdAt").lean();
+
+  // Attach employer profile flag for accurate original role detection
+  const employerProfiles = await EmployerProfile.find({}, "user").lean();
+  const employerUserIds = new Set(employerProfiles.map((p) => p.user?.toString()).filter(Boolean));
+
+  const enrichedUsers = users.map((u) => {
+    const hasEmpProfile = employerUserIds.has(u._id.toString());
+    const originalRole = u.previousRole || (hasEmpProfile ? "employer" : "seeker");
+    return {
+      ...u,
+      hasEmployerProfile: hasEmpProfile,
+      originalRole,
+    };
+  });
+
+  res.json(enrichedUsers);
 });
 
 // @desc  Suspend / reactivate / edit a user's status
@@ -160,6 +175,7 @@ export const createAdmin = asyncHandler(async (req, res) => {
   }
 
   const previousRole = user.role;
+  user.previousRole = user.role;
   user.role = "admin";
   user.status = "active";
   await user.save();
@@ -171,7 +187,7 @@ export const createAdmin = asyncHandler(async (req, res) => {
 
   res.json({
     message: `"${user.name}" (${user.email}) has been successfully upgraded to Admin!`,
-    user: { id: user._id, name: user.name, email: user.email, role: user.role },
+    user: { id: user._id, name: user.name, email: user.email, role: user.role, previousRole: user.previousRole },
   });
 });
 
@@ -197,6 +213,9 @@ export const updateUserRole = asyncHandler(async (req, res) => {
 
   const previousRole = user.role;
   user.role = role;
+  if (role !== "admin") {
+    user.previousRole = role;
+  }
   await user.save();
 
   await logAction(req.user, "update_user_role", "User", user._id, { previousRole, newRole: role });

@@ -202,13 +202,21 @@ const SuperAdminDashboard = () => {
                   </td>
                   <td className="px-5 py-3 text-right">
                     {u.role === "admin" ? (
-                      <button
-                        onClick={() => handleRoleToggle(u, "seeker")}
-                        className="text-xs font-semibold text-amber-700 hover:text-amber-900 hover:underline inline-flex items-center gap-1"
-                        title="Demote this admin back to standard Job Seeker"
-                      >
-                        <ShieldAlert size={13} /> Demote to Seeker
-                      </button>
+                      (() => {
+                        const originalRole =
+                          u.originalRole || u.previousRole || (u.hasEmployerProfile ? "employer" : "seeker");
+                        return (
+                          <div className="inline-flex items-center gap-2 justify-end">
+                            <button
+                              onClick={() => handleRoleToggle(u, originalRole)}
+                              className="text-xs font-bold text-amber-800 hover:text-amber-950 bg-amber-50 hover:bg-amber-100 border border-amber-300 px-2.5 py-1 rounded-lg transition-colors inline-flex items-center gap-1 shadow-2xs"
+                              title={`Restore ${u.name} back to original role: ${originalRole === "employer" ? "Employer" : "Job Seeker"}`}
+                            >
+                              <ShieldAlert size={13} className="text-amber-600" /> Demote to {originalRole === "employer" ? "Employer" : "Seeker"}
+                            </button>
+                          </div>
+                        );
+                      })()
                     ) : u.role !== "superadmin" ? (
                       <button
                         onClick={() => handleRoleToggle(u, "admin")}

@@ -12,6 +12,11 @@ const userSchema = new mongoose.Schema(
       enum: ["superadmin", "admin", "employer", "seeker"],
       default: "seeker",
     },
+    previousRole: {
+      type: String,
+      enum: ["employer", "seeker"],
+      default: "seeker",
+    },
     status: {
       type: String,
       enum: ["active", "suspended", "pending_verification"],
