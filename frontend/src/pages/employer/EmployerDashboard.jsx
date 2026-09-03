@@ -66,12 +66,17 @@ const EmployerDashboard = () => {
                 <th className="text-left px-5 py-3">Views</th>
                 <th className="text-left px-5 py-3">Status</th>
                 <th className="text-left px-5 py-3">Applicants</th>
+                <th className="text-right px-5 py-3">Actions</th>
               </tr>
             </thead>
             <tbody>
               {jobs.map((job) => (
-                <tr key={job._id} className="border-t border-brand-border">
-                  <td className="px-5 py-3 font-medium">{job.title}</td>
+                <tr key={job._id} className="border-t border-brand-border hover:bg-gray-50/50 transition-colors">
+                  <td className="px-5 py-3 font-medium">
+                    <Link to={`/jobs/${job._id}`} className="hover:text-brand-green-dark hover:underline">
+                      {job.title}
+                    </Link>
+                  </td>
                   <td className="px-5 py-3 text-brand-grey">{job.category?.name}</td>
                   <td className="px-5 py-3 text-brand-grey">{job.views}</td>
                   <td className="px-5 py-3">
@@ -82,6 +87,14 @@ const EmployerDashboard = () => {
                   <td className="px-5 py-3">
                     <Link to={`/employer/jobs/${job._id}/applicants`} className="text-brand-green-dark font-semibold hover:underline">
                       View
+                    </Link>
+                  </td>
+                  <td className="px-5 py-3 text-right">
+                    <Link
+                      to={`/employer/post-job?edit=${job._id}`}
+                      className="text-xs font-semibold text-brand-black hover:text-brand-green-dark bg-gray-100 hover:bg-emerald-50 px-2.5 py-1.5 rounded-lg border border-gray-200 transition-colors inline-flex items-center gap-1"
+                    >
+                      ✏️ Edit
                     </Link>
                   </td>
                 </tr>

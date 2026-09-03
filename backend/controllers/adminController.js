@@ -232,6 +232,24 @@ export const verifyEmployer = asyncHandler(async (req, res) => {
   res.json(employer);
 });
 
+// @desc  List all jobs across the platform (filterable for admin)
+// @route GET /api/admin/jobs
+export const listAllJobs = asyncHandler(async (req, res) => {
+  const { status, search } = req.query;
+  const filter = {};
+  if (status && status !== "all") filter.status = status;
+  if (search && search.trim()) {
+    const regex = { $regex: search.trim(), $options: "i" };
+    filter.$or = [{ title: regex }, { companyName: regex }, { location: regex }];
+  }
+
+  const jobs = await Job.find(filter)
+    .populate("employer", "name email")
+    .populate("category", "name")
+    .sort("-createdAt");
+  res.json(jobs);
+});
+
 // @desc  List pending job postings
 // @route GET /api/admin/jobs/pending
 export const getPendingJobs = asyncHandler(async (req, res) => {

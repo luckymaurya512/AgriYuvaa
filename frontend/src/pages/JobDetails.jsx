@@ -21,8 +21,10 @@ import {
   FileText,
   Loader2,
   ArrowRight,
+  Edit3,
 } from "lucide-react";
 import { fetchJobById, applyToJob, fetchMyApplications, fetchJobs } from "../services/jobService.js";
+import { toggleJobFeatured } from "../services/adminService.js";
 import { fetchSeekerProfile, toggleSaveJob, uploadSeekerResume } from "../services/userService.js";
 import { toggleFollowEmployer, enablePushNotifications } from "../services/notificationService.js";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -259,21 +261,69 @@ const JobDetails = () => {
     defaultEmailSubject
   )}&body=${encodeURIComponent(emailBody)}`;
 
+  const isOwner = user && (job.employer?._id === user._id || job.employer === user._id);
+  const isAdmin = user && ["admin", "superadmin"].includes(user.role);
+  const canEdit = isOwner || isAdmin;
+
+  const handleAdminToggleFeatured = async () => {
+    try {
+      const res = await toggleJobFeatured(id);
+      setJob((prev) => ({ ...prev, isFeatured: res.isFeatured }));
+      alert(
+        res.isFeatured
+          ? `⭐ "${job.title}" is now marked as FEATURED.`
+          : `ℹ️ "${job.title}" featured boost removed.`
+      );
+    } catch (err) {
+      alert("Failed to toggle featured status");
+    }
+  };
+
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 grid md:grid-cols-3 gap-8">
       {/* Left Column: Job Info */}
       <div className="md:col-span-2 space-y-6">
         <div>
-          <div className="flex flex-wrap items-center gap-2 mb-3">
-            {job.isFeatured && (
-              <span className="inline-flex items-center gap-1 bg-amber-500 text-white text-xs font-bold px-2.5 py-1 rounded-md shadow-xs">
-                <Star size={13} fill="currentColor" /> Featured
-              </span>
-            )}
-            {job.isUrgent && (
-              <span className="inline-flex items-center gap-1 bg-orange-600 text-white text-xs font-bold px-2.5 py-1 rounded-md animate-pulse">
-                <Zap size={13} fill="currentColor" /> Urgent Hiring
-              </span>
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div className="flex flex-wrap items-center gap-2">
+              {job.isFeatured && (
+                <span className="inline-flex items-center gap-1 bg-amber-500 text-white text-xs font-bold px-2.5 py-1 rounded-md shadow-xs">
+                  <Star size={13} fill="currentColor" /> Featured
+                </span>
+              )}
+              {job.isUrgent && (
+                <span className="inline-flex items-center gap-1 bg-orange-600 text-white text-xs font-bold px-2.5 py-1 rounded-md animate-pulse">
+                  <Zap size={13} fill="currentColor" /> Urgent Hiring
+                </span>
+              )}
+            </div>
+
+            {/* Owner / Admin Quick Actions */}
+            {canEdit && (
+              <div className="flex items-center gap-2">
+                {isAdmin && (
+                  <button
+                    type="button"
+                    onClick={handleAdminToggleFeatured}
+                    className={`text-xs font-bold px-2.5 py-1 rounded-lg border transition-all inline-flex items-center gap-1 shadow-2xs ${
+                      job.isFeatured
+                        ? "bg-amber-100 text-amber-900 border-amber-300 hover:bg-amber-200"
+                        : "bg-gray-100 text-gray-700 border-gray-200 hover:bg-amber-50 hover:text-amber-800"
+                    }`}
+                    title={job.isFeatured ? "Click to Remove Featured Status" : "Click to Make Featured"}
+                  >
+                    <Star size={12} fill={job.isFeatured ? "currentColor" : "none"} />
+                    {job.isFeatured ? "Unfeature" : "Make Featured"}
+                  </button>
+                )}
+
+                <Link
+                  to={`/employer/post-job?edit=${job._id}`}
+                  className="text-xs font-semibold text-brand-black hover:text-brand-green-dark bg-gray-100 hover:bg-emerald-50 px-3 py-1 rounded-lg border border-gray-200 transition-colors inline-flex items-center gap-1"
+                >
+                  <Edit3 size={13} /> Edit Job
+                </Link>
+              </div>
             )}
           </div>
 

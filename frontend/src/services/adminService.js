@@ -16,6 +16,7 @@ export const verifyEmployer = (id, decision) =>
   api.post(`/admin/employers/${id}/verify`, { decision }).then((r) => r.data);
 
 export const fetchPendingJobs = () => api.get("/admin/jobs/pending").then((r) => r.data);
+export const fetchAllPlatformJobs = (params) => api.get("/admin/jobs", { params }).then((r) => r.data);
 export const reviewJob = (id, decision, rejectionReason, isFeatured) =>
   api.post(`/admin/jobs/${id}/review`, { decision, rejectionReason, isFeatured }).then((r) => r.data);
 export const toggleJobFeatured = (id) => api.post(`/admin/jobs/${id}/featured`).then((r) => r.data);

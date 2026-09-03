@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Mail, ExternalLink, FileText, Building2, Sparkles } from "lucide-react";
-import { fetchCategories, createJob } from "../../services/jobService.js";
+import { useNavigate, useSearchParams, useParams } from "react-router-dom";
+import { Mail, ExternalLink, FileText, Building2, Sparkles, Loader2, ArrowLeft } from "lucide-react";
+import { fetchCategories, createJob, fetchJobById, updateJob } from "../../services/jobService.js";
 import { useAuth } from "../../context/AuthContext.jsx";
 
 const employmentTypes = ["full-time", "part-time", "seasonal", "daily-wage", "contract", "internship"];
@@ -9,12 +9,18 @@ const experienceLevels = ["entry", "mid", "senior", "any"];
 
 const PostJob = () => {
   const navigate = useNavigate();
+  const { id: paramId } = useParams();
+  const [searchParams] = useSearchParams();
+  const editJobId = searchParams.get("edit") || paramId;
+  const isEdit = Boolean(editJobId);
+
   const { user } = useAuth();
   const isAdmin = ["admin", "superadmin"].includes(user?.role);
 
   const [categories, setCategories] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(isEdit);
 
   const [form, setForm] = useState({
     title: "",
@@ -35,11 +41,51 @@ const PostJob = () => {
     applyEmailSubject: "",
     applyEmailInstructions: "",
     applyUrl: "",
+    isFeatured: false,
+    featuredRequested: false,
+    isUrgent: false,
   });
 
   useEffect(() => {
     fetchCategories().then(setCategories).catch(() => setCategories([]));
   }, []);
+
+  useEffect(() => {
+    if (editJobId) {
+      setInitialLoading(true);
+      fetchJobById(editJobId)
+        .then((job) => {
+          if (!job) return;
+          setForm({
+            title: job.title || "",
+            companyName: job.companyName || "",
+            description: job.description || "",
+            responsibilities: (job.responsibilities || []).join("\n"),
+            requirements: (job.requirements || []).join("\n"),
+            benefits: (job.benefits || []).join("\n"),
+            category: job.category?._id || job.category || "",
+            employmentType: job.employmentType || "full-time",
+            experienceLevel: job.experienceLevel || "any",
+            location: job.location || "",
+            salaryMin: job.salaryMin !== undefined ? String(job.salaryMin) : "",
+            salaryMax: job.salaryMax !== undefined ? String(job.salaryMax) : "",
+            cropTags: (job.cropTags || []).join(", "),
+            applyType: job.applyType || "platform",
+            applyEmail: job.applyEmail || "",
+            applyEmailSubject: job.applyEmailSubject || "",
+            applyEmailInstructions: job.applyEmailInstructions || "",
+            applyUrl: job.applyUrl || "",
+            isFeatured: job.isFeatured || false,
+            featuredRequested: job.featuredRequested || false,
+            isUrgent: job.isUrgent || false,
+          });
+        })
+        .catch((err) => {
+          setError(err.response?.data?.message || "Failed to load job details for editing");
+        })
+        .finally(() => setInitialLoading(false));
+    }
+  }, [editJobId]);
 
   const parseList = (text) =>
     (text || "")
@@ -63,7 +109,7 @@ const PostJob = () => {
 
     setLoading(true);
     try {
-      await createJob({
+      const payload = {
         ...form,
         responsibilities: parseList(form.responsibilities),
         requirements: parseList(form.requirements),
@@ -71,28 +117,60 @@ const PostJob = () => {
         salaryMin: form.salaryMin ? Number(form.salaryMin) : undefined,
         salaryMax: form.salaryMax ? Number(form.salaryMax) : undefined,
         cropTags: form.cropTags ? form.cropTags.split(",").map((t) => t.trim()).filter(Boolean) : [],
-      });
+      };
 
-      if (isAdmin) {
-        navigate("/admin");
+      if (isEdit) {
+        await updateJob(editJobId, payload);
+        alert(
+          isAdmin
+            ? "Job listing updated successfully!"
+            : "Job updated! If modified, changes will be reviewed by admin moderation."
+        );
+        if (isAdmin) {
+          navigate("/admin");
+        } else {
+          navigate("/employer");
+        }
       } else {
-        navigate("/employer");
+        await createJob(payload);
+        if (isAdmin) {
+          navigate("/admin");
+        } else {
+          navigate("/employer");
+        }
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Could not create job posting");
+      setError(err.response?.data?.message || "Could not save job posting");
     } finally {
       setLoading(false);
     }
   };
 
+  if (initialLoading) {
+    return (
+      <div className="py-24 text-center text-sm text-brand-grey flex items-center justify-center gap-2">
+        <Loader2 size={18} className="animate-spin text-brand-green" /> Loading job details...
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <div className="mb-8">
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          className="inline-flex items-center gap-1 text-xs font-semibold text-brand-grey hover:text-brand-black mb-3 transition-colors"
+        >
+          <ArrowLeft size={14} /> Back
+        </button>
         <h1 className="text-2xl font-display font-bold mb-1">
-          {isAdmin ? "Post a Job / Hiring Alert" : "Post a New Job"}
+          {isEdit ? "Edit Job Listing" : isAdmin ? "Post a Job / Hiring Alert" : "Post a New Job"}
         </h1>
         <p className="text-sm text-brand-grey">
-          {isAdmin
+          {isEdit
+            ? "Update role requirements, location, salary, or application instructions."
+            : isAdmin
             ? "As an Admin, this job will be published immediately on the portal."
             : "Your listing will go live once approved by our moderation team."}
         </p>
@@ -479,7 +557,9 @@ const PostJob = () => {
 
         <button disabled={loading} type="submit" className="btn-primary w-full py-3">
           {loading
-            ? "Publishing..."
+            ? "Saving..."
+            : isEdit
+            ? "Save & Update Job Listing"
             : isAdmin
             ? "Publish Job (Live Immediately)"
             : "Submit for Approval"}

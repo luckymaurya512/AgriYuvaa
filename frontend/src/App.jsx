@@ -72,6 +72,14 @@ function App() {
             }
           />
           <Route
+            path="/employer/edit-job/:id"
+            element={
+              <ProtectedRoute roles={["employer", "admin", "superadmin"]}>
+                <PostJob />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/employer/jobs/:jobId/applicants"
             element={
               <ProtectedRoute roles={["employer", "admin", "superadmin"]}>
