@@ -15,10 +15,10 @@ const govtJobSchema = new mongoose.Schema(
       enum: ["B.Sc Agriculture", "M.Sc / Ph.D", "Diploma in Agriculture", "B.Tech Agri Engg", "Any Graduate"],
       default: "B.Sc Agriculture",
     },
-    vacancies: { type: String, required: true },
+    vacancies: { type: String, default: "Not Specified" },
     salary: { type: String, required: true },
     applicationDeadline: { type: String, required: true },
-    notificationUrl: { type: String, required: true },
+    notificationUrl: { type: String, default: "" },
     applyUrl: { type: String, required: true },
     status: {
       type: String,

@@ -304,7 +304,7 @@ const GovtJobs = () => {
                   <Users size={16} className="text-emerald-700 shrink-0" />
                   <div>
                     <p className="text-brand-grey font-medium">Total Vacancies</p>
-                    <p className="font-bold text-brand-black">{job.vacancies}</p>
+                    <p className="font-bold text-brand-black">{job.vacancies || "Not Specified"}</p>
                   </div>
                 </div>
 
@@ -352,14 +352,16 @@ const GovtJobs = () => {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
-                  <a
-                    href={job.notificationUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn-secondary text-xs py-2 px-4 flex items-center gap-1.5"
-                  >
-                    <FileText size={14} /> Official Notification PDF <ExternalLink size={11} />
-                  </a>
+                  {job.notificationUrl && (
+                    <a
+                      href={job.notificationUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-secondary text-xs py-2 px-4 flex items-center gap-1.5"
+                    >
+                      <FileText size={14} /> Official Notification PDF <ExternalLink size={11} />
+                    </a>
+                  )}
 
                   <a
                     href={job.applyUrl}
@@ -482,10 +484,9 @@ const GovtJobs = () => {
                 </div>
 
                 <div>
-                  <label className="font-bold text-brand-grey uppercase">Total Vacancies *</label>
+                  <label className="font-bold text-brand-grey uppercase">Total Vacancies (Optional)</label>
                   <input
-                    required
-                    placeholder="e.g. 516 Posts"
+                    placeholder="e.g. 516 Posts (or leave blank)"
                     className="input-field mt-1 text-sm"
                     value={form.vacancies}
                     onChange={(e) => setForm({ ...form, vacancies: e.target.value })}
@@ -525,11 +526,10 @@ const GovtJobs = () => {
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="font-bold text-brand-grey uppercase">Official Notification PDF Link (URL) *</label>
+                  <label className="font-bold text-brand-grey uppercase">Official Notification PDF Link (URL) (Optional)</label>
                   <input
-                    required
                     type="url"
-                    placeholder="https://official-dept.gov.in/notification.pdf"
+                    placeholder="https://official-dept.gov.in/notification.pdf (Optional)"
                     className="input-field mt-1 text-sm"
                     value={form.notificationUrl}
                     onChange={(e) => setForm({ ...form, notificationUrl: e.target.value })}
