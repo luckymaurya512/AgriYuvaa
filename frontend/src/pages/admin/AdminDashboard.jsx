@@ -871,22 +871,21 @@ const AdminDashboard = () => {
           </div>
 
           <div className="card overflow-hidden">
-            <div className="p-5 border-b border-brand-border flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-              <div className="flex items-center gap-2">
-                <span className="text-xs bg-emerald-100 text-emerald-800 font-bold px-3 py-1 rounded-full border border-emerald-200">
-                  {applications.length} Total Applicants
+            <div className="p-4 sm:p-5 border-b border-brand-border bg-white flex flex-col xl:flex-row xl:items-center justify-between gap-3 sm:gap-4">
+              {/* Left: Applicant Counter & View Mode Switcher */}
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-xs bg-emerald-50 text-emerald-900 font-bold px-3 py-1.5 rounded-xl border border-emerald-200 shrink-0">
+                  👥 {applications.length} Total Applicants
                 </span>
-              </div>
 
-              <div className="flex flex-wrap items-center gap-2.5">
                 {/* View Mode Toggle: By Job vs Full Feed */}
-                <div className="inline-flex rounded-xl bg-gray-100 p-1 border border-gray-200 text-xs font-semibold">
+                <div className="inline-flex rounded-xl bg-gray-100/90 p-1 border border-gray-200 text-xs font-semibold shrink-0">
                   <button
                     type="button"
                     onClick={() => setAppViewMode("by_job")}
                     className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
                       appViewMode === "by_job"
-                        ? "bg-white text-emerald-900 shadow-2xs font-bold"
+                        ? "bg-white text-emerald-950 shadow-2xs font-bold"
                         : "text-gray-600 hover:text-black"
                     }`}
                   >
@@ -897,18 +896,43 @@ const AdminDashboard = () => {
                     onClick={() => setAppViewMode("all_feed")}
                     className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
                       appViewMode === "all_feed"
-                        ? "bg-white text-emerald-900 shadow-2xs font-bold"
+                        ? "bg-white text-emerald-950 shadow-2xs font-bold"
                         : "text-gray-600 hover:text-black"
                     }`}
                   >
                     <Layers size={13} /> Flat Feed ({applications.length})
                   </button>
                 </div>
+              </div>
 
+              {/* Right: Search, Filter, Export Controls */}
+              <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
+                {/* Search Bar */}
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    loadPlatformApplications();
+                  }}
+                  className="relative flex-1 sm:flex-initial"
+                >
+                  <Search
+                    size={14}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-grey pointer-events-none"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Search applicant, job, company..."
+                    value={appSearch}
+                    onChange={(e) => setAppSearch(e.target.value)}
+                    className="w-full sm:w-56 pl-8 pr-3 py-1.5 text-xs bg-gray-50/80 border border-brand-border rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent transition-all"
+                  />
+                </form>
+
+                {/* Status Dropdown */}
                 <select
                   value={appStatusFilter}
                   onChange={(e) => setAppStatusFilter(e.target.value)}
-                  className="input-field text-xs py-2 bg-white w-auto"
+                  className="w-auto px-3 py-1.5 text-xs font-medium bg-gray-50/80 border border-brand-border rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600 cursor-pointer transition-all shrink-0"
                 >
                   <option value="all">All Statuses</option>
                   <option value="applied">Applied</option>
@@ -918,29 +942,11 @@ const AdminDashboard = () => {
                   <option value="rejected">Rejected</option>
                 </select>
 
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    loadPlatformApplications();
-                  }}
-                  className="flex items-center gap-1"
-                >
-                  <input
-                    type="text"
-                    placeholder="Search job, company, or applicant..."
-                    value={appSearch}
-                    onChange={(e) => setAppSearch(e.target.value)}
-                    className="input-field text-xs py-2 w-40 sm:w-52"
-                  />
-                  <button type="submit" className="btn-secondary text-xs py-2 px-3 shrink-0">
-                    <Search size={13} />
-                  </button>
-                </form>
-
+                {/* Export CSV Button */}
                 <button
                   type="button"
                   onClick={() => handleExportCSV(null, "all_applications")}
-                  className="px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 text-xs font-bold flex items-center gap-1.5 transition-all shadow-2xs shrink-0"
+                  className="px-3.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 text-xs font-bold flex items-center gap-1.5 transition-all shadow-2xs shrink-0 cursor-pointer"
                   title="Export all filtered applicants to CSV spreadsheet"
                 >
                   <FileSpreadsheet size={14} className="text-emerald-700" />
