@@ -253,12 +253,21 @@ const JobDetails = () => {
   if (!job) return <div className="py-24 text-center text-brand-grey">{error || "Job not found."}</div>;
 
   const companyDisplayName = job.companyName || job.employer?.name || "Hiring Company";
-  const defaultEmailSubject =
-    job.applyEmailSubject || `Application for ${job.title} - ${user?.name || "Applicant"}`;
+  
+  // Format subject: always ensure [AgriYuvaa] reference is present in the subject
+  let defaultEmailSubject = job.applyEmailSubject?.trim();
+  if (!defaultEmailSubject) {
+    defaultEmailSubject = `[AgriYuvaa Application] ${job.title} - ${user?.name || "Candidate"}`;
+  } else if (!defaultEmailSubject.toLowerCase().includes("agriyuvaa")) {
+    defaultEmailSubject = `[AgriYuvaa] ${defaultEmailSubject} - ${user?.name || "Candidate"}`;
+  }
 
-  const emailBody = `Dear HR,\n\nPlease find attached my resume for the ${job.title} position at ${companyDisplayName}.\n\nName: ${
-    user?.name || ""
-  }\nEmail: ${user?.email || ""}\n\nBest regards,\n${user?.name || ""}`;
+  const candidatePhone = user?.phone ? `\n- Phone: ${user.phone}` : "";
+  const resumeRef = (job.applyType === "email" && resumeUrl)
+    ? `\n- Online Resume Link: ${resumeUrl.startsWith("http") ? resumeUrl : `https://${resumeUrl}`}`
+    : "";
+
+  const emailBody = `Dear Hiring Team at ${companyDisplayName},\n\nI am writing to apply for the "${job.title}" position at ${companyDisplayName} via AgriYuvaa (Agriculture Career & Talent Platform).\n\nPlease find attached my resume for your review and consideration.\n\nApplicant Details:\n- Name: ${user?.name || "Candidate"}\n- Email: ${user?.email || ""}${candidatePhone}${resumeRef}\n\nThank you for your time and consideration.\n\nBest regards,\n${user?.name || "Candidate"}\n(Applied through AgriYuvaa - https://frontend-lime-nine-60.vercel.app)`;
 
   const gmailWebLink = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
     job.applyEmail || ""
