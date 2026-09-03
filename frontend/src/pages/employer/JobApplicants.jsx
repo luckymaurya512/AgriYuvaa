@@ -182,35 +182,50 @@ const JobApplicants = () => {
                   </div>
                 )}
 
-                {app.resumeUrl ? (
-                  <div className="flex items-center gap-3 pt-1">
-                    <a
-                      href={
-                        app.resumeUrl.startsWith("http://") || app.resumeUrl.startsWith("https://")
-                          ? app.resumeUrl.trim()
-                          : `https://${app.resumeUrl.trim()}`
-                      }
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3.5 py-1.5 rounded-lg transition-colors shadow-2xs"
-                    >
-                      <Download size={13} /> View / Download Resume <ExternalLink size={11} />
-                    </a>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const targetUrl =
-                          app.resumeUrl.startsWith("http://") || app.resumeUrl.startsWith("https://")
-                            ? app.resumeUrl.trim()
-                            : `https://${app.resumeUrl.trim()}`;
-                        navigator.clipboard.writeText(targetUrl);
-                        alert("Resume link copied to clipboard!");
-                      }}
-                      className="text-xs text-brand-grey hover:text-brand-black underline"
-                    >
-                      Copy Link
-                    </button>
-                  </div>
+                {app.resumeUrl || app._id ? (
+                  (() => {
+                    const backendBase = (
+                      import.meta.env.VITE_API_URL || "https://agriyuvaa.onrender.com"
+                    ).replace(/\/api\/?$/, "");
+
+                    let targetUrl = app.resumeUrl ? app.resumeUrl.trim() : "";
+                    targetUrl = targetUrl.replace(/^https?:\/\/\/+/, "/");
+
+                    if (targetUrl.startsWith("/uploads/")) {
+                      targetUrl = `${backendBase}${targetUrl}`;
+                    } else if (
+                      !targetUrl.startsWith("http://") &&
+                      !targetUrl.startsWith("https://") &&
+                      targetUrl.length > 0
+                    ) {
+                      targetUrl = `https://${targetUrl}`;
+                    } else if (!targetUrl) {
+                      targetUrl = `${backendBase}/api/applications/${app._id}/resume`;
+                    }
+
+                    return (
+                      <div className="flex items-center gap-3 pt-1">
+                        <a
+                          href={targetUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3.5 py-1.5 rounded-lg transition-colors shadow-2xs"
+                        >
+                          <Download size={13} /> View / Download Resume <ExternalLink size={11} />
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(targetUrl);
+                            alert("Resume link copied to clipboard!");
+                          }}
+                          className="text-xs text-brand-grey hover:text-brand-black underline"
+                        >
+                          Copy Link
+                        </button>
+                      </div>
+                    );
+                  })()
                 ) : (
                   <span className="text-xs text-brand-grey italic">No resume link provided</span>
                 )}

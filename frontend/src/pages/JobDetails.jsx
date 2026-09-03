@@ -170,16 +170,23 @@ const JobDetails = () => {
     setError("");
     let formattedUrl = (resumeUrl || "").trim();
     if (!formattedUrl) {
-      setError("Please provide your resume URL.");
+      setError("Please attach or upload your resume before applying.");
       return;
     }
-    if (!formattedUrl.startsWith("http://") && !formattedUrl.startsWith("https://")) {
+
+    // Clean up corrupted triple slashes if present
+    formattedUrl = formattedUrl.replace(/^https?:\/\/\/+/, "/");
+
+    // If it's a relative backend uploaded path, prefix with backend server URL
+    if (formattedUrl.startsWith("/uploads/")) {
+      const backendBase = import.meta.env.VITE_API_URL
+        ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, "")
+        : "https://agriyuvaa.onrender.com";
+      formattedUrl = `${backendBase}${formattedUrl}`;
+    } else if (!formattedUrl.startsWith("http://") && !formattedUrl.startsWith("https://")) {
       formattedUrl = `https://${formattedUrl}`;
     }
-    if (!formattedUrl.includes(".") || formattedUrl.length < 8) {
-      setError("Please enter a valid resume link (e.g., https://drive.google.com/file/... or Dropbox link)");
-      return;
-    }
+
     try {
       await applyToJob(id, { resumeUrl: formattedUrl, coverNote });
       setApplied(true);

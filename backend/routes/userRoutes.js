@@ -197,9 +197,14 @@ router.post(
       throw new Error("Please select a resume file (PDF, DOCX, DOC, or Image) to upload");
     }
 
+    const base64Data = req.file.buffer.toString("base64");
     const fileUrl = await uploadFileToCloud(req.file.buffer, req.file.originalname, "agriyuvaa/resumes");
+    
     const profile = await getOrCreateProfile(req.user._id);
     profile.resumeUrl = fileUrl;
+    profile.resumeOriginalName = req.file.originalname;
+    profile.resumeMimeType = req.file.mimetype;
+    profile.resumeFileData = base64Data;
     await profile.save();
 
     res.json({

@@ -1,6 +1,9 @@
+import path from "path";
+import fs from "fs";
 import asyncHandler from "express-async-handler";
 import Application from "../models/Application.js";
 import Job from "../models/Job.js";
+import SeekerProfile from "../models/SeekerProfile.js";
 import sendEmail from "../utils/sendEmail.js";
 
 // @desc  Apply to a job (job seeker only)
@@ -18,14 +21,87 @@ export const applyToJob = asyncHandler(async (req, res) => {
     throw new Error("You have already applied to this job");
   }
 
+  // Lookup profile to get stored resume file data if available
+  const seekerProfile = await SeekerProfile.findOne({ user: req.user._id });
+
   const application = await Application.create({
     job: job._id,
     seeker: req.user._id,
-    resumeUrl: req.body.resumeUrl,
+    resumeUrl: req.body.resumeUrl || seekerProfile?.resumeUrl,
+    resumeOriginalName: seekerProfile?.resumeOriginalName,
+    resumeMimeType: seekerProfile?.resumeMimeType,
+    resumeFileData: seekerProfile?.resumeFileData,
     coverNote: req.body.coverNote,
   });
 
   res.status(201).json(application);
+});
+
+// @desc  Download / view application resume safely
+// @route GET /api/applications/:id/resume
+export const downloadApplicationResume = asyncHandler(async (req, res) => {
+  const application = await Application.findById(req.params.id).populate("job");
+  if (!application) {
+    res.status(404);
+    throw new Error("Application not found");
+  }
+
+  // 1. If stored in MongoDB as base64Data
+  if (application.resumeFileData) {
+    const fileBuffer = Buffer.from(application.resumeFileData, "base64");
+    const mimeType = application.resumeMimeType || "application/pdf";
+    const filename = (application.resumeOriginalName || `Resume_${application._id}.pdf`).replace(
+      /[^a-zA-Z0-9._-]/g,
+      "_"
+    );
+
+    res.setHeader("Content-Type", mimeType);
+    res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
+    return res.send(fileBuffer);
+  }
+
+  // If application has no resumeFileData, try fallback to seekerProfile
+  const seekerProfile = await SeekerProfile.findOne({ user: application.seeker });
+  if (seekerProfile?.resumeFileData) {
+    const fileBuffer = Buffer.from(seekerProfile.resumeFileData, "base64");
+    const mimeType = seekerProfile.resumeMimeType || "application/pdf";
+    const filename = (seekerProfile.resumeOriginalName || `Resume_${application._id}.pdf`).replace(
+      /[^a-zA-Z0-9._-]/g,
+      "_"
+    );
+
+    res.setHeader("Content-Type", mimeType);
+    res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
+    return res.send(fileBuffer);
+  }
+
+  // 2. If stored on disk in uploads
+  if (application.resumeUrl) {
+    let cleanUrl = application.resumeUrl.trim();
+    if (cleanUrl.startsWith("/uploads/")) {
+      const filePath = path.join(process.cwd(), cleanUrl);
+      if (fs.existsSync(filePath)) {
+        return res.sendFile(filePath);
+      }
+    }
+
+    // Clean up corrupted triple slashes if present (e.g. https:///uploads/...)
+    cleanUrl = cleanUrl.replace(/^https?:\/\/\/+/, "/").replace(/^https?:\/\//i, "https://");
+    if (cleanUrl.startsWith("/uploads/")) {
+      const filePath = path.join(process.cwd(), cleanUrl);
+      if (fs.existsSync(filePath)) {
+        return res.sendFile(filePath);
+      }
+      return res.redirect(`https://agriyuvaa.onrender.com${cleanUrl}`);
+    }
+
+    if (!cleanUrl.startsWith("http://") && !cleanUrl.startsWith("https://")) {
+      cleanUrl = `https://${cleanUrl}`;
+    }
+    return res.redirect(cleanUrl);
+  }
+
+  res.status(404).json({ message: "Resume document not available" });
 });
 
 // @desc  Get applications submitted by the logged-in seeker

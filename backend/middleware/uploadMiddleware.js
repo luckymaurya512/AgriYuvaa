@@ -68,6 +68,6 @@ export const uploadFileToCloud = async (fileBuffer, originalname, folder = "agri
   const filePath = path.join(uploadDir, safeFilename);
   await fs.promises.writeFile(filePath, fileBuffer);
 
-  const baseUrl = process.env.SERVER_URL || process.env.CLIENT_URL || "";
-  return `/uploads/${safeFilename}`;
+  const baseUrl = (process.env.SERVER_URL || "https://agriyuvaa.onrender.com").replace(/\/+$/, "");
+  return `${baseUrl}/uploads/${safeFilename}`;
 };

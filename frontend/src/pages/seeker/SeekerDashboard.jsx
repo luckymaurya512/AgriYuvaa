@@ -472,7 +472,15 @@ const SeekerDashboard = () => {
 
                   <div className="flex items-center gap-2 pt-3 border-t border-emerald-200">
                     <a
-                      href={resumeUrl.startsWith("http") ? resumeUrl : `https://${resumeUrl}`}
+                      href={(() => {
+                        const backendBase = (
+                          import.meta.env.VITE_API_URL || "https://agriyuvaa.onrender.com"
+                        ).replace(/\/api\/?$/, "");
+                        let target = (resumeUrl || "").trim().replace(/^https?:\/\/\/+/, "/");
+                        if (target.startsWith("/uploads/")) return `${backendBase}${target}`;
+                        if (target.startsWith("http://") || target.startsWith("https://")) return target;
+                        return `https://${target}`;
+                      })()}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="btn-secondary text-xs py-2 px-3 flex-1 text-center bg-white"
