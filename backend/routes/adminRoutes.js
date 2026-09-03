@@ -8,6 +8,7 @@ import {
   getPendingEmployers,
   verifyEmployer,
   listAllJobs,
+  listAllApplications,
   getPendingJobs,
   reviewJob,
   toggleJobFeatured,
@@ -30,6 +31,7 @@ router.get("/employers/pending", getPendingEmployers);
 router.route("/employers/:id/verify").patch(verifyEmployer).post(verifyEmployer);
 
 router.get("/jobs", listAllJobs);
+router.get("/applications", listAllApplications);
 router.get("/jobs/pending", getPendingJobs);
 router.route("/jobs/:id/review").patch(reviewJob).post(reviewJob);
 router.route("/jobs/:id/featured").patch(toggleJobFeatured).post(toggleJobFeatured);

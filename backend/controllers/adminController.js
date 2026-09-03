@@ -269,6 +269,45 @@ export const listAllJobs = asyncHandler(async (req, res) => {
   res.json(jobs);
 });
 
+// @desc  List all job applications across the entire platform (Admin & Super Admin)
+// @route GET /api/admin/applications
+export const listAllApplications = asyncHandler(async (req, res) => {
+  const { status, search } = req.query;
+  const filter = {};
+  if (status && status !== "all") filter.status = status;
+
+  let applications = await Application.find(filter)
+    .populate("seeker", "name email phone")
+    .populate({
+      path: "job",
+      select: "title companyName location employer isFeatured isUrgent",
+      populate: { path: "employer", select: "name email" },
+    })
+    .sort("-createdAt");
+
+  if (search && search.trim()) {
+    const q = search.trim().toLowerCase();
+    applications = applications.filter((app) => {
+      const candidateName = app.seeker?.name?.toLowerCase() || "";
+      const candidateEmail = app.seeker?.email?.toLowerCase() || "";
+      const jobTitle = app.job?.title?.toLowerCase() || "";
+      const companyName = (
+        app.job?.companyName ||
+        app.job?.employer?.name ||
+        ""
+      ).toLowerCase();
+      return (
+        candidateName.includes(q) ||
+        candidateEmail.includes(q) ||
+        jobTitle.includes(q) ||
+        companyName.includes(q)
+      );
+    });
+  }
+
+  res.json(applications);
+});
+
 // @desc  List pending job postings
 // @route GET /api/admin/jobs/pending
 export const getPendingJobs = asyncHandler(async (req, res) => {

@@ -1,12 +1,29 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { PlusCircle, Star, CheckCircle, XCircle, Landmark, Edit3, Trash2, Search, Sparkles } from "lucide-react";
+import {
+  PlusCircle,
+  Star,
+  CheckCircle,
+  XCircle,
+  Landmark,
+  Edit3,
+  Trash2,
+  Search,
+  Sparkles,
+  Users,
+  Download,
+  ExternalLink,
+  FileText,
+  Building2,
+  Calendar,
+} from "lucide-react";
 import {
   fetchPlatformStats,
   fetchPendingEmployers,
   verifyEmployer,
   fetchPendingJobs,
   fetchAllPlatformJobs,
+  fetchAllApplications,
   reviewJob,
   toggleJobFeatured,
 } from "../../services/adminService.js";
@@ -20,6 +37,13 @@ const AdminDashboard = () => {
   const [jobSearch, setJobSearch] = useState("");
   const [jobStatusFilter, setJobStatusFilter] = useState("all");
   const [loadingJobs, setLoadingJobs] = useState(false);
+
+  // Platform Applications State
+  const [applications, setApplications] = useState([]);
+  const [appSearch, setAppSearch] = useState("");
+  const [appStatusFilter, setAppStatusFilter] = useState("all");
+  const [loadingApps, setLoadingApps] = useState(false);
+
   const [actionSuccess, setActionSuccess] = useState("");
 
   const loadAll = () => {
@@ -27,6 +51,7 @@ const AdminDashboard = () => {
     fetchPendingEmployers().then(setPendingEmployers).catch(() => {});
     fetchPendingJobs().then(setPendingJobs).catch(() => {});
     loadPlatformJobs();
+    loadPlatformApplications();
   };
 
   const loadPlatformJobs = () => {
@@ -40,6 +65,17 @@ const AdminDashboard = () => {
       .finally(() => setLoadingJobs(false));
   };
 
+  const loadPlatformApplications = () => {
+    setLoadingApps(true);
+    fetchAllApplications({
+      status: appStatusFilter !== "all" ? appStatusFilter : undefined,
+      search: appSearch.trim() || undefined,
+    })
+      .then(setApplications)
+      .catch(() => setApplications([]))
+      .finally(() => setLoadingApps(false));
+  };
+
   useEffect(() => {
     loadAll();
   }, []);
@@ -47,6 +83,10 @@ const AdminDashboard = () => {
   useEffect(() => {
     loadPlatformJobs();
   }, [jobStatusFilter]);
+
+  useEffect(() => {
+    loadPlatformApplications();
+  }, [appStatusFilter]);
 
   const handleEmployerDecision = async (id, decision) => {
     await verifyEmployer(id, decision);
@@ -353,6 +393,180 @@ const AdminDashboard = () => {
                     </td>
                   </tr>
                 ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* ── ALL PLATFORM APPLICATIONS (WHO APPLIED TO WHICH COMPANY) ── */}
+      <div className="card overflow-hidden">
+        <div className="p-5 border-b border-brand-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h3 className="font-display font-bold text-base text-brand-black flex items-center gap-2">
+              <Users size={18} className="text-brand-green" />
+              <span>All Platform Job Applications ({applications.length})</span>
+            </h3>
+            <p className="text-xs text-brand-grey mt-0.5">
+              Live tracking of which candidates have applied to which company and role across the platform.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2.5">
+            <select
+              value={appStatusFilter}
+              onChange={(e) => setAppStatusFilter(e.target.value)}
+              className="input-field text-xs py-2 bg-white w-auto"
+            >
+              <option value="all">All Application Statuses</option>
+              <option value="applied">Applied / Pending</option>
+              <option value="viewed">Viewed by Employer</option>
+              <option value="shortlisted">Shortlisted</option>
+              <option value="hired">Hired / Selected</option>
+              <option value="rejected">Rejected</option>
+            </select>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                loadPlatformApplications();
+              }}
+              className="flex items-center gap-1"
+            >
+              <input
+                type="text"
+                placeholder="Search candidate, job, or company..."
+                value={appSearch}
+                onChange={(e) => setAppSearch(e.target.value)}
+                className="input-field text-xs py-2 w-48 sm:w-60"
+              />
+              <button type="submit" className="btn-secondary text-xs py-2 px-3 shrink-0">
+                <Search size={13} />
+              </button>
+            </form>
+          </div>
+        </div>
+
+        {loadingApps ? (
+          <p className="p-6 text-sm text-brand-grey text-center">Loading applications...</p>
+        ) : applications.length === 0 ? (
+          <p className="p-6 text-sm text-brand-grey text-center">No applications found matching your criteria.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-brand-surface text-xs uppercase text-brand-grey">
+                <tr>
+                  <th className="text-left px-5 py-3">Candidate</th>
+                  <th className="text-left px-5 py-3">Target Company & Role</th>
+                  <th className="text-left px-5 py-3">Applied On</th>
+                  <th className="text-left px-5 py-3">Status</th>
+                  <th className="text-right px-5 py-3">Resume</th>
+                </tr>
+              </thead>
+              <tbody>
+                {applications.map((app) => {
+                  const backendBase = (
+                    import.meta.env.VITE_API_URL || "https://agriyuvaa.onrender.com"
+                  ).replace(/\/api\/?$/, "");
+
+                  let downloadUrl = app.resumeUrl ? app.resumeUrl.trim() : "";
+                  downloadUrl = downloadUrl.replace(/^https?:\/\/\/+/, "/");
+
+                  if (downloadUrl.startsWith("/uploads/")) {
+                    downloadUrl = `${backendBase}${downloadUrl}`;
+                  } else if (
+                    !downloadUrl.startsWith("http://") &&
+                    !downloadUrl.startsWith("https://") &&
+                    downloadUrl.length > 0
+                  ) {
+                    downloadUrl = `https://${downloadUrl}`;
+                  } else if (!downloadUrl) {
+                    downloadUrl = `${backendBase}/api/applications/${app._id}/resume`;
+                  }
+
+                  const companyName =
+                    app.job?.companyName || app.job?.employer?.name || "Hiring Company";
+
+                  return (
+                    <tr key={app._id} className="border-t border-brand-border hover:bg-gray-50/50 transition-colors">
+                      {/* Candidate Column */}
+                      <td className="px-5 py-3.5">
+                        <p className="font-semibold text-brand-black">{app.seeker?.name || "Applicant"}</p>
+                        <p className="text-xs text-brand-grey mt-0.5">{app.seeker?.email}</p>
+                        {app.seeker?.phone && (
+                          <p className="text-[11px] text-brand-grey">📞 {app.seeker.phone}</p>
+                        )}
+                      </td>
+
+                      {/* Target Company & Role Column */}
+                      <td className="px-5 py-3.5">
+                        {app.job ? (
+                          <Link
+                            to={`/jobs/${app.job._id}`}
+                            className="font-semibold text-brand-black hover:text-brand-green-dark hover:underline flex items-center gap-1.5"
+                          >
+                            {app.job.title} <ExternalLink size={11} className="text-brand-grey shrink-0" />
+                          </Link>
+                        ) : (
+                          <p className="font-semibold text-brand-grey">Job closed / removed</p>
+                        )}
+                        <p className="text-xs text-emerald-800 font-medium flex items-center gap-1 mt-0.5">
+                          <Building2 size={13} className="text-emerald-700 shrink-0" />
+                          {companyName} {app.job?.location ? `· ${app.job.location}` : ""}
+                        </p>
+                        {app.coverNote && (
+                          <p className="text-[11px] text-gray-500 italic mt-1 line-clamp-1 max-w-xs" title={app.coverNote}>
+                            "{app.coverNote}"
+                          </p>
+                        )}
+                      </td>
+
+                      {/* Applied On Date */}
+                      <td className="px-5 py-3.5 text-xs text-brand-grey whitespace-nowrap">
+                        <span className="flex items-center gap-1">
+                          <Calendar size={13} className="text-brand-grey shrink-0" />
+                          {new Date(app.createdAt).toLocaleDateString("en-IN", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })}
+                        </span>
+                      </td>
+
+                      {/* Status Badge */}
+                      <td className="px-5 py-3.5 whitespace-nowrap">
+                        <span
+                          className={`text-[11px] font-bold px-2.5 py-1 rounded-full capitalize ${
+                            app.status === "shortlisted"
+                              ? "bg-emerald-100 text-emerald-900 border border-emerald-200"
+                              : app.status === "hired"
+                              ? "bg-purple-100 text-purple-900 border border-purple-200"
+                              : app.status === "rejected"
+                              ? "bg-red-100 text-red-800 border border-red-200"
+                              : app.status === "viewed"
+                              ? "bg-blue-50 text-blue-800 border border-blue-200"
+                              : "bg-gray-100 text-gray-700 border border-gray-200"
+                          }`}
+                        >
+                          ● {app.status}
+                        </span>
+                      </td>
+
+                      {/* Resume Download Action */}
+                      <td className="px-5 py-3.5 text-right whitespace-nowrap">
+                        <a
+                          href={downloadUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-lg transition-colors shadow-2xs"
+                          title="Download candidate resume"
+                        >
+                          <Download size={13} /> Resume
+                        </a>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
