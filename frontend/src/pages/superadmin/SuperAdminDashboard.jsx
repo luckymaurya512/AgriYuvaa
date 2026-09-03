@@ -358,7 +358,7 @@ const SuperAdminDashboard = () => {
                     Job Applications Breakdown
                   </h3>
                   <p className="text-xs text-brand-grey mt-1 leading-relaxed">
-                    View candidate counts grouped by job posting, review seeker contact details, and stream resumes.
+                    View candidate counts grouped by job posting, review applicant contact details, and stream resumes.
                   </p>
                 </div>
                 <div className="mt-5 pt-4 border-t border-brand-border flex items-center justify-between text-xs font-bold text-emerald-800 group-hover:translate-x-0.5 transition-transform">
@@ -798,7 +798,7 @@ const SuperAdminDashboard = () => {
                 >
                   <input
                     type="text"
-                    placeholder="Search job, company, or seeker..."
+                    placeholder="Search job, company, or applicant..."
                     value={appSearch}
                     onChange={(e) => setAppSearch(e.target.value)}
                     className="input-field text-xs py-2 w-44 sm:w-56"
@@ -883,7 +883,7 @@ const SuperAdminDashboard = () => {
                             >
                               <Users size={14} className={count > 0 ? "text-emerald-700" : "text-gray-400"} />
                               <span>
-                                {count} {count === 1 ? "Seeker Applied" : "Seekers Applied"}
+                                {count} {count === 1 ? "Applicant Applied" : "Applicants Applied"}
                               </span>
                             </div>
 
@@ -896,11 +896,11 @@ const SuperAdminDashboard = () => {
                             >
                               {isExpanded ? (
                                 <>
-                                  Hide Seekers <ChevronUp size={14} />
+                                  Hide Applicants <ChevronUp size={14} />
                                 </>
                               ) : (
                                 <>
-                                  View Seekers ({count}) <ChevronDown size={14} />
+                                  View Applicants ({count}) <ChevronDown size={14} />
                                 </>
                               )}
                             </button>
@@ -918,7 +918,7 @@ const SuperAdminDashboard = () => {
                           <div className="bg-emerald-50/20 border-t border-brand-border p-4 sm:p-5">
                             {group.applicants.length === 0 ? (
                               <div className="py-6 text-center text-xs text-brand-grey bg-white rounded-xl border border-dashed border-brand-border">
-                                No job seekers have applied for this position yet.
+                                No applicants have applied for this position yet.
                               </div>
                             ) : (
                               <div className="overflow-x-auto bg-white rounded-xl border border-brand-border shadow-2xs">
