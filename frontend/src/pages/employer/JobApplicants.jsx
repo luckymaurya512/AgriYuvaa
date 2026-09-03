@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Download, FileSpreadsheet, ArrowLeft, ExternalLink, Mail, Phone, Calendar } from "lucide-react";
+import { Download, FileSpreadsheet, ArrowLeft, ExternalLink, Mail, Phone, Calendar, Eye } from "lucide-react";
+import ResumePreviewModal from "../../components/ResumePreviewModal.jsx";
 import { fetchApplicationsForJob, updateApplicationStatus, fetchJobById } from "../../services/jobService.js";
 
 const statusOptions = ["applied", "viewed", "shortlisted", "rejected", "hired"];
@@ -20,6 +21,7 @@ const JobApplicants = () => {
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState(null);
   const [toastMessage, setToastMessage] = useState("");
+  const [previewApp, setPreviewApp] = useState(null);
 
   const load = async () => {
     try {
@@ -204,14 +206,23 @@ const JobApplicants = () => {
                     }
 
                     return (
-                      <div className="flex items-center gap-3 pt-1">
+                      <div className="flex flex-wrap items-center gap-2.5 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => setPreviewApp({ ...app, jobTitle: job?.title })}
+                          className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-300 px-3.5 py-1.5 rounded-lg transition-colors shadow-2xs"
+                          title="Preview resume document directly inside browser"
+                        >
+                          <Eye size={13} className="text-emerald-700" /> Preview Resume
+                        </button>
+
                         <a
                           href={targetUrl}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3.5 py-1.5 rounded-lg transition-colors shadow-2xs"
                         >
-                          <Download size={13} /> View / Download Resume <ExternalLink size={11} />
+                          <Download size={13} /> Download <ExternalLink size={11} />
                         </a>
                         <button
                           type="button"
@@ -255,6 +266,14 @@ const JobApplicants = () => {
             </div>
           ))}
         </div>
+      )}
+
+      {/* In-Browser PDF Resume Preview Modal */}
+      {previewApp && (
+        <ResumePreviewModal
+          application={previewApp}
+          onClose={() => setPreviewApp(null)}
+        />
       )}
     </div>
   );

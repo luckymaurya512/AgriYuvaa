@@ -21,7 +21,10 @@ import {
   ArrowRight,
   Landmark,
   Edit3,
+  FileSpreadsheet,
+  Eye,
 } from "lucide-react";
+import ResumePreviewModal from "../../components/ResumePreviewModal.jsx";
 import {
   fetchPlatformStats,
   fetchUsers,
@@ -60,6 +63,69 @@ const SuperAdminDashboard = () => {
   const [loadingApps, setLoadingApps] = useState(false);
   const [appViewMode, setAppViewMode] = useState("by_job");
   const [expandedJobIds, setExpandedJobIds] = useState(new Set());
+  const [previewApp, setPreviewApp] = useState(null);
+
+  const handleExportCSV = (customList = null, filenamePrefix = "all_applications") => {
+    const listToExport = customList || applications;
+    if (!listToExport || listToExport.length === 0) {
+      alert("No applicants to export.");
+      return;
+    }
+
+    const backendBase = (
+      import.meta.env.VITE_API_URL || "https://agriyuvaa.onrender.com"
+    ).replace(/\/api\/?$/, "");
+
+    const headers = [
+      "Applicant Name",
+      "Email Address",
+      "Phone Number",
+      "Target Job Title",
+      "Company Name",
+      "Job Location",
+      "Application Status",
+      "Applied Date",
+      "Resume URL",
+      "Cover Note",
+    ];
+
+    const rows = listToExport.map((app) => {
+      let downloadUrl = app.resumeUrl ? app.resumeUrl.trim() : "";
+      downloadUrl = downloadUrl.replace(/^https?:\/\/\/+/, "/");
+      if (downloadUrl.startsWith("/uploads/")) {
+        downloadUrl = `${backendBase}${downloadUrl}`;
+      } else if (!downloadUrl.startsWith("http://") && !downloadUrl.startsWith("https://") && downloadUrl.length > 0) {
+        downloadUrl = `https://${downloadUrl}`;
+      } else if (!downloadUrl && app._id) {
+        downloadUrl = `${backendBase}/api/applications/${app._id}/resume`;
+      }
+
+      return [
+        `"${(app.seeker?.name || "Applicant").replace(/"/g, '""')}"`,
+        `"${(app.seeker?.email || "").replace(/"/g, '""')}"`,
+        `"${(app.seeker?.phone || "").replace(/"/g, '""')}"`,
+        `"${(app.job?.title || "Job").replace(/"/g, '""')}"`,
+        `"${(app.job?.companyName || app.job?.employer?.name || "Company").replace(/"/g, '""')}"`,
+        `"${(app.job?.location || "").replace(/"/g, '""')}"`,
+        `"${(app.status || "applied").replace(/"/g, '""')}"`,
+        `"${new Date(app.createdAt).toLocaleDateString("en-IN")}"`,
+        `"${downloadUrl.replace(/"/g, '""')}"`,
+        `"${(app.coverNote || "").replace(/"/g, '""').replace(/\n/g, " ")}"`,
+      ];
+    });
+
+    const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const safeName = filenamePrefix.replace(/[^a-z0-9]/gi, "_").toLowerCase();
+    link.setAttribute("href", url);
+    link.setAttribute("download", `AgriYuvaa_${safeName}_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   const toggleExpandJob = (jobId) => {
     setExpandedJobIds((prev) => {
@@ -801,12 +867,22 @@ const SuperAdminDashboard = () => {
                     placeholder="Search job, company, or applicant..."
                     value={appSearch}
                     onChange={(e) => setAppSearch(e.target.value)}
-                    className="input-field text-xs py-2 w-44 sm:w-56"
+                    className="input-field text-xs py-2 w-40 sm:w-52"
                   />
                   <button type="submit" className="btn-secondary text-xs py-2 px-3 shrink-0">
                     <Search size={13} />
                   </button>
                 </form>
+
+                <button
+                  type="button"
+                  onClick={() => handleExportCSV(null, "all_applications")}
+                  className="px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 text-xs font-bold flex items-center gap-1.5 transition-all shadow-2xs shrink-0"
+                  title="Export all filtered applicants to CSV spreadsheet"
+                >
+                  <FileSpreadsheet size={14} className="text-emerald-700" />
+                  <span>Export CSV</span>
+                </button>
               </div>
             </div>
 
@@ -873,7 +949,7 @@ const SuperAdminDashboard = () => {
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-2.5 shrink-0">
+                          <div className="flex items-center gap-2 shrink-0">
                             <div
                               className={`px-3.5 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 shadow-2xs ${
                                 count > 0
@@ -883,9 +959,21 @@ const SuperAdminDashboard = () => {
                             >
                               <Users size={14} className={count > 0 ? "text-emerald-700" : "text-gray-400"} />
                               <span>
-                                {count} {count === 1 ? "Applicant Applied" : "Applicants Applied"}
+                                {count} {count === 1 ? "Applicant" : "Applicants"}
                               </span>
                             </div>
+
+                            {count > 0 && (
+                              <button
+                                type="button"
+                                onClick={() => handleExportCSV(group.applicants, group.title)}
+                                className="px-2.5 py-1.5 rounded-lg bg-gray-100 hover:bg-emerald-50 text-emerald-900 border border-gray-200 text-xs font-bold flex items-center gap-1 transition-colors"
+                                title={`Export ${count} applicants for ${group.title} to CSV`}
+                              >
+                                <FileSpreadsheet size={13} className="text-emerald-700" />
+                                <span className="hidden sm:inline">CSV</span>
+                              </button>
+                            )}
 
                             <button
                               type="button"
@@ -930,7 +1018,7 @@ const SuperAdminDashboard = () => {
                                       <th className="text-left px-4 py-3">Applied On</th>
                                       <th className="text-left px-4 py-3">Status</th>
                                       <th className="text-left px-4 py-3">Cover Note</th>
-                                      <th className="text-right px-4 py-3">Resume</th>
+                                      <th className="text-right px-4 py-3">Resume Actions</th>
                                     </tr>
                                   </thead>
                                   <tbody className="divide-y divide-brand-border">
@@ -990,7 +1078,21 @@ const SuperAdminDashboard = () => {
                                           <td className="px-4 py-3 text-gray-600 max-w-xs truncate italic">
                                             {app.coverNote || "-"}
                                           </td>
-                                          <td className="px-4 py-3 text-right whitespace-nowrap">
+                                          <td className="px-4 py-3 text-right whitespace-nowrap space-x-1.5">
+                                            <button
+                                              type="button"
+                                              onClick={() =>
+                                                setPreviewApp({
+                                                  ...app,
+                                                  jobTitle: group.title,
+                                                })
+                                              }
+                                              className="inline-flex items-center gap-1 text-[11px] font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-300 px-2.5 py-1 rounded-lg transition-colors shadow-2xs"
+                                              title="Preview resume inside browser"
+                                            >
+                                              <Eye size={12} className="text-emerald-700" /> Preview
+                                            </button>
+
                                             <a
                                               href={downloadUrl}
                                               target="_blank"
@@ -1023,7 +1125,7 @@ const SuperAdminDashboard = () => {
                       <th className="text-left px-5 py-3">Target Company & Role</th>
                       <th className="text-left px-5 py-3">Applied On</th>
                       <th className="text-left px-5 py-3">Status</th>
-                      <th className="text-right px-5 py-3">Resume</th>
+                      <th className="text-right px-5 py-3">Resume Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1104,7 +1206,16 @@ const SuperAdminDashboard = () => {
                             </span>
                           </td>
 
-                          <td className="px-5 py-3.5 text-right whitespace-nowrap">
+                          <td className="px-5 py-3.5 text-right whitespace-nowrap space-x-1.5">
+                            <button
+                              type="button"
+                              onClick={() => setPreviewApp(app)}
+                              className="inline-flex items-center gap-1 text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-300 px-3 py-1.5 rounded-lg transition-colors shadow-2xs"
+                              title="Preview resume inside browser"
+                            >
+                              <Eye size={13} className="text-emerald-700" /> Preview
+                            </button>
+
                             <a
                               href={downloadUrl}
                               target="_blank"
@@ -1123,6 +1234,14 @@ const SuperAdminDashboard = () => {
             )}
           </div>
         </div>
+      )}
+
+      {/* Resume In-Browser Preview Modal */}
+      {previewApp && (
+        <ResumePreviewModal
+          application={previewApp}
+          onClose={() => setPreviewApp(null)}
+        />
       )}
     </div>
   );
