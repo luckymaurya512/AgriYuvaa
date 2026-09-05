@@ -3,8 +3,41 @@ import Job from "../models/Job.js";
 import User from "../models/User.js";
 import EmployerProfile from "../models/EmployerProfile.js";
 import Application from "../models/Application.js";
+import Category from "../models/Category.js";
 import { broadcastNewJobAlert } from "../utils/webPush.js";
 import sendEmail from "../utils/sendEmail.js";
+
+const resolveCategory = async (categoryId, customCategoryName) => {
+  if (customCategoryName && customCategoryName.trim()) {
+    const trimmedName = customCategoryName.trim();
+    let existing = await Category.findOne({ name: { $regex: `^${trimmedName}$`, $options: "i" } });
+    if (existing) return existing._id;
+
+    let baseSlug = trimmedName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)+/g, "");
+    if (!baseSlug) baseSlug = "category";
+    let uniqueSlug = baseSlug;
+    let counter = 1;
+    while (await Category.findOne({ slug: uniqueSlug })) {
+      uniqueSlug = `${baseSlug}-${counter++}`;
+    }
+
+    const newCategory = await Category.create({
+      name: trimmedName,
+      slug: uniqueSlug,
+      icon: "Sparkles",
+    });
+    return newCategory._id;
+  }
+
+  if (categoryId && categoryId !== "custom") {
+    return categoryId;
+  }
+
+  return null;
+};
 
 // @desc  Create a job (employer or admin/superadmin)
 // @route POST /api/jobs
@@ -35,10 +68,19 @@ export const createJob = asyncHandler(async (req, res) => {
       }
       parsedDeadline = d;
     }
+  let categoryId = req.body.category;
+  const customCat = req.body.customCategory || (req.body.category === "custom" ? req.body.customCategoryName : "");
+  if (categoryId === "custom" || customCat) {
+    categoryId = await resolveCategory(categoryId, customCat);
+    if (!categoryId) {
+      res.status(400);
+      throw new Error("Please provide a valid category or custom category name");
+    }
   }
 
   const job = await Job.create({
     ...req.body,
+    category: categoryId,
     employer: req.user._id,
     status: initialStatus,
     isFeatured,
@@ -219,6 +261,16 @@ export const updateJob = asyncHandler(async (req, res) => {
   const fieldsToUpdate = { ...req.body };
   if (isOwner && !isPrivileged) {
     fieldsToUpdate.status = "pending";
+  }
+
+  if (fieldsToUpdate.category === "custom" || fieldsToUpdate.customCategory || fieldsToUpdate.customCategoryName) {
+    const customCat = fieldsToUpdate.customCategory || fieldsToUpdate.customCategoryName;
+    const resolvedCatId = await resolveCategory(fieldsToUpdate.category, customCat);
+    if (resolvedCatId) {
+      fieldsToUpdate.category = resolvedCatId;
+    }
+    delete fieldsToUpdate.customCategory;
+    delete fieldsToUpdate.customCategoryName;
   }
 
   if (fieldsToUpdate.applicationDeadline !== undefined || fieldsToUpdate.expiresAt !== undefined) {

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams, useParams } from "react-router-dom";
-import { Mail, ExternalLink, FileText, Building2, Sparkles, Loader2, ArrowLeft, Calendar } from "lucide-react";
+import { Mail, ExternalLink, FileText, Building2, Sparkles, Loader2, ArrowLeft, Calendar, PlusCircle } from "lucide-react";
 import { fetchCategories, createJob, fetchJobById, updateJob } from "../../services/jobService.js";
 import { useAuth } from "../../context/AuthContext.jsx";
 
@@ -37,6 +37,7 @@ const PostJob = () => {
     requirements: "",
     benefits: "",
     category: "",
+    customCategory: "",
     employmentType: "full-time",
     experienceLevel: "any",
     location: "",
@@ -109,6 +110,12 @@ const PostJob = () => {
     e.preventDefault();
     setError("");
 
+    // Validate custom category
+    if (form.category === "custom" && !form.customCategory?.trim()) {
+      setError("Please enter the name of your custom category");
+      return;
+    }
+
     // Validate based on applyType
     if (form.applyType === "email" && !form.applyEmail) {
       setError("Please enter the HR contact email");
@@ -123,6 +130,8 @@ const PostJob = () => {
     try {
       const payload = {
         ...form,
+        category: form.category === "custom" ? "custom" : form.category,
+        customCategory: form.category === "custom" ? form.customCategory.trim() : undefined,
         responsibilities: parseList(form.responsibilities),
         requirements: parseList(form.requirements),
         benefits: parseList(form.benefits),
@@ -415,22 +424,70 @@ const PostJob = () => {
         {/* Category & Employment Type */}
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
-            <label className="text-xs font-semibold text-brand-grey uppercase tracking-wide">
-              Category *
-            </label>
-            <select
-              required
-              className="input-field mt-1 text-sm"
-              value={form.category}
-              onChange={(e) => setForm({ ...form, category: e.target.value })}
-            >
-              <option value="">Select category</option>
-              {categories.map((c) => (
-                <option key={c._id} value={c._id}>
-                  {c.name}
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-semibold text-brand-grey uppercase tracking-wide">
+                Category *
+              </label>
+              {form.category !== "custom" ? (
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, category: "custom", customCategory: "" })}
+                  className="text-xs font-bold text-brand-green-dark hover:text-brand-green flex items-center gap-1 cursor-pointer transition-colors"
+                >
+                  <PlusCircle size={13} /> + Add Custom Category
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, category: categories[0]?._id || "", customCategory: "" })}
+                  className="text-xs font-semibold text-brand-grey hover:text-brand-black flex items-center gap-1 cursor-pointer transition-colors"
+                >
+                  Choose existing list
+                </button>
+              )}
+            </div>
+
+            {form.category === "custom" ? (
+              <div className="mt-1 space-y-1.5">
+                <div className="relative">
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Hydroponics & Vertical Farming, Bio-Pesticides, Drone Operations..."
+                    className="input-field text-sm pr-9 bg-emerald-50/40 border-emerald-300 focus:border-brand-green"
+                    value={form.customCategory || ""}
+                    onChange={(e) => setForm({ ...form, customCategory: e.target.value })}
+                  />
+                  <Sparkles size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-green pointer-events-none" />
+                </div>
+                <p className="text-[11px] text-emerald-800">
+                  ✨ This custom category will be created and automatically associated with your job posting.
+                </p>
+              </div>
+            ) : (
+              <select
+                required
+                className="input-field mt-1 text-sm"
+                value={form.category}
+                onChange={(e) => {
+                  if (e.target.value === "custom") {
+                    setForm({ ...form, category: "custom", customCategory: "" });
+                  } else {
+                    setForm({ ...form, category: e.target.value, customCategory: "" });
+                  }
+                }}
+              >
+                <option value="">Select category</option>
+                {categories.map((c) => (
+                  <option key={c._id} value={c._id}>
+                    {c.name}
+                  </option>
+                ))}
+                <option value="custom" className="font-semibold text-brand-green-dark bg-emerald-50">
+                  ✨ + Add Custom Category...
                 </option>
-              ))}
-            </select>
+              </select>
+            )}
           </div>
           <div>
             <label className="text-xs font-semibold text-brand-grey uppercase tracking-wide">

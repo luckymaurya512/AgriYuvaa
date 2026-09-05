@@ -7,6 +7,40 @@ export const getCategories = asyncHandler(async (req, res) => {
   res.json(categories);
 });
 
+// @route POST /api/categories/custom (authenticated employer / admin)
+export const createCustomCategory = asyncHandler(async (req, res) => {
+  const { name } = req.body;
+  if (!name || !name.trim()) {
+    res.status(400);
+    throw new Error("Category name is required");
+  }
+
+  const trimmedName = name.trim();
+  let existing = await Category.findOne({ name: { $regex: `^${trimmedName}$`, $options: "i" } });
+  if (existing) {
+    return res.status(200).json(existing);
+  }
+
+  let baseSlug = trimmedName
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)+/g, "");
+  if (!baseSlug) baseSlug = "category";
+  let uniqueSlug = baseSlug;
+  let counter = 1;
+  while (await Category.findOne({ slug: uniqueSlug })) {
+    uniqueSlug = `${baseSlug}-${counter++}`;
+  }
+
+  const category = await Category.create({
+    name: trimmedName,
+    slug: uniqueSlug,
+    icon: "Sparkles",
+  });
+
+  res.status(201).json(category);
+});
+
 // @route POST /api/admin/categories  (admin/superadmin)
 export const createCategory = asyncHandler(async (req, res) => {
   const { name, slug, icon, parentCategory } = req.body;

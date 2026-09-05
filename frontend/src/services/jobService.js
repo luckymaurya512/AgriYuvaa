@@ -8,6 +8,7 @@ export const updateJob = (id, payload) => api.patch(`/jobs/${id}`, payload).then
 export const deleteJob = (id) => api.delete(`/jobs/${id}`).then((r) => r.data);
 
 export const fetchCategories = () => api.get("/categories").then((r) => r.data);
+export const createCustomCategory = (name) => api.post("/categories/custom", { name }).then((r) => r.data);
 
 export const applyToJob = (jobId, payload) =>
   api.post(`/applications/jobs/${jobId}`, payload).then((r) => r.data);
