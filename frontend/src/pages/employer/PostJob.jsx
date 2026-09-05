@@ -198,8 +198,8 @@ const PostJob = () => {
           {isEdit
             ? "Update role requirements, location, salary, or application instructions."
             : isAdmin
-            ? "As an Admin, this job will be published immediately on the portal."
-            : "Your listing will go live once approved by our moderation team."}
+              ? "As an Admin, this job will be published immediately on the portal."
+              : "Your listing will go live once approved by our moderation team."}
         </p>
       </div>
 
@@ -245,11 +245,10 @@ const PostJob = () => {
             <button
               type="button"
               onClick={() => setForm({ ...form, applyType: "platform" })}
-              className={`p-3.5 rounded-xl border-2 text-left flex flex-col gap-1 transition-all ${
-                form.applyType === "platform"
+              className={`p-3.5 rounded-xl border-2 text-left flex flex-col gap-1 transition-all ${form.applyType === "platform"
                   ? "border-brand-green bg-brand-green-light/40 text-brand-black"
                   : "border-brand-border text-brand-grey hover:border-gray-300"
-              }`}
+                }`}
             >
               <div className="flex items-center gap-2 font-semibold text-xs">
                 <FileText size={16} className={form.applyType === "platform" ? "text-brand-green" : "text-brand-grey"} />
@@ -262,11 +261,10 @@ const PostJob = () => {
             <button
               type="button"
               onClick={() => setForm({ ...form, applyType: "email" })}
-              className={`p-3.5 rounded-xl border-2 text-left flex flex-col gap-1 transition-all ${
-                form.applyType === "email"
+              className={`p-3.5 rounded-xl border-2 text-left flex flex-col gap-1 transition-all ${form.applyType === "email"
                   ? "border-blue-600 bg-blue-50/70 text-blue-950"
                   : "border-brand-border text-brand-grey hover:border-gray-300"
-              }`}
+                }`}
             >
               <div className="flex items-center gap-2 font-semibold text-xs text-blue-900">
                 <Mail size={16} className={form.applyType === "email" ? "text-blue-600" : "text-brand-grey"} />
@@ -279,11 +277,10 @@ const PostJob = () => {
             <button
               type="button"
               onClick={() => setForm({ ...form, applyType: "external_link" })}
-              className={`p-3.5 rounded-xl border-2 text-left flex flex-col gap-1 transition-all ${
-                form.applyType === "external_link"
+              className={`p-3.5 rounded-xl border-2 text-left flex flex-col gap-1 transition-all ${form.applyType === "external_link"
                   ? "border-purple-600 bg-purple-50/70 text-purple-950"
                   : "border-brand-border text-brand-grey hover:border-gray-300"
-              }`}
+                }`}
             >
               <div className="flex items-center gap-2 font-semibold text-xs text-purple-900">
                 <ExternalLink size={16} className={form.applyType === "external_link" ? "text-purple-600" : "text-brand-grey"} />
@@ -673,10 +670,10 @@ const PostJob = () => {
           {loading
             ? "Saving..."
             : isEdit
-            ? "Save & Update Job Listing"
-            : isAdmin
-            ? "Publish Job (Live Immediately)"
-            : "Submit for Approval"}
+              ? "Save & Update Job Listing"
+              : isAdmin
+                ? "Publish Job"
+                : "Submit for Approval"}
         </button>
       </form>
     </div>
