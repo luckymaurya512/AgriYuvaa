@@ -228,11 +228,20 @@ const Navbar = () => {
                 )}
               </div>
 
-              <Link to={dashboardPathForRole(user.role)} className="btn-secondary text-sm py-2">
-                <User size={16} /> Dashboard
+              <Link
+                to="/profile"
+                className="px-3 py-2 rounded-xl border border-brand-border hover:border-emerald-600/60 bg-gray-50 hover:bg-emerald-50/60 text-brand-black text-xs font-bold flex items-center gap-1.5 transition-colors shadow-2xs"
+                title="My Profile & Account Settings"
+              >
+                <User size={15} className="text-emerald-700" />
+                <span>Profile</span>
               </Link>
-              <button onClick={handleLogout} className="btn-primary text-sm py-2">
-                <LogOut size={16} /> Logout
+
+              <Link to={dashboardPathForRole(user.role)} className="btn-secondary text-xs py-2 px-3 flex items-center gap-1.5">
+                <span>Dashboard</span>
+              </Link>
+              <button onClick={handleLogout} className="btn-primary text-xs py-2 px-3 flex items-center gap-1.5">
+                <LogOut size={14} /> <span>Logout</span>
               </button>
             </>
           ) : (
@@ -262,11 +271,14 @@ const Navbar = () => {
           <hr className="border-brand-border" />
           {user ? (
             <>
-              <Link to={dashboardPathForRole(user.role)} className="block text-sm font-semibold" onClick={() => setOpen(false)}>
-                Dashboard
+              <Link to="/profile" className="block text-sm font-bold text-emerald-900" onClick={() => setOpen(false)}>
+                👤 My Profile & Account Settings
               </Link>
-              <button onClick={handleLogout} className="block text-sm font-semibold text-left w-full">
-                Logout
+              <Link to={dashboardPathForRole(user.role)} className="block text-sm font-semibold text-brand-black" onClick={() => setOpen(false)}>
+                📊 Dashboard
+              </Link>
+              <button onClick={handleLogout} className="block text-sm font-semibold text-left w-full text-red-600">
+                🚪 Logout
               </button>
             </>
           ) : (

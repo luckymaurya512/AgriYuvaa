@@ -21,3 +21,10 @@ export const uploadSeekerResume = (file) => {
     .then((r) => r.data);
 };
 
+export const fetchUserProfile = () => api.get("/users/profile").then((r) => r.data);
+
+export const updateUserProfile = (payload) =>
+  api.patch("/users/profile", payload).then((r) => r.data);
+
+export const changePassword = (payload) =>
+  api.put("/users/change-password", payload).then((r) => r.data);

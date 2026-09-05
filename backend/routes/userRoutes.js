@@ -1,6 +1,7 @@
 import express from "express";
 import asyncHandler from "express-async-handler";
 import { authenticate, authorize } from "../middleware/authMiddleware.js";
+import User from "../models/User.js";
 import SeekerProfile from "../models/SeekerProfile.js";
 import EmployerProfile from "../models/EmployerProfile.js";
 import { upload, uploadFileToCloud } from "../middleware/uploadMiddleware.js";
@@ -15,6 +16,140 @@ const getOrCreateProfile = async (userId) => {
   }
   return profile;
 };
+
+// @route GET /api/users/profile
+// Get unified profile for any logged in user
+router.get(
+  "/profile",
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const user = await User.findById(req.user._id).select("-passwordHash");
+    if (!user) {
+      res.status(404);
+      throw new Error("User not found");
+    }
+
+    let profileData = null;
+    if (user.role === "seeker") {
+      profileData = await SeekerProfile.findOne({ user: user._id })
+        .populate("savedJobs", "title location employer isFeatured")
+        .populate("followedEmployers", "companyName sector location logo user");
+      if (!profileData) {
+        profileData = await SeekerProfile.create({ user: user._id, savedJobs: [], followedEmployers: [] });
+      }
+    } else if (user.role === "employer") {
+      profileData = await EmployerProfile.findOne({ user: user._id });
+      if (!profileData) {
+        profileData = await EmployerProfile.create({
+          user: user._id,
+          companyName: user.name,
+        });
+      }
+    }
+
+    res.json({
+      user,
+      profile: profileData,
+    });
+  })
+);
+
+// @route PATCH /api/users/profile
+// Update unified user and profile information
+router.patch(
+  "/profile",
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const { name, phone, avatarUrl, seekerProfile, employerProfile } = req.body;
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      res.status(404);
+      throw new Error("User not found");
+    }
+
+    if (name) user.name = name.trim();
+    if (phone !== undefined) user.phone = phone.trim();
+    if (avatarUrl !== undefined) user.avatarUrl = avatarUrl;
+    await user.save();
+
+    let profileData = null;
+    if (user.role === "seeker" && seekerProfile) {
+      profileData = await SeekerProfile.findOne({ user: user._id });
+      if (!profileData) {
+        profileData = await SeekerProfile.create({ user: user._id, ...seekerProfile });
+      } else {
+        Object.assign(profileData, seekerProfile);
+        await profileData.save();
+      }
+    } else if (user.role === "employer" && employerProfile) {
+      profileData = await EmployerProfile.findOne({ user: user._id });
+      if (!profileData) {
+        profileData = await EmployerProfile.create({ user: user._id, ...employerProfile });
+      } else {
+        Object.assign(profileData, employerProfile);
+        await profileData.save();
+      }
+    } else {
+      if (user.role === "seeker") {
+        profileData = await SeekerProfile.findOne({ user: user._id });
+      } else if (user.role === "employer") {
+        profileData = await EmployerProfile.findOne({ user: user._id });
+      }
+    }
+
+    res.json({
+      message: "Profile updated successfully",
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        avatarUrl: user.avatarUrl,
+        isEmailVerified: user.isEmailVerified,
+      },
+      profile: profileData,
+    });
+  })
+);
+
+// @route PUT /api/users/change-password
+// Change user password
+router.put(
+  "/change-password",
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      res.status(400);
+      throw new Error("Both current and new password are required");
+    }
+
+    if (newPassword.length < 6) {
+      res.status(400);
+      throw new Error("New password must be at least 6 characters long");
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      res.status(404);
+      throw new Error("User not found");
+    }
+
+    const isMatch = await user.matchPassword(currentPassword);
+    if (!isMatch) {
+      res.status(400);
+      throw new Error("Current password is incorrect");
+    }
+
+    user.passwordHash = newPassword;
+    await user.save();
+
+    res.json({ message: "Password updated successfully" });
+  })
+);
 
 // @route GET /api/users/seeker/me
 router.get(

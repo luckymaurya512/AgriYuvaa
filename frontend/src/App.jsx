@@ -24,6 +24,7 @@ import JobApplicants from "./pages/employer/JobApplicants.jsx";
 
 import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
 import SuperAdminDashboard from "./pages/superadmin/SuperAdminDashboard.jsx";
+import Profile from "./pages/Profile.jsx";
 
 function App() {
   return (
@@ -104,6 +105,16 @@ function App() {
             element={
               <ProtectedRoute roles={["superadmin"]}>
                 <SuperAdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Unified Profile & Account Settings */}
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute roles={["seeker", "employer", "admin", "superadmin"]}>
+                <Profile />
               </ProtectedRoute>
             }
           />
