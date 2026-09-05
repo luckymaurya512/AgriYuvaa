@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import {
   MapPin,
   Briefcase,
@@ -22,9 +22,10 @@ import {
   Loader2,
   ArrowRight,
   Edit3,
+  Trash2,
   Clock,
 } from "lucide-react";
-import { fetchJobById, applyToJob, fetchMyApplications, fetchJobs } from "../services/jobService.js";
+import { fetchJobById, applyToJob, fetchMyApplications, fetchJobs, deleteJob } from "../services/jobService.js";
 import { toggleJobFeatured } from "../services/adminService.js";
 import { fetchSeekerProfile, toggleSaveJob, uploadSeekerResume } from "../services/userService.js";
 import { toggleFollowEmployer, enablePushNotifications } from "../services/notificationService.js";
@@ -278,6 +279,7 @@ const JobDetails = () => {
     defaultEmailSubject
   )}&body=${encodeURIComponent(emailBody)}`;
 
+  const navigate = useNavigate();
   const isOwner = user && (job.employer?._id === user._id || job.employer === user._id);
   const isAdmin = user && ["admin", "superadmin"].includes(user.role);
   const canEdit = isOwner || isAdmin;
@@ -296,6 +298,27 @@ const JobDetails = () => {
       );
     } catch (err) {
       alert("Failed to toggle featured status");
+    }
+  };
+
+  const handleDeleteJob = async () => {
+    if (
+      !window.confirm(
+        `Are you sure you want to delete "${job.title}"?\n\nThis will permanently remove the listing and its applicant records.`
+      )
+    ) {
+      return;
+    }
+    try {
+      await deleteJob(id);
+      alert(`Job "${job.title}" has been removed.`);
+      if (isAdmin) {
+        navigate("/admin?tab=jobs");
+      } else {
+        navigate("/employer/dashboard");
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to delete job");
     }
   };
 
@@ -363,6 +386,15 @@ const JobDetails = () => {
                 >
                   <Edit3 size={13} /> Edit Job
                 </Link>
+
+                <button
+                  type="button"
+                  onClick={handleDeleteJob}
+                  className="text-xs font-semibold text-red-600 hover:text-white bg-red-50 hover:bg-red-600 px-3 py-1 rounded-lg border border-red-200 hover:border-red-600 transition-colors inline-flex items-center gap-1 cursor-pointer"
+                  title="Delete Job"
+                >
+                  <Trash2 size={13} /> Delete
+                </button>
               </div>
             )}
           </div>

@@ -1,106 +1,224 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Plus } from "lucide-react";
-import { fetchMyJobs } from "../../services/jobService.js";
+import { Plus, Edit3, Trash2, Users, Calendar, Clock, ExternalLink } from "lucide-react";
+import { fetchMyJobs, deleteJob } from "../../services/jobService.js";
 
 const statusColors = {
-  draft: "bg-gray-100 text-gray-600",
-  pending: "bg-yellow-100 text-yellow-700",
-  approved: "bg-brand-green-light text-brand-green-dark",
-  rejected: "bg-red-100 text-red-700",
-  closed: "bg-gray-200 text-gray-600",
-  expired: "bg-gray-200 text-gray-600",
+  draft: "bg-gray-100 text-gray-700 border-gray-200",
+  pending: "bg-amber-100 text-amber-900 border-amber-300",
+  approved: "bg-emerald-100 text-emerald-900 border-emerald-300",
+  rejected: "bg-red-100 text-red-700 border-red-200",
+  closed: "bg-gray-200 text-gray-700 border-gray-300",
+  expired: "bg-amber-50 text-amber-800 border-amber-200",
 };
 
 const EmployerDashboard = () => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [actionSuccess, setActionSuccess] = useState("");
+  const [deletingId, setDeletingId] = useState(null);
+
+  const loadJobs = () => {
+    setLoading(true);
+    fetchMyJobs()
+      .then(setJobs)
+      .catch(() => setJobs([]))
+      .finally(() => setLoading(false));
+  };
 
   useEffect(() => {
-    fetchMyJobs().then(setJobs).catch(() => setJobs([])).finally(() => setLoading(false));
+    loadJobs();
   }, []);
 
+  const handleDeleteJob = async (job) => {
+    if (
+      !window.confirm(
+        `Are you sure you want to delete "${job.title}"?\n\nThis will permanently delete this job listing and its applicant data.`
+      )
+    ) {
+      return;
+    }
+
+    setDeletingId(job._id);
+    try {
+      await deleteJob(job._id);
+      setJobs((prev) => prev.filter((j) => j._id !== job._id));
+      setActionSuccess(`Job "${job.title}" has been deleted successfully.`);
+      setTimeout(() => setActionSuccess(""), 4000);
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to delete job.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <div className="flex items-center justify-between mb-8">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-display font-bold mb-1">Employer Dashboard</h1>
-          <p className="text-sm text-brand-grey">Manage your job listings and applicants</p>
+          <p className="text-sm text-brand-grey">Manage your job listings, track views, and review candidate applicants.</p>
         </div>
-        <Link to="/employer/post-job" className="btn-primary">
+        <Link to="/employer/post-job" className="btn-primary flex items-center gap-2">
           <Plus size={16} /> Post a Job
         </Link>
       </div>
 
-      <div className="grid md:grid-cols-4 gap-5 mb-10">
+      {actionSuccess && (
+        <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-xl text-xs font-semibold flex items-center justify-between">
+          <span>{actionSuccess}</span>
+          <button
+            onClick={() => setActionSuccess("")}
+            className="text-emerald-700 hover:text-emerald-950 text-base leading-none"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="card p-5">
           <p className="text-xs text-brand-grey uppercase font-semibold">Total Jobs</p>
-          <p className="text-3xl font-display font-bold mt-2">{jobs.length}</p>
+          <p className="text-3xl font-display font-bold mt-2 text-brand-black">{jobs.length}</p>
         </div>
         <div className="card p-5">
-          <p className="text-xs text-brand-grey uppercase font-semibold">Approved</p>
-          <p className="text-3xl font-display font-bold mt-2">{jobs.filter((j) => j.status === "approved").length}</p>
+          <p className="text-xs text-brand-grey uppercase font-semibold">Live / Approved</p>
+          <p className="text-3xl font-display font-bold mt-2 text-emerald-700">
+            {jobs.filter((j) => j.status === "approved").length}
+          </p>
         </div>
         <div className="card p-5">
-          <p className="text-xs text-brand-grey uppercase font-semibold">Pending Review</p>
-          <p className="text-3xl font-display font-bold mt-2">{jobs.filter((j) => j.status === "pending").length}</p>
+          <p className="text-xs text-brand-grey uppercase font-semibold">Pending Moderation</p>
+          <p className="text-3xl font-display font-bold mt-2 text-amber-700">
+            {jobs.filter((j) => j.status === "pending").length}
+          </p>
         </div>
         <div className="card p-5">
           <p className="text-xs text-brand-grey uppercase font-semibold">Total Views</p>
-          <p className="text-3xl font-display font-bold mt-2">{jobs.reduce((sum, j) => sum + (j.views || 0), 0)}</p>
+          <p className="text-3xl font-display font-bold mt-2 text-blue-700">
+            {jobs.reduce((sum, j) => sum + (j.views || 0), 0)}
+          </p>
         </div>
       </div>
 
       <div className="card overflow-hidden">
-        <div className="px-5 py-4 border-b border-brand-border font-semibold text-sm">My Job Listings</div>
+        <div className="px-5 py-4 border-b border-brand-border font-semibold text-sm flex items-center justify-between bg-gray-50/50">
+          <span className="font-display font-bold text-brand-black">My Job Postings</span>
+          <span className="text-xs bg-gray-200 text-gray-800 px-2.5 py-0.5 rounded-full font-bold">
+            {jobs.length} Listed
+          </span>
+        </div>
+
         {loading ? (
-          <p className="p-5 text-sm text-brand-grey">Loading...</p>
+          <p className="p-8 text-center text-sm text-brand-grey">Loading your jobs...</p>
         ) : jobs.length === 0 ? (
-          <p className="p-5 text-sm text-brand-grey">You haven't posted any jobs yet.</p>
+          <div className="p-12 text-center space-y-3">
+            <p className="text-sm font-semibold text-brand-black">You haven't posted any jobs yet.</p>
+            <p className="text-xs text-brand-grey">Start hiring agriculture talent by publishing your first opportunity.</p>
+            <Link to="/employer/post-job" className="btn-primary inline-flex items-center gap-2 text-xs py-2 px-4 mt-2">
+              <Plus size={14} /> Post Your First Job
+            </Link>
+          </div>
         ) : (
-          <table className="w-full text-sm">
-            <thead className="bg-brand-surface text-xs uppercase text-brand-grey">
-              <tr>
-                <th className="text-left px-5 py-3">Title</th>
-                <th className="text-left px-5 py-3">Category</th>
-                <th className="text-left px-5 py-3">Views</th>
-                <th className="text-left px-5 py-3">Status</th>
-                <th className="text-left px-5 py-3">Applicants</th>
-                <th className="text-right px-5 py-3">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {jobs.map((job) => (
-                <tr key={job._id} className="border-t border-brand-border hover:bg-gray-50/50 transition-colors">
-                  <td className="px-5 py-3 font-medium">
-                    <Link to={`/jobs/${job._id}`} className="hover:text-brand-green-dark hover:underline">
-                      {job.title}
-                    </Link>
-                  </td>
-                  <td className="px-5 py-3 text-brand-grey">{job.category?.name}</td>
-                  <td className="px-5 py-3 text-brand-grey">{job.views}</td>
-                  <td className="px-5 py-3">
-                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-full capitalize ${statusColors[job.status]}`}>
-                      {job.status}
-                    </span>
-                  </td>
-                  <td className="px-5 py-3">
-                    <Link to={`/employer/jobs/${job._id}/applicants`} className="text-brand-green-dark font-semibold hover:underline">
-                      View
-                    </Link>
-                  </td>
-                  <td className="px-5 py-3 text-right">
-                    <Link
-                      to={`/employer/post-job?edit=${job._id}`}
-                      className="text-xs font-semibold text-brand-black hover:text-brand-green-dark bg-gray-100 hover:bg-emerald-50 px-2.5 py-1.5 rounded-lg border border-gray-200 transition-colors inline-flex items-center gap-1"
-                    >
-                      ✏️ Edit
-                    </Link>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-brand-surface text-xs uppercase text-brand-grey border-b border-brand-border">
+                <tr>
+                  <th className="text-left px-5 py-3">Title & Category</th>
+                  <th className="text-left px-5 py-3">Views</th>
+                  <th className="text-left px-5 py-3">Status</th>
+                  <th className="text-left px-5 py-3">Deadline</th>
+                  <th className="text-left px-5 py-3">Applicants</th>
+                  <th className="text-right px-5 py-3">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-brand-border">
+                {jobs.map((job) => {
+                  const deadlineDate = job.applicationDeadline || job.expiresAt;
+                  const isExpired = deadlineDate && new Date(deadlineDate) < new Date();
+
+                  return (
+                    <tr key={job._id} className="hover:bg-gray-50/60 transition-colors">
+                      <td className="px-5 py-3.5 font-medium">
+                        <Link
+                          to={`/jobs/${job._id}`}
+                          className="font-bold text-brand-black hover:text-brand-green-dark hover:underline block"
+                        >
+                          {job.title}
+                        </Link>
+                        <span className="text-xs text-brand-grey mt-0.5 inline-block">
+                          {job.category?.name || "Agriculture"} · {job.employmentType}
+                        </span>
+                      </td>
+
+                      <td className="px-5 py-3.5 text-brand-grey font-medium">{job.views || 0}</td>
+
+                      <td className="px-5 py-3.5">
+                        <span
+                          className={`text-xs font-bold px-2.5 py-1 rounded-full border capitalize ${
+                            statusColors[job.status] || "bg-gray-100 text-gray-700"
+                          }`}
+                        >
+                          {job.status}
+                        </span>
+                      </td>
+
+                      <td className="px-5 py-3.5 text-xs text-brand-grey">
+                        {deadlineDate ? (
+                          <span
+                            className={`inline-flex items-center gap-1 font-medium ${
+                              isExpired ? "text-amber-800 font-bold" : "text-gray-700"
+                            }`}
+                          >
+                            <Clock size={12} className={isExpired ? "text-amber-700" : "text-gray-400"} />
+                            {new Date(deadlineDate).toLocaleDateString("en-IN", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            })}
+                            {isExpired && <span className="text-[10px] text-amber-700 font-bold">(Passed)</span>}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400 italic">No deadline</span>
+                        )}
+                      </td>
+
+                      <td className="px-5 py-3.5">
+                        <Link
+                          to={`/employer/jobs/${job._id}/applicants`}
+                          className="text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5 transition-colors"
+                        >
+                          <Users size={13} /> View Applicants
+                        </Link>
+                      </td>
+
+                      <td className="px-5 py-3.5 text-right">
+                        <div className="inline-flex items-center gap-1.5">
+                          <Link
+                            to={`/employer/post-job?edit=${job._id}`}
+                            className="text-xs font-semibold text-gray-700 hover:text-black bg-gray-100 hover:bg-gray-200 px-2.5 py-1.5 rounded-lg border border-gray-200 transition-colors inline-flex items-center gap-1"
+                            title="Edit Job"
+                          >
+                            <Edit3 size={13} /> Edit
+                          </Link>
+
+                          <button
+                            type="button"
+                            disabled={deletingId === job._id}
+                            onClick={() => handleDeleteJob(job)}
+                            className="text-xs font-semibold text-red-600 hover:text-white bg-red-50 hover:bg-red-600 px-2.5 py-1.5 rounded-lg border border-red-200 hover:border-red-600 transition-colors inline-flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                            title="Delete Job"
+                          >
+                            <Trash2 size={13} /> Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

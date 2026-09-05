@@ -2,6 +2,7 @@ import asyncHandler from "express-async-handler";
 import Job from "../models/Job.js";
 import User from "../models/User.js";
 import EmployerProfile from "../models/EmployerProfile.js";
+import Application from "../models/Application.js";
 import { broadcastNewJobAlert } from "../utils/webPush.js";
 import sendEmail from "../utils/sendEmail.js";
 
@@ -244,6 +245,7 @@ export const deleteJob = asyncHandler(async (req, res) => {
     throw new Error("You do not have permission to delete this job");
   }
 
+  await Application.deleteMany({ job: job._id });
   await job.deleteOne();
   res.json({ message: "Job removed" });
 });
