@@ -68,6 +68,8 @@ export const createJob = asyncHandler(async (req, res) => {
       }
       parsedDeadline = d;
     }
+  }
+
   let categoryId = req.body.category;
   const customCat = req.body.customCategory || (req.body.category === "custom" ? req.body.customCategoryName : "");
   if (categoryId === "custom" || customCat) {
