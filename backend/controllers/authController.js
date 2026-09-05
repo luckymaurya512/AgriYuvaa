@@ -160,43 +160,8 @@ export const verifyOtp = asyncHandler(async (req, res) => {
       await EmployerProfile.create({
         user: user._id,
         companyName: companyName || user.name,
+        verificationStatus: "approved",
       });
-    }
-
-    // 📧 Notify Admins and Superadmins of new employer awaiting verification
-    try {
-      const admins = await User.find({ role: { $in: ["admin", "superadmin"] } }).select("email name");
-      const employerDisplayName = companyName || user.name;
-      for (const admin of admins) {
-        sendEmail({
-          to: admin.email,
-          subject: `🏢 New Employer Registered for Verification: ${employerDisplayName}`,
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 12px; background-color: #ffffff;">
-              <div style="text-align: center; margin-bottom: 20px;">
-                <h2 style="color: #15803d; margin: 0; font-size: 22px;">AgriYuvaa Admin Alert 🌾</h2>
-                <p style="color: #6b7280; font-size: 13px; margin-top: 4px;">New Employer Registration & Verification Required</p>
-              </div>
-              
-              <div style="padding: 16px; background-color: #f0fdf4; border-radius: 8px; border-left: 4px solid #16a34a; margin-bottom: 16px;">
-                <h3 style="margin: 0 0 8px 0; color: #166534; font-size: 16px;">New Employer Details</h3>
-                <p style="margin: 4px 0; color: #374151; font-size: 14px;"><strong>Company / Farm Name:</strong> ${employerDisplayName}</p>
-                <p style="margin: 4px 0; color: #374151; font-size: 14px;"><strong>Contact Person:</strong> ${user.name}</p>
-                <p style="margin: 4px 0; color: #374151; font-size: 14px;"><strong>Email:</strong> ${user.email}</p>
-                <p style="margin: 4px 0; color: #374151; font-size: 14px;"><strong>Phone:</strong> ${user.phone || "Not provided"}</p>
-              </div>
-
-              <p style="color: #4b5563; font-size: 13px; line-height: 1.5;">Please log in to the AgriYuvaa Admin Panel to review their verification documents and approve their employer profile so they can post jobs.</p>
-
-              <div style="text-align: center; margin-top: 24px;">
-                <a href="https://frontend-lime-nine-60.vercel.app/admin" style="display: inline-block; background-color: #15803d; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px;">Open Admin Dashboard →</a>
-              </div>
-            </div>
-          `,
-        }).catch((err) => console.error("Admin employer alert email error:", err));
-      }
-    } catch (adminAlertError) {
-      console.error("Error fetching admins for notification:", adminAlertError);
     }
   } else {
     const existingProfile = await SeekerProfile.findOne({ user: user._id });

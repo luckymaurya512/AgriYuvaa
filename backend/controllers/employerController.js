@@ -41,10 +41,6 @@ export const updateMyEmployerProfile = asyncHandler(async (req, res) => {
     throw new Error("Employer profile not found");
   }
   Object.assign(profile, req.body);
-  // Editing key details re-triggers verification
-  if (req.body.companyName || req.body.gstOrFpoId) {
-    profile.verificationStatus = "pending";
-  }
   await profile.save();
   res.json(profile);
 });

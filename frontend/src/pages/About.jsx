@@ -13,8 +13,8 @@ const About = () => (
       across the country — on a platform built mobile-first, for how our users actually search for work.
     </p>
     <p className="text-brand-grey">
-      Every employer on AgriYuvaa is verified before they can post a job, and every listing is reviewed
-      by our team before it goes live — so job seekers can search with confidence.
+      Every job listing on AgriYuvaa is carefully reviewed and moderated by our team before going live
+      — so job seekers can search with complete confidence.
     </p>
   </div>
 );

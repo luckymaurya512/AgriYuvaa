@@ -10,15 +10,13 @@ import sendEmail from "../utils/sendEmail.js";
 export const createJob = asyncHandler(async (req, res) => {
   const isPrivileged = ["admin", "superadmin"].includes(req.user.role);
 
-  let employerProfile = null;
-  if (!isPrivileged) {
-    employerProfile = await EmployerProfile.findOne({ user: req.user._id });
-    if (!employerProfile || employerProfile.verificationStatus !== "approved") {
-      res.status(403);
-      throw new Error("Your employer account must be verified before posting jobs");
-    }
-  } else {
-    employerProfile = await EmployerProfile.findOne({ user: req.user._id });
+  let employerProfile = await EmployerProfile.findOne({ user: req.user._id });
+  if (!employerProfile && req.user.role === "employer") {
+    employerProfile = await EmployerProfile.create({
+      user: req.user._id,
+      companyName: req.user.name,
+      verificationStatus: "approved",
+    });
   }
 
   // Admin-created jobs are automatically approved; employer jobs are pending review

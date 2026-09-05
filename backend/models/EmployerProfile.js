@@ -13,7 +13,7 @@ const employerProfileSchema = new mongoose.Schema(
     verificationStatus: {
       type: String,
       enum: ["pending", "approved", "rejected"],
-      default: "pending",
+      default: "approved",
     },
     documents: [{ type: String }],
   },

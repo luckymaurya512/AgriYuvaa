@@ -30,8 +30,6 @@ import {
 import ResumePreviewModal from "../../components/ResumePreviewModal.jsx";
 import {
   fetchPlatformStats,
-  fetchPendingEmployers,
-  verifyEmployer,
   fetchPendingJobs,
   fetchAllPlatformJobs,
   fetchAllApplications,
@@ -53,7 +51,6 @@ const AdminDashboard = () => {
   };
 
   const [stats, setStats] = useState(null);
-  const [pendingEmployers, setPendingEmployers] = useState([]);
   const [pendingJobs, setPendingJobs] = useState([]);
   const [allJobs, setAllJobs] = useState([]);
   const [jobSearch, setJobSearch] = useState("");
@@ -216,7 +213,6 @@ const AdminDashboard = () => {
 
   const loadAll = () => {
     fetchPlatformStats().then(setStats).catch(() => {});
-    fetchPendingEmployers().then(setPendingEmployers).catch(() => {});
     fetchPendingJobs().then(setPendingJobs).catch(() => {});
     loadPlatformJobs();
     loadPlatformApplications();
@@ -255,11 +251,6 @@ const AdminDashboard = () => {
   useEffect(() => {
     loadPlatformApplications();
   }, [appStatusFilter]);
-
-  const handleEmployerDecision = async (id, decision) => {
-    await verifyEmployer(id, decision);
-    loadAll();
-  };
 
   const handleJobDecision = async (id, decision, isFeatured = false) => {
     await reviewJob(
@@ -305,7 +296,7 @@ const AdminDashboard = () => {
         <div>
           <h1 className="text-2xl font-display font-bold mb-1">Admin Control Center</h1>
           <p className="text-sm text-brand-grey">
-            Manage job postings, verify employers, track applicant resumes, and monitor platform activity.
+            Manage job postings, review submissions, track applicant resumes, and monitor platform activity.
           </p>
         </div>
 
@@ -326,13 +317,19 @@ const AdminDashboard = () => {
       </div>
 
       {actionSuccess && (
-        <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-2xl text-xs font-semibold flex items-center gap-2 shadow-xs">
+        <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-xl text-xs font-semibold flex items-center justify-between">
           <span>{actionSuccess}</span>
+          <button
+            onClick={() => setActionSuccess("")}
+            className="text-emerald-700 hover:text-emerald-950 text-base leading-none"
+          >
+            ×
+          </button>
         </div>
       )}
 
-      {/* ── TOP NAVIGATION TABS ── */}
-      <div className="flex items-center gap-2 border-b border-brand-border pb-1 overflow-x-auto no-scrollbar">
+      {/* ── UNIFIED STICKY NAVIGATION TABS ── */}
+      <div className="flex items-center gap-1.5 p-1.5 bg-gray-100/80 backdrop-blur-md rounded-2xl border border-gray-200/80 overflow-x-auto shadow-inner">
         <button
           type="button"
           onClick={() => setTab("overview")}
@@ -354,10 +351,10 @@ const AdminDashboard = () => {
               : "text-gray-600 hover:text-black hover:bg-gray-100"
           }`}
         >
-          <Users size={15} /> Job Applications
+          <Users size={15} /> Applications Tracker
           <span
-            className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-              activeTab === "applications" ? "bg-emerald-800 text-white" : "bg-gray-200 text-gray-800"
+            className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+              activeTab === "applications" ? "bg-emerald-800 text-white" : "bg-gray-200 text-gray-700"
             }`}
           >
             {applications.length}
@@ -375,8 +372,8 @@ const AdminDashboard = () => {
         >
           <Briefcase size={15} /> Platform Jobs
           <span
-            className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-              activeTab === "jobs" ? "bg-emerald-800 text-white" : "bg-gray-200 text-gray-800"
+            className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+              activeTab === "jobs" ? "bg-emerald-800 text-white" : "bg-gray-200 text-gray-700"
             }`}
           >
             {allJobs.length}
@@ -392,14 +389,14 @@ const AdminDashboard = () => {
               : "text-gray-600 hover:text-black hover:bg-gray-100"
           }`}
         >
-          <Clock size={15} /> Pending Approvals
-          {pendingEmployers.length + pendingJobs.length > 0 && (
+          <Clock size={15} /> Job Moderation Queue
+          {pendingJobs.length > 0 && (
             <span
               className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
                 activeTab === "approvals" ? "bg-amber-500 text-white" : "bg-amber-100 text-amber-900 border border-amber-300"
               }`}
             >
-              {pendingEmployers.length + pendingJobs.length}
+              {pendingJobs.length}
             </span>
           )}
         </button>
@@ -422,7 +419,7 @@ const AdminDashboard = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <StatCard label="Total Platform Users" value={stats.totalUsers} />
               <StatCard label="Active Platform Jobs" value={stats.totalJobs} />
-              <StatCard label="Pending Moderation" value={stats.pendingJobs + pendingEmployers.length} />
+              <StatCard label="Pending Job Moderation" value={stats.pendingJobs} />
               <StatCard label="Candidate Applications" value={stats.totalApplications} />
             </div>
           )}
@@ -501,23 +498,23 @@ const AdminDashboard = () => {
                     </div>
                     <span
                       className={`text-xs font-bold px-2.5 py-1 rounded-full border ${
-                        pendingEmployers.length + pendingJobs.length > 0
+                        pendingJobs.length > 0
                           ? "bg-amber-100 text-amber-900 border-amber-300"
                           : "bg-gray-100 text-gray-700 border-gray-200"
                       }`}
                     >
-                      {pendingEmployers.length + pendingJobs.length} Pending
+                      {pendingJobs.length} Pending
                     </span>
                   </div>
                   <h3 className="font-display font-bold text-base text-brand-black group-hover:text-amber-800 transition-colors">
-                    Moderation & Approvals
+                    Job Moderation Queue
                   </h3>
                   <p className="text-xs text-brand-grey mt-1 leading-relaxed">
-                    Verify new employer company registrations and approve or reject submitted job opportunities.
+                    Review and approve or reject newly submitted job postings from employers before they go live.
                   </p>
                 </div>
                 <div className="mt-5 pt-4 border-t border-brand-border flex items-center justify-between text-xs font-bold text-amber-900 group-hover:translate-x-0.5 transition-transform">
-                  <span>Review Approvals Queue</span>
+                  <span>Review Job Queue</span>
                   <ArrowRight size={14} />
                 </div>
               </div>
@@ -581,14 +578,14 @@ const AdminDashboard = () => {
       )}
 
       {/* ═══════════════════════════════════════════════════════════════════ */}
-      {/* ── TAB 2: PENDING APPROVALS QUEUE (EMPLOYERS & JOBS) ── */}
+      {/* ── TAB 2: JOB MODERATION QUEUE ── */}
       {/* ═══════════════════════════════════════════════════════════════════ */}
       {activeTab === "approvals" && (
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-display font-bold text-brand-black">Pending Moderation & Approvals</h2>
-              <p className="text-xs text-brand-grey">Verify new employer accounts and review pending job submissions.</p>
+              <h2 className="text-lg font-display font-bold text-brand-black">Job Moderation & Approvals Queue</h2>
+              <p className="text-xs text-brand-grey">Review, approve, or reject newly submitted job opportunities from employers.</p>
             </div>
             <button
               onClick={() => setTab("overview")}
@@ -598,102 +595,93 @@ const AdminDashboard = () => {
             </button>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* Pending Employers */}
-            <div className="card overflow-hidden">
-              <div className="px-5 py-4 border-b border-brand-border font-semibold text-sm flex items-center justify-between">
-                <span>Pending Employer Verifications</span>
-                <span className="text-xs bg-gray-100 px-2 py-0.5 rounded-full font-bold">{pendingEmployers.length}</span>
-              </div>
-              <div className="divide-y divide-brand-border">
-                {pendingEmployers.length === 0 && (
-                  <p className="p-5 text-sm text-brand-grey">No employers pending verification.</p>
-                )}
-                {pendingEmployers.map((emp) => (
-                  <div key={emp._id} className="p-5 flex items-center justify-between gap-3">
-                    <div>
-                      <p className="font-medium text-sm">{emp.companyName}</p>
-                      <p className="text-xs text-brand-grey">{emp.user?.email}</p>
-                    </div>
-                    <div className="flex gap-2 shrink-0">
-                      <button
-                        onClick={() => handleEmployerDecision(emp._id, "approved")}
-                        className="text-xs font-semibold bg-brand-green text-white px-3 py-1.5 rounded-lg hover:bg-emerald-700 transition-colors"
-                      >
-                        Approve
-                      </button>
-                      <button
-                        onClick={() => handleEmployerDecision(emp._id, "rejected")}
-                        className="text-xs font-semibold bg-brand-black text-white px-3 py-1.5 rounded-lg hover:bg-black/80 transition-colors"
-                      >
-                        Reject
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+          {/* Pending Job Approvals Full-Width Card */}
+          <div className="card overflow-hidden">
+            <div className="px-5 py-4 border-b border-brand-border font-semibold text-sm flex items-center justify-between bg-gray-50/50">
+              <span className="flex items-center gap-2 font-display font-bold text-brand-black">
+                <Clock size={16} className="text-amber-600" />
+                Job Postings Awaiting Moderation
+              </span>
+              <span className="text-xs bg-amber-100 text-amber-900 border border-amber-300 px-2.5 py-0.5 rounded-full font-bold">
+                {pendingJobs.length} Pending
+              </span>
             </div>
-
-            {/* Pending Job Approvals */}
-            <div className="card overflow-hidden">
-              <div className="px-5 py-4 border-b border-brand-border font-semibold text-sm flex items-center justify-between">
-                <span>Pending Job Approvals</span>
-                <span className="text-xs bg-gray-100 px-2 py-0.5 rounded-full font-bold">{pendingJobs.length}</span>
-              </div>
-              <div className="divide-y divide-brand-border">
-                {pendingJobs.length === 0 && (
-                  <p className="p-5 text-sm text-brand-grey">No jobs pending approval.</p>
-                )}
-                {pendingJobs.map((job) => (
-                  <div key={job._id} className="p-5 space-y-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <p className="font-semibold text-sm text-brand-black">{job.title}</p>
-                          {job.featuredRequested && (
-                            <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-md">
-                              <Star size={10} fill="currentColor" /> Boost Requested
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs text-brand-grey mt-0.5">
-                          {job.companyName || job.employer?.name} · {job.location} · {job.employmentType}
-                        </p>
+            <div className="divide-y divide-brand-border">
+              {pendingJobs.length === 0 && (
+                <div className="p-12 text-center space-y-2">
+                  <CheckCircle size={40} className="mx-auto text-brand-green opacity-90" />
+                  <p className="text-sm font-semibold text-brand-black">All caught up!</p>
+                  <p className="text-xs text-brand-grey">There are currently no job postings awaiting approval.</p>
+                </div>
+              )}
+              {pendingJobs.map((job) => (
+                <div key={job._id} className="p-5 space-y-3 hover:bg-gray-50/40 transition-colors">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-bold text-base text-brand-black">{job.title}</p>
+                        {job.featuredRequested && (
+                          <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-md">
+                            <Star size={10} fill="currentColor" /> Boost Requested
+                          </span>
+                        )}
+                        <span className="text-[11px] font-medium bg-gray-100 text-gray-700 px-2.5 py-0.5 rounded-md">
+                          {job.employmentType}
+                        </span>
+                        {job.category?.name && (
+                          <span className="text-[11px] font-medium bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-md">
+                            {job.category.name}
+                          </span>
+                        )}
                       </div>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-gray-100">
-                      <button
-                        onClick={() => handleJobDecision(job._id, "approved", true)}
-                        className="text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-lg flex items-center gap-1 shadow-xs transition-colors"
-                      >
-                        <Star size={12} fill="currentColor" /> Approve & Feature
-                      </button>
-
-                      <button
-                        onClick={() => handleJobDecision(job._id, "approved", false)}
-                        className="text-xs font-semibold bg-brand-green hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg transition-colors"
-                      >
-                        Approve
-                      </button>
-
-                      <button
-                        onClick={() => handleJobDecision(job._id, "rejected")}
-                        className="text-xs font-semibold bg-gray-100 hover:bg-red-50 hover:text-red-700 text-gray-700 px-3 py-1.5 rounded-lg transition-colors"
-                      >
-                        Reject
-                      </button>
-
-                      <Link
-                        to={`/employer/post-job?edit=${job._id}`}
-                        className="text-xs font-semibold text-gray-600 hover:text-black px-2.5 py-1.5 rounded-lg hover:bg-gray-100 transition-colors inline-flex items-center gap-1 ml-auto"
-                      >
-                        <Edit3 size={13} /> Edit
-                      </Link>
+                      <p className="text-xs text-brand-grey flex items-center gap-2 flex-wrap">
+                        <span className="font-semibold text-brand-black">{job.companyName || job.employer?.name || "Company"}</span>
+                        <span>•</span>
+                        <span>{job.location || "Pan-India"}</span>
+                        <span>•</span>
+                        <span>{job.salaryRange || "Salary Disclosed on Application"}</span>
+                        <span>•</span>
+                        <span>Posted on {new Date(job.createdAt).toLocaleDateString()}</span>
+                      </p>
+                      {job.description && (
+                        <p className="text-xs text-gray-600 line-clamp-2 mt-1 leading-relaxed bg-gray-50/80 p-2.5 rounded-xl border border-gray-100">
+                          {job.description}
+                        </p>
+                      )}
                     </div>
                   </div>
-                ))}
-              </div>
+
+                  <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-100">
+                    <button
+                      onClick={() => handleJobDecision(job._id, "approved", true)}
+                      className="text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                    >
+                      <Star size={13} fill="currentColor" /> Approve & Boost Featured
+                    </button>
+
+                    <button
+                      onClick={() => handleJobDecision(job._id, "approved", false)}
+                      className="text-xs font-bold bg-brand-green hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                      <CheckCircle size={13} /> Approve Live
+                    </button>
+
+                    <button
+                      onClick={() => handleJobDecision(job._id, "rejected")}
+                      className="text-xs font-semibold bg-gray-100 hover:bg-red-50 hover:text-red-700 text-gray-700 px-3.5 py-1.5 rounded-xl transition-colors cursor-pointer"
+                    >
+                      <XCircle size={13} /> Reject
+                    </button>
+
+                    <Link
+                      to={`/employer/post-job?edit=${job._id}`}
+                      className="text-xs font-semibold text-gray-600 hover:text-black px-3 py-1.5 rounded-xl hover:bg-gray-100 transition-colors inline-flex items-center gap-1.5 ml-auto"
+                    >
+                      <Edit3 size={13} /> Edit Job
+                    </Link>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
