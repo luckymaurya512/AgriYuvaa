@@ -22,6 +22,7 @@ import {
   Loader2,
   ArrowRight,
   Edit3,
+  Clock,
 } from "lucide-react";
 import { fetchJobById, applyToJob, fetchMyApplications, fetchJobs } from "../services/jobService.js";
 import { toggleJobFeatured } from "../services/adminService.js";
@@ -281,6 +282,9 @@ const JobDetails = () => {
   const isAdmin = user && ["admin", "superadmin"].includes(user.role);
   const canEdit = isOwner || isAdmin;
 
+  const deadlineDate = job.applicationDeadline || job.expiresAt;
+  const isExpired = deadlineDate && new Date(deadlineDate) < new Date();
+
   const handleAdminToggleFeatured = async () => {
     try {
       const res = await toggleJobFeatured(id);
@@ -299,6 +303,26 @@ const JobDetails = () => {
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 grid md:grid-cols-3 gap-8">
       {/* Left Column: Job Info */}
       <div className="md:col-span-2 space-y-6">
+        {isExpired && (
+          <div className="p-4 bg-amber-50 border border-amber-300 rounded-2xl text-amber-900 text-xs font-semibold flex items-center gap-2.5 shadow-2xs">
+            <Clock size={18} className="text-amber-700 shrink-0" />
+            <div>
+              <p className="font-bold text-sm text-amber-950">Application Deadline Passed</p>
+              <p className="text-[11px] text-amber-800 font-normal mt-0.5">
+                The deadline for this job posting was{" "}
+                <strong>
+                  {new Date(deadlineDate).toLocaleDateString("en-IN", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </strong>
+                . This listing is now closed and no longer accepting new applications.
+              </p>
+            </div>
+          </div>
+        )}
+
         <div>
           <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
             <div className="flex flex-wrap items-center gap-2">
@@ -386,6 +410,21 @@ const JobDetails = () => {
               <Calendar size={16} className="text-brand-green" /> Posted{" "}
               {new Date(job.createdAt).toLocaleDateString()}
             </span>
+            {deadlineDate && (
+              <span
+                className={`inline-flex items-center gap-1 font-medium ${
+                  isExpired ? "text-amber-900 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200" : "text-amber-800"
+                }`}
+              >
+                <Clock size={15} className={isExpired ? "text-amber-700" : "text-amber-600"} />
+                {isExpired ? "Expired: " : "Deadline: "}
+                {new Date(deadlineDate).toLocaleDateString("en-IN", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })}
+              </span>
+            )}
           </div>
         </div>
 
@@ -437,8 +476,23 @@ const JobDetails = () => {
       {/* Right Column: Application Card */}
       <div className="space-y-4">
         <div className="card p-6 sticky top-24">
-          {/* ── CASE 1: DIRECT HR EMAIL APPLICATION ── */}
-          {job.applyType === "email" ? (
+          {isExpired ? (
+            <div className="p-6 text-center space-y-4 bg-amber-50/40 rounded-2xl border border-amber-200/80">
+              <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center mx-auto shadow-xs">
+                <Clock size={24} />
+              </div>
+              <div>
+                <h3 className="font-display font-bold text-lg text-brand-black">Applications Closed</h3>
+                <p className="text-xs text-brand-grey mt-1 leading-relaxed">
+                  The application deadline for this position has passed. This job is no longer accepting new candidate submissions.
+                </p>
+              </div>
+              <Link to="/jobs" className="btn-primary w-full text-center block text-xs py-3 font-bold shadow-xs">
+                Explore Active Openings →
+              </Link>
+            </div>
+          ) : /* ── CASE 1: DIRECT HR EMAIL APPLICATION ── */
+          job.applyType === "email" ? (
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center">

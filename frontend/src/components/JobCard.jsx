@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { MapPin, Briefcase, IndianRupee, Bookmark, Zap, Star } from "lucide-react";
+import { MapPin, Briefcase, IndianRupee, Bookmark, Zap, Star, Calendar } from "lucide-react";
 import { toggleSaveJob } from "../services/userService.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import WhatsAppIcon from "./WhatsAppIcon.jsx";
@@ -35,6 +35,8 @@ const JobCard = ({ job, isSavedInitial = false, onBookmarkChange }) => {
       setSaving(false);
     }
   };
+
+  const deadlineDate = job.applicationDeadline || job.expiresAt;
 
   return (
     <Link to={`/jobs/${job._id}`} className="card p-5 flex flex-col gap-3 h-full relative group">
@@ -112,6 +114,12 @@ const JobCard = ({ job, isSavedInitial = false, onBookmarkChange }) => {
         {job.category?.name && (
           <span className="text-xs font-medium text-brand-green-dark bg-brand-green-light px-3 py-1 rounded-full">
             {job.category.name}
+          </span>
+        )}
+        {deadlineDate && (
+          <span className="text-[11px] font-medium text-amber-900 bg-amber-50 border border-amber-200/80 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+            <Calendar size={11} className="text-amber-700" />
+            Closes {new Date(deadlineDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
           </span>
         )}
         {job.applyType === "email" && (

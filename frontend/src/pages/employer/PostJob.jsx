@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams, useParams } from "react-router-dom";
-import { Mail, ExternalLink, FileText, Building2, Sparkles, Loader2, ArrowLeft } from "lucide-react";
+import { Mail, ExternalLink, FileText, Building2, Sparkles, Loader2, ArrowLeft, Calendar } from "lucide-react";
 import { fetchCategories, createJob, fetchJobById, updateJob } from "../../services/jobService.js";
 import { useAuth } from "../../context/AuthContext.jsx";
 
@@ -36,6 +36,7 @@ const PostJob = () => {
     salaryMin: "",
     salaryMax: "",
     cropTags: "",
+    applicationDeadline: "",
     applyType: "platform", // "platform" | "email" | "external_link"
     applyEmail: "",
     applyEmailSubject: "",
@@ -56,6 +57,9 @@ const PostJob = () => {
       fetchJobById(editJobId)
         .then((job) => {
           if (!job) return;
+          const deadlineStr = job.applicationDeadline || job.expiresAt
+            ? new Date(job.applicationDeadline || job.expiresAt).toISOString().split("T")[0]
+            : "";
           setForm({
             title: job.title || "",
             companyName: job.companyName || "",
@@ -70,6 +74,7 @@ const PostJob = () => {
             salaryMin: job.salaryMin !== undefined ? String(job.salaryMin) : "",
             salaryMax: job.salaryMax !== undefined ? String(job.salaryMax) : "",
             cropTags: (job.cropTags || []).join(", "),
+            applicationDeadline: deadlineStr,
             applyType: job.applyType || "platform",
             applyEmail: job.applyEmail || "",
             applyEmailSubject: job.applyEmailSubject || "",
@@ -117,6 +122,8 @@ const PostJob = () => {
         salaryMin: form.salaryMin ? Number(form.salaryMin) : undefined,
         salaryMax: form.salaryMax ? Number(form.salaryMax) : undefined,
         cropTags: form.cropTags ? form.cropTags.split(",").map((t) => t.trim()).filter(Boolean) : [],
+        applicationDeadline: form.applicationDeadline ? form.applicationDeadline : null,
+        expiresAt: form.applicationDeadline ? form.applicationDeadline : null,
       };
 
       if (isEdit) {
@@ -494,6 +501,51 @@ const PostJob = () => {
               onChange={(e) => setForm({ ...form, salaryMax: e.target.value })}
             />
           </div>
+        </div>
+
+        {/* Application Deadline / Expiration Date */}
+        <div className="p-4 bg-emerald-50/40 border border-emerald-100 rounded-xl space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-bold text-emerald-950 uppercase tracking-wide flex items-center gap-1.5">
+              <Calendar size={14} className="text-emerald-700" />
+              Application Deadline / Expiration Date (Optional)
+            </label>
+            {form.applicationDeadline && (
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, applicationDeadline: "" })}
+                className="text-[11px] font-semibold text-emerald-800 hover:text-red-700 underline cursor-pointer"
+              >
+                Clear Date
+              </button>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
+            <input
+              type="date"
+              min={new Date().toISOString().split("T")[0]}
+              className="input-field text-sm bg-white max-w-xs cursor-pointer"
+              value={form.applicationDeadline}
+              onChange={(e) => setForm({ ...form, applicationDeadline: e.target.value })}
+            />
+          </div>
+          <p className="text-[11px] text-brand-grey leading-relaxed">
+            {form.applicationDeadline ? (
+              <span className="text-emerald-900 font-medium">
+                ✓ This job will automatically stop appearing on the public /jobs page after{" "}
+                <strong>
+                  {new Date(form.applicationDeadline).toLocaleDateString("en-IN", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </strong>
+                .
+              </span>
+            ) : (
+              "Leave blank if this job listing should stay active indefinitely until manually closed."
+            )}
+          </p>
         </div>
 
         {/* Tags */}

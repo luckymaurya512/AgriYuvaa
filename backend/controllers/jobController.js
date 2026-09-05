@@ -24,12 +24,26 @@ export const createJob = asyncHandler(async (req, res) => {
   const isFeatured = isPrivileged ? Boolean(req.body.isFeatured) : false;
   const featuredRequested = !isPrivileged && Boolean(req.body.featuredRequested || req.body.isFeatured);
 
+  let deadline = req.body.applicationDeadline || req.body.expiresAt;
+  let parsedDeadline = undefined;
+  if (deadline) {
+    const d = new Date(deadline);
+    if (!isNaN(d.getTime())) {
+      if (typeof deadline === "string" && deadline.length <= 10) {
+        d.setUTCHours(23, 59, 59, 999);
+      }
+      parsedDeadline = d;
+    }
+  }
+
   const job = await Job.create({
     ...req.body,
     employer: req.user._id,
     status: initialStatus,
     isFeatured,
     featuredRequested,
+    applicationDeadline: parsedDeadline,
+    expiresAt: parsedDeadline,
   });
 
   if (initialStatus === "approved") {
@@ -75,7 +89,7 @@ export const createJob = asyncHandler(async (req, res) => {
   res.status(201).json(job);
 });
 
-// @desc  Public job search & listing with filters
+// @desc  Public job search & listing with filters (excludes expired jobs)
 // @route GET /api/jobs
 export const getJobs = asyncHandler(async (req, res) => {
   const {
@@ -91,19 +105,42 @@ export const getJobs = asyncHandler(async (req, res) => {
     limit = 12,
   } = req.query;
 
-  const query = { status: "approved" };
+  const now = new Date();
+  const andConditions = [
+    {
+      $or: [
+        { expiresAt: { $exists: false } },
+        { expiresAt: null },
+        { expiresAt: { $gte: now } },
+      ],
+    },
+    {
+      $or: [
+        { applicationDeadline: { $exists: false } },
+        { applicationDeadline: null },
+        { applicationDeadline: { $gte: now } },
+      ],
+    },
+  ];
 
   if (keyword && keyword.trim()) {
     const keywordRegex = { $regex: keyword.trim(), $options: "i" };
-    query.$or = [
-      { title: keywordRegex },
-      { companyName: keywordRegex },
-      { description: keywordRegex },
-      { cropTags: keywordRegex },
-      { requirements: keywordRegex },
-      { responsibilities: keywordRegex },
-    ];
+    andConditions.push({
+      $or: [
+        { title: keywordRegex },
+        { companyName: keywordRegex },
+        { description: keywordRegex },
+        { cropTags: keywordRegex },
+        { requirements: keywordRegex },
+        { responsibilities: keywordRegex },
+      ],
+    });
   }
+
+  const query = {
+    status: "approved",
+    $and: andConditions,
+  };
 
   if (category) query.category = category;
   if (employmentType) query.employmentType = employmentType;
@@ -167,6 +204,23 @@ export const updateJob = asyncHandler(async (req, res) => {
   const fieldsToUpdate = { ...req.body };
   if (isOwner && !isPrivileged) {
     fieldsToUpdate.status = "pending";
+  }
+
+  if (fieldsToUpdate.applicationDeadline !== undefined || fieldsToUpdate.expiresAt !== undefined) {
+    const rawDeadline = fieldsToUpdate.applicationDeadline ?? fieldsToUpdate.expiresAt;
+    if (rawDeadline) {
+      const d = new Date(rawDeadline);
+      if (!isNaN(d.getTime())) {
+        if (typeof rawDeadline === "string" && rawDeadline.length <= 10) {
+          d.setUTCHours(23, 59, 59, 999);
+        }
+        fieldsToUpdate.applicationDeadline = d;
+        fieldsToUpdate.expiresAt = d;
+      }
+    } else {
+      fieldsToUpdate.applicationDeadline = null;
+      fieldsToUpdate.expiresAt = null;
+    }
   }
 
   Object.assign(job, fieldsToUpdate);
