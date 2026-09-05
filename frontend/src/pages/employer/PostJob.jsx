@@ -5,7 +5,14 @@ import { fetchCategories, createJob, fetchJobById, updateJob } from "../../servi
 import { useAuth } from "../../context/AuthContext.jsx";
 
 const employmentTypes = ["full-time", "part-time", "seasonal", "daily-wage", "contract", "internship"];
-const experienceLevels = ["entry", "mid", "senior", "any"];
+const experienceLevels = [
+  { value: "any", label: "Any Experience / Freshers Welcome" },
+  { value: "0-1", label: "0-1 Years (Fresher / Junior)" },
+  { value: "1-2", label: "1-2 Years" },
+  { value: "2-3", label: "2-3 Years" },
+  { value: "3-5", label: "3-5 Years" },
+  { value: "5+", label: "5+ Years (Senior / Lead)" },
+];
 
 const PostJob = () => {
   const navigate = useNavigate();
@@ -455,8 +462,8 @@ const PostJob = () => {
               onChange={(e) => setForm({ ...form, experienceLevel: e.target.value })}
             >
               {experienceLevels.map((l) => (
-                <option key={l} value={l}>
-                  {l}
+                <option key={l.value} value={l.value}>
+                  {l.label}
                 </option>
               ))}
             </select>

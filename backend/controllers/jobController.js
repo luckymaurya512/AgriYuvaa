@@ -145,7 +145,21 @@ export const getJobs = asyncHandler(async (req, res) => {
 
   if (category) query.category = category;
   if (employmentType) query.employmentType = employmentType;
-  if (experienceLevel) query.experienceLevel = experienceLevel;
+  if (experienceLevel && experienceLevel !== "any") {
+    if (experienceLevel === "0-1" || experienceLevel === "0-1 years") {
+      query.experienceLevel = { $in: ["0-1", "0-1 years", "entry"] };
+    } else if (experienceLevel === "1-2" || experienceLevel === "1-2 years") {
+      query.experienceLevel = { $in: ["1-2", "1-2 years"] };
+    } else if (experienceLevel === "2-3" || experienceLevel === "2-3 years") {
+      query.experienceLevel = { $in: ["2-3", "2-3 years"] };
+    } else if (experienceLevel === "3-5" || experienceLevel === "3-5 years") {
+      query.experienceLevel = { $in: ["3-5", "3-5 years", "mid"] };
+    } else if (experienceLevel === "5+" || experienceLevel === "5+ years") {
+      query.experienceLevel = { $in: ["5+", "5+ years", "senior"] };
+    } else {
+      query.experienceLevel = experienceLevel;
+    }
+  }
   if (location && location.trim()) query.location = { $regex: location.trim(), $options: "i" };
   if (minSalary) query.salaryMax = { $gte: Number(minSalary) };
   if (maxSalary) query.salaryMin = { ...(query.salaryMin || {}), $lte: Number(maxSalary) };

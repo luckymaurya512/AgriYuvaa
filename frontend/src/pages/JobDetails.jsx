@@ -24,6 +24,7 @@ import {
   Edit3,
   Trash2,
   Clock,
+  Award,
 } from "lucide-react";
 import { fetchJobById, applyToJob, fetchMyApplications, fetchJobs, deleteJob } from "../services/jobService.js";
 import { toggleJobFeatured } from "../services/adminService.js";
@@ -32,6 +33,16 @@ import { toggleFollowEmployer, enablePushNotifications } from "../services/notif
 import { useAuth } from "../context/AuthContext.jsx";
 import JobCard from "../components/JobCard.jsx";
 import WhatsAppIcon from "../components/WhatsAppIcon.jsx";
+
+const formatExperience = (lvl) => {
+  if (!lvl || lvl === "any") return "Any Experience";
+  if (lvl === "0-1" || lvl === "0-1 years" || lvl === "entry") return "0-1 Years";
+  if (lvl === "1-2" || lvl === "1-2 years") return "1-2 Years";
+  if (lvl === "2-3" || lvl === "2-3 years") return "2-3 Years";
+  if (lvl === "3-5" || lvl === "3-5 years" || lvl === "mid") return "3-5 Years";
+  if (lvl === "5+" || lvl === "5+ years" || lvl === "senior") return "5+ Years";
+  return lvl;
+};
 
 const JobDetails = () => {
   const { id } = useParams();
@@ -429,6 +440,9 @@ const JobDetails = () => {
             </span>
             <span className="inline-flex items-center gap-1">
               <Briefcase size={16} className="text-brand-green" /> {job.employmentType}
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <Award size={16} className="text-brand-green" /> {formatExperience(job.experienceLevel)}
             </span>
             {(job.salaryMin || job.salaryMax) && (
               <span className="inline-flex items-center gap-1">

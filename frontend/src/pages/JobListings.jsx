@@ -5,6 +5,13 @@ import { fetchJobs, fetchCategories } from "../services/jobService.js";
 import JobCard from "../components/JobCard.jsx";
 
 const employmentTypes = ["full-time", "part-time", "seasonal", "daily-wage", "contract", "internship"];
+const experienceFilterOptions = [
+  { value: "0-1", label: "0-1 Years (Fresher)" },
+  { value: "1-2", label: "1-2 Years" },
+  { value: "2-3", label: "2-3 Years" },
+  { value: "3-5", label: "3-5 Years" },
+  { value: "5+", label: "5+ Years" },
+];
 
 const JobListings = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -20,6 +27,7 @@ const JobListings = () => {
   const currentLocation = searchParams.get("location") || "";
   const currentCategory = searchParams.get("category") || "";
   const currentEmploymentType = searchParams.get("employmentType") || "";
+  const currentExperienceLevel = searchParams.get("experienceLevel") || "";
 
   // Controlled input states for responsive typing & Enter key submit
   const [keywordInput, setKeywordInput] = useState(currentKeyword);
@@ -45,6 +53,7 @@ const JobListings = () => {
       location: currentLocation,
       category: currentCategory,
       employmentType: currentEmploymentType,
+      experienceLevel: currentExperienceLevel,
       page,
     })
       .then((data) => {
@@ -54,7 +63,7 @@ const JobListings = () => {
       })
       .catch(() => setJobs([]))
       .finally(() => setLoading(false));
-  }, [searchParams, page, currentKeyword, currentLocation, currentCategory, currentEmploymentType]);
+  }, [searchParams, page, currentKeyword, currentLocation, currentCategory, currentEmploymentType, currentExperienceLevel]);
 
   const applyTextFilters = (e) => {
     if (e) e.preventDefault();
@@ -85,7 +94,9 @@ const JobListings = () => {
     setSearchParams({});
   };
 
-  const hasActiveFilters = Boolean(currentKeyword || currentLocation || currentCategory || currentEmploymentType);
+  const hasActiveFilters = Boolean(
+    currentKeyword || currentLocation || currentCategory || currentEmploymentType || currentExperienceLevel
+  );
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -209,6 +220,23 @@ const JobListings = () => {
               {employmentTypes.map((t) => (
                 <option key={t} value={t}>
                   {t.replace("-", " ")}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Experience Level Dropdown */}
+          <div>
+            <label className="text-xs font-semibold text-brand-grey uppercase tracking-wide">Experience Level</label>
+            <select
+              className="input-field mt-1 text-sm"
+              value={currentExperienceLevel}
+              onChange={(e) => updateSelectFilter("experienceLevel", e.target.value)}
+            >
+              <option value="">Any experience</option>
+              {experienceFilterOptions.map((exp) => (
+                <option key={exp.value} value={exp.value}>
+                  {exp.label}
                 </option>
               ))}
             </select>

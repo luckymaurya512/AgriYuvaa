@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { MapPin, Briefcase, IndianRupee, Bookmark, Zap, Star, Calendar } from "lucide-react";
+import { MapPin, Briefcase, IndianRupee, Bookmark, Zap, Star, Calendar, Award } from "lucide-react";
 import { toggleSaveJob } from "../services/userService.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import WhatsAppIcon from "./WhatsAppIcon.jsx";
@@ -9,6 +9,16 @@ const formatSalary = (min, max) => {
   if (!min && !max) return "Salary not disclosed";
   if (min && max) return `₹${min.toLocaleString("en-IN")} - ₹${max.toLocaleString("en-IN")}`;
   return `₹${(min || max).toLocaleString("en-IN")}+`;
+};
+
+const formatExperience = (lvl) => {
+  if (!lvl || lvl === "any") return null;
+  if (lvl === "0-1" || lvl === "0-1 years" || lvl === "entry") return "0-1 Yrs";
+  if (lvl === "1-2" || lvl === "1-2 years") return "1-2 Yrs";
+  if (lvl === "2-3" || lvl === "2-3 years") return "2-3 Yrs";
+  if (lvl === "3-5" || lvl === "3-5 years" || lvl === "mid") return "3-5 Yrs";
+  if (lvl === "5+" || lvl === "5+ years" || lvl === "senior") return "5+ Yrs";
+  return `${lvl} Yrs`;
 };
 
 const JobCard = ({ job, isSavedInitial = false, onBookmarkChange }) => {
@@ -105,6 +115,11 @@ const JobCard = ({ job, isSavedInitial = false, onBookmarkChange }) => {
         <span className="inline-flex items-center gap-1">
           <Briefcase size={14} className="text-brand-green" /> {job.employmentType}
         </span>
+        {formatExperience(job.experienceLevel) && (
+          <span className="inline-flex items-center gap-1">
+            <Award size={14} className="text-brand-green" /> {formatExperience(job.experienceLevel)}
+          </span>
+        )}
         <span className="inline-flex items-center gap-1">
           <IndianRupee size={14} className="text-brand-green" /> {formatSalary(job.salaryMin, job.salaryMax)}
         </span>

@@ -62,11 +62,11 @@ const agriSpecializations = [
 ];
 
 const experienceLevels = [
-  "Fresher / Entry Level (0 - 1 Year)",
-  "Junior Professional (1 - 3 Years)",
-  "Mid-Level Professional (3 - 5 Years)",
-  "Senior Specialist (5 - 8 Years)",
-  "Leadership / Management (8+ Years)",
+  "Fresher / Any (0-1 Years)",
+  "1-2 Years",
+  "2-3 Years",
+  "3-5 Years",
+  "5+ Years",
 ];
 
 const Profile = () => {
