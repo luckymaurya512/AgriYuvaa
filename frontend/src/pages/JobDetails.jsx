@@ -36,6 +36,7 @@ import WhatsAppIcon from "../components/WhatsAppIcon.jsx";
 const JobDetails = () => {
   const { id } = useParams();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [job, setJob] = useState(null);
   const [similarJobs, setSimilarJobs] = useState([]);
   const [resumeUrl, setResumeUrl] = useState("");
@@ -279,7 +280,6 @@ const JobDetails = () => {
     defaultEmailSubject
   )}&body=${encodeURIComponent(emailBody)}`;
 
-  const navigate = useNavigate();
   const isOwner = user && (job.employer?._id === user._id || job.employer === user._id);
   const isAdmin = user && ["admin", "superadmin"].includes(user.role);
   const canEdit = isOwner || isAdmin;
