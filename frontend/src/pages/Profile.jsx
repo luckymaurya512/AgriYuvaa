@@ -406,13 +406,13 @@ const Profile = () => {
                   Full Name *
                 </label>
                 <div className="relative">
-                  <User size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-grey" />
+                  <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-grey pointer-events-none" />
                   <input
                     type="text"
                     required
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="input-field pl-9 text-xs sm:text-sm"
+                    className="input-field !pl-10 text-xs sm:text-sm"
                     placeholder="e.g. Rahul Sharma"
                   />
                 </div>
@@ -423,12 +423,12 @@ const Profile = () => {
                   Phone Number
                 </label>
                 <div className="relative">
-                  <Phone size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-grey" />
+                  <Phone size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-grey pointer-events-none" />
                   <input
                     type="tel"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="input-field pl-9 text-xs sm:text-sm"
+                    className="input-field !pl-10 text-xs sm:text-sm"
                     placeholder="e.g. +91 9876543210"
                   />
                 </div>
@@ -442,12 +442,12 @@ const Profile = () => {
                 Email Address (Primary Account ID)
               </label>
               <div className="relative">
-                <Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-grey" />
+                <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-grey pointer-events-none" />
                 <input
                   type="email"
                   disabled
                   value={user?.email || ""}
-                  className="input-field pl-9 text-xs sm:text-sm bg-gray-100 text-brand-grey cursor-not-allowed"
+                  className="input-field !pl-10 text-xs sm:text-sm bg-gray-100 text-brand-grey cursor-not-allowed"
                 />
               </div>
             </div>
@@ -522,12 +522,12 @@ const Profile = () => {
                       Current City / State
                     </label>
                     <div className="relative">
-                      <MapPin size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-grey" />
+                      <MapPin size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-grey pointer-events-none" />
                       <input
                         type="text"
                         value={formData.location}
                         onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                        className="input-field pl-9 text-xs sm:text-sm"
+                        className="input-field !pl-10 text-xs sm:text-sm"
                         placeholder="e.g. Pune, Maharashtra / Lucknow, UP"
                       />
                     </div>
@@ -592,12 +592,12 @@ const Profile = () => {
                       Company Website URL
                     </label>
                     <div className="relative">
-                      <Globe size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-grey" />
+                      <Globe size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-grey pointer-events-none" />
                       <input
                         type="url"
                         value={formData.website}
                         onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                        className="input-field pl-9 text-xs sm:text-sm"
+                        className="input-field !pl-10 text-xs sm:text-sm"
                         placeholder="https://www.yourcompany.com"
                       />
                     </div>
@@ -608,12 +608,12 @@ const Profile = () => {
                       Headquarters / Office Location
                     </label>
                     <div className="relative">
-                      <MapPin size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-grey" />
+                      <MapPin size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-grey pointer-events-none" />
                       <input
                         type="text"
                         value={formData.location}
                         onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                        className="input-field pl-9 text-xs sm:text-sm"
+                        className="input-field !pl-10 text-xs sm:text-sm"
                         placeholder="e.g. Hyderabad, Telangana"
                       />
                     </div>
@@ -806,7 +806,7 @@ const Profile = () => {
                 Current Password *
               </label>
               <div className="relative">
-                <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-grey" />
+                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-grey pointer-events-none" />
                 <input
                   type="password"
                   required
@@ -814,7 +814,7 @@ const Profile = () => {
                   onChange={(e) =>
                     setPasswordData({ ...passwordData, currentPassword: e.target.value })
                   }
-                  className="input-field pl-9 text-xs sm:text-sm"
+                  className="input-field !pl-10 text-xs sm:text-sm"
                   placeholder="Enter your existing password"
                 />
               </div>
@@ -825,7 +825,7 @@ const Profile = () => {
                 New Password *
               </label>
               <div className="relative">
-                <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-grey" />
+                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-grey pointer-events-none" />
                 <input
                   type="password"
                   required
@@ -834,7 +834,7 @@ const Profile = () => {
                   onChange={(e) =>
                     setPasswordData({ ...passwordData, newPassword: e.target.value })
                   }
-                  className="input-field pl-9 text-xs sm:text-sm"
+                  className="input-field !pl-10 text-xs sm:text-sm"
                   placeholder="Minimum 6 characters"
                 />
               </div>
@@ -845,7 +845,7 @@ const Profile = () => {
                 Confirm New Password *
               </label>
               <div className="relative">
-                <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-grey" />
+                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-grey pointer-events-none" />
                 <input
                   type="password"
                   required
@@ -854,7 +854,7 @@ const Profile = () => {
                   onChange={(e) =>
                     setPasswordData({ ...passwordData, confirmPassword: e.target.value })
                   }
-                  className="input-field pl-9 text-xs sm:text-sm"
+                  className="input-field !pl-10 text-xs sm:text-sm"
                   placeholder="Re-enter your new password"
                 />
               </div>

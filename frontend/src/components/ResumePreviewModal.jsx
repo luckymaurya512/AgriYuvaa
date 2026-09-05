@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { X, Download, ExternalLink, FileText, User, Mail, Phone, AlertCircle, Loader2 } from "lucide-react";
+import { X, Download, ExternalLink, FileText, User, Mail, Phone, AlertCircle, Loader2, FileCode, CheckCircle2 } from "lucide-react";
 
 /**
  * Reusable in-browser Resume Preview Modal
+ * Supports both PDF and Word (.docx, .doc) documents
  * @param {Object} props
  * @param {Object} props.application - Full application object or candidate info
  * @param {Function} props.onClose - Modal close handler
@@ -25,19 +26,18 @@ const ResumePreviewModal = ({ application, onClose }) => {
     import.meta.env.VITE_API_URL || "https://agriyuvaa.onrender.com"
   ).replace(/\/api\/?$/, "");
 
-  let resumeUrl = application.resumeUrl ? application.resumeUrl.trim() : "";
-  resumeUrl = resumeUrl.replace(/^https?:\/\/\/+/, "/");
+  let rawUrl = application.resumeUrl ? application.resumeUrl.trim() : "";
+  let resumeUrl = "";
 
-  if (resumeUrl.startsWith("/uploads/")) {
-    resumeUrl = `${backendBase}${resumeUrl}`;
-  } else if (
-    !resumeUrl.startsWith("http://") &&
-    !resumeUrl.startsWith("https://") &&
-    resumeUrl.length > 0
-  ) {
-    resumeUrl = `https://${resumeUrl}`;
-  } else if (!resumeUrl && application._id) {
+  // Prioritize streaming endpoint if application._id exists (guaranteed persistence from MongoDB buffer)
+  if (application._id) {
     resumeUrl = `${backendBase}/api/applications/${application._id}/resume`;
+  } else if (rawUrl.startsWith("/uploads/")) {
+    resumeUrl = `${backendBase}${rawUrl.replace(/^https?:\/\/\/+/, "/")}`;
+  } else if (rawUrl.startsWith("http://") || rawUrl.startsWith("https://")) {
+    resumeUrl = rawUrl;
+  } else if (rawUrl) {
+    resumeUrl = `https://${rawUrl}`;
   }
 
   const applicantName = application.seeker?.name || application.name || "Candidate Resume";
@@ -45,8 +45,20 @@ const ResumePreviewModal = ({ application, onClose }) => {
   const applicantPhone = application.seeker?.phone || application.phone || "";
   const jobTitle = application.job?.title || application.jobTitle || "";
 
+  // Detect file extension / format
+  const isWordDoc =
+    rawUrl.toLowerCase().endsWith(".docx") ||
+    rawUrl.toLowerCase().endsWith(".doc") ||
+    (application.resumeOriginalName &&
+      (application.resumeOriginalName.toLowerCase().endsWith(".docx") ||
+        application.resumeOriginalName.toLowerCase().endsWith(".doc")));
+
+  const docxFileName =
+    application.resumeOriginalName ||
+    (rawUrl ? rawUrl.split("/").pop() : `${applicantName.replace(/[^a-z0-9]/gi, "_")}_Resume.docx`);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/75 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/80 backdrop-blur-xs animate-in fade-in duration-200">
       <div className="bg-white rounded-3xl max-w-5xl w-full h-[90vh] flex flex-col shadow-2xl border border-brand-border overflow-hidden relative">
         
         {/* Modal Top Header */}
@@ -89,9 +101,9 @@ const ResumePreviewModal = ({ application, onClose }) => {
 
                 <a
                   href={resumeUrl}
-                  download={`${applicantName.replace(/[^a-z0-9]/gi, "_")}_Resume.pdf`}
+                  download={docxFileName}
                   className="px-3.5 py-1.5 rounded-xl bg-brand-green hover:bg-emerald-600 text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs"
-                  title="Download PDF"
+                  title="Download File"
                 >
                   <Download size={13} />
                   <span>Download</span>
@@ -110,16 +122,65 @@ const ResumePreviewModal = ({ application, onClose }) => {
           </div>
         </div>
 
-        {/* Modal Body: In-Browser Viewer */}
+        {/* Modal Body */}
         <div className="flex-1 bg-gray-100 relative overflow-hidden flex flex-col">
-          {loading && !loadError && (
+          {loading && !loadError && !isWordDoc && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-50/90 z-10 space-y-3">
               <Loader2 size={32} className="text-emerald-700 animate-spin" />
-              <p className="text-xs font-semibold text-brand-grey">Loading PDF Document Preview...</p>
+              <p className="text-xs font-semibold text-brand-grey">Loading Document Preview...</p>
             </div>
           )}
 
-          {resumeUrl ? (
+          {!resumeUrl ? (
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-3">
+              <AlertCircle size={36} className="text-amber-500" />
+              <p className="text-sm font-bold text-brand-black">No Resume File Attached</p>
+              <p className="text-xs text-brand-grey max-w-sm">
+                This candidate did not upload an online resume file with their application.
+              </p>
+            </div>
+          ) : isWordDoc ? (
+            /* Word Document (.DOCX / .DOC) Dedicated Viewer Card */
+            <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-10 bg-gradient-to-b from-gray-50 to-emerald-50/30 text-center space-y-5">
+              <div className="w-20 h-20 rounded-2xl bg-blue-50 border-2 border-blue-200 text-blue-700 flex items-center justify-center shadow-sm">
+                <FileText size={40} />
+              </div>
+
+              <div className="space-y-1 max-w-md">
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-900 border border-blue-300">
+                  Microsoft Word Document (.docx)
+                </span>
+                <h4 className="text-lg font-display font-bold text-brand-black pt-1 break-all">
+                  {docxFileName}
+                </h4>
+                <p className="text-xs text-brand-grey">
+                  Uploaded by <strong>{applicantName}</strong> for {jobTitle || "Job Application"}
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                <a
+                  href={resumeUrl}
+                  download={docxFileName}
+                  className="btn-primary text-xs py-2.5 px-5 flex items-center gap-2 shadow-sm"
+                >
+                  <Download size={15} />
+                  <span>Download Word Document</span>
+                </a>
+
+                <a
+                  href={`https://docs.google.com/viewer?url=${encodeURIComponent(resumeUrl)}&embedded=false`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-secondary text-xs py-2.5 px-4 flex items-center gap-2 bg-white"
+                >
+                  <ExternalLink size={14} className="text-emerald-700" />
+                  <span>View in Google Docs ↗</span>
+                </a>
+              </div>
+            </div>
+          ) : (
+            /* PDF In-Browser Viewer */
             <iframe
               src={`${resumeUrl}#toolbar=1&navpanes=0`}
               title={`Resume of ${applicantName}`}
@@ -130,14 +191,6 @@ const ResumePreviewModal = ({ application, onClose }) => {
                 setLoadError(true);
               }}
             />
-          ) : (
-            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-3">
-              <AlertCircle size={36} className="text-amber-500" />
-              <p className="text-sm font-bold text-brand-black">No Resume File Attached</p>
-              <p className="text-xs text-brand-grey max-w-sm">
-                This candidate did not upload an online resume file with their application.
-              </p>
-            </div>
           )}
 
           {loadError && (
@@ -155,7 +208,7 @@ const ResumePreviewModal = ({ application, onClose }) => {
                 rel="noopener noreferrer"
                 className="btn-primary text-xs py-2 px-4 inline-flex items-center gap-2"
               >
-                <Download size={14} /> Download / Open Document Directly
+                <Download size={14} /> Download Document Directly
               </a>
             </div>
           )}
@@ -167,7 +220,7 @@ const ResumePreviewModal = ({ application, onClose }) => {
           <button
             type="button"
             onClick={onClose}
-            className="font-semibold text-emerald-800 hover:text-emerald-950 underline"
+            className="font-semibold text-emerald-800 hover:text-emerald-950 underline cursor-pointer"
           >
             Close Preview
           </button>

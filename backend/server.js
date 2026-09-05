@@ -19,6 +19,11 @@ import userRoutes from "./routes/userRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import govtJobRoutes from "./routes/govtJobRoutes.js";
 
+import fs from "fs";
+import path from "path";
+import Application from "./models/Application.js";
+import SeekerProfile from "./models/SeekerProfile.js";
+
 dotenv.config();
 connectDB();
 
@@ -50,6 +55,52 @@ app.use((req, res, next) => {
 });
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Smart /uploads handler: serves from disk if present, falls back to MongoDB Base64 buffer if ephemeral Render storage was reset
+app.get("/uploads/:filename", async (req, res, next) => {
+  const filePath = path.join(process.cwd(), "uploads", req.params.filename);
+  if (fs.existsSync(filePath)) {
+    return res.sendFile(filePath);
+  }
+
+  try {
+    const filenameRegex = new RegExp(req.params.filename.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+    
+    let doc = await Application.findOne({
+      $or: [
+        { resumeUrl: filenameRegex },
+        { resumeOriginalName: filenameRegex },
+      ],
+      resumeFileData: { $exists: true, $ne: null },
+    });
+
+    if (!doc) {
+      doc = await SeekerProfile.findOne({
+        $or: [
+          { resumeUrl: filenameRegex },
+          { resumeOriginalName: filenameRegex },
+        ],
+        resumeFileData: { $exists: true, $ne: null },
+      });
+    }
+
+    if (doc && doc.resumeFileData) {
+      const fileBuffer = Buffer.from(doc.resumeFileData, "base64");
+      const isDocx = req.params.filename.endsWith(".docx");
+      const isDoc = req.params.filename.endsWith(".doc");
+      const mimeType = doc.resumeMimeType || (isDocx ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document" : isDoc ? "application/msword" : "application/pdf");
+      
+      res.setHeader("Content-Type", mimeType);
+      res.setHeader("Content-Disposition", `inline; filename="${doc.resumeOriginalName || req.params.filename}"`);
+      return res.send(fileBuffer);
+    }
+  } catch (err) {
+    console.error("Failed to restore upload from database persistence:", err);
+  }
+
+  next();
+});
+
 app.use("/uploads", express.static("uploads"));
 if (process.env.NODE_ENV !== "production") app.use(morgan("dev"));
 
