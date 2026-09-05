@@ -34,14 +34,22 @@ import { useAuth } from "../context/AuthContext.jsx";
 import JobCard from "../components/JobCard.jsx";
 import WhatsAppIcon from "../components/WhatsAppIcon.jsx";
 
+const formatEmploymentType = (type) => {
+  if (!type) return "Full-time";
+  if (type === "work-from-home") return "Work From Home";
+  if (type === "full-time") return "Full-time";
+  if (type === "part-time") return "Part-time";
+  if (type === "internship") return "Internship";
+  return type.charAt(0).toUpperCase() + type.slice(1).replace("-", " ");
+};
+
 const formatExperience = (lvl) => {
-  if (!lvl || lvl === "any") return "Any Experience";
-  if (lvl === "0-1" || lvl === "0-1 years" || lvl === "entry") return "0-1 Years";
+  if (!lvl || lvl === "any" || lvl === "0-1" || lvl === "0-1 years" || lvl === "entry") return "0-1 Years (Fresher)";
   if (lvl === "1-2" || lvl === "1-2 years") return "1-2 Years";
   if (lvl === "2-3" || lvl === "2-3 years") return "2-3 Years";
   if (lvl === "3-5" || lvl === "3-5 years" || lvl === "mid") return "3-5 Years";
   if (lvl === "5+" || lvl === "5+ years" || lvl === "senior") return "5+ Years";
-  return lvl;
+  return `${lvl} Years`;
 };
 
 const JobDetails = () => {
@@ -439,7 +447,7 @@ const JobDetails = () => {
               <MapPin size={16} className="text-brand-green" /> {job.location}
             </span>
             <span className="inline-flex items-center gap-1">
-              <Briefcase size={16} className="text-brand-green" /> {job.employmentType}
+              <Briefcase size={16} className="text-brand-green" /> {formatEmploymentType(job.employmentType)}
             </span>
             <span className="inline-flex items-center gap-1">
               <Award size={16} className="text-brand-green" /> {formatExperience(job.experienceLevel)}

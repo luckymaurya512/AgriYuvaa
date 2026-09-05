@@ -146,8 +146,8 @@ const EmployerDashboard = () => {
                         >
                           {job.title}
                         </Link>
-                        <span className="text-xs text-brand-grey mt-0.5 inline-block">
-                          {job.category?.name || "Agriculture"} · {job.employmentType}
+                        <span className="text-xs text-brand-grey mt-0.5 inline-block capitalize">
+                          {job.category?.name || "Agriculture"} · {job.employmentType?.replace(/-/g, " ")}
                         </span>
                       </td>
 

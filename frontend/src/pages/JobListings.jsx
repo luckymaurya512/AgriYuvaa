@@ -4,7 +4,12 @@ import { SlidersHorizontal, Search, MapPin, X, RotateCcw } from "lucide-react";
 import { fetchJobs, fetchCategories } from "../services/jobService.js";
 import JobCard from "../components/JobCard.jsx";
 
-const employmentTypes = ["full-time", "part-time", "seasonal", "daily-wage", "contract", "internship"];
+const employmentTypes = [
+  { value: "full-time", label: "Full-time" },
+  { value: "part-time", label: "Part-time" },
+  { value: "work-from-home", label: "Work From Home" },
+  { value: "internship", label: "Internship" },
+];
 const experienceFilterOptions = [
   { value: "0-1", label: "0-1 Years (Fresher)" },
   { value: "1-2", label: "1-2 Years" },
@@ -218,8 +223,8 @@ const JobListings = () => {
             >
               <option value="">Any type</option>
               {employmentTypes.map((t) => (
-                <option key={t} value={t}>
-                  {t.replace("-", " ")}
+                <option key={t.value} value={t.value}>
+                  {t.label}
                 </option>
               ))}
             </select>
@@ -233,7 +238,7 @@ const JobListings = () => {
               value={currentExperienceLevel}
               onChange={(e) => updateSelectFilter("experienceLevel", e.target.value)}
             >
-              <option value="">Any experience</option>
+              <option value="">All experience levels</option>
               {experienceFilterOptions.map((exp) => (
                 <option key={exp.value} value={exp.value}>
                   {exp.label}

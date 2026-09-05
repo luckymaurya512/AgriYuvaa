@@ -11,9 +11,18 @@ const formatSalary = (min, max) => {
   return `₹${(min || max).toLocaleString("en-IN")}+`;
 };
 
+const formatEmploymentType = (type) => {
+  if (!type) return "Full-time";
+  if (type === "work-from-home") return "Work From Home";
+  if (type === "full-time") return "Full-time";
+  if (type === "part-time") return "Part-time";
+  if (type === "internship") return "Internship";
+  return type.charAt(0).toUpperCase() + type.slice(1).replace("-", " ");
+};
+
 const formatExperience = (lvl) => {
-  if (!lvl || lvl === "any") return null;
-  if (lvl === "0-1" || lvl === "0-1 years" || lvl === "entry") return "0-1 Yrs";
+  if (!lvl) return null;
+  if (lvl === "0-1" || lvl === "0-1 years" || lvl === "entry" || lvl === "any") return "0-1 Yrs";
   if (lvl === "1-2" || lvl === "1-2 years") return "1-2 Yrs";
   if (lvl === "2-3" || lvl === "2-3 years") return "2-3 Yrs";
   if (lvl === "3-5" || lvl === "3-5 years" || lvl === "mid") return "3-5 Yrs";
@@ -113,7 +122,7 @@ const JobCard = ({ job, isSavedInitial = false, onBookmarkChange }) => {
           <MapPin size={14} className="text-brand-green" /> {job.location}
         </span>
         <span className="inline-flex items-center gap-1">
-          <Briefcase size={14} className="text-brand-green" /> {job.employmentType}
+          <Briefcase size={14} className="text-brand-green" /> {formatEmploymentType(job.employmentType)}
         </span>
         {formatExperience(job.experienceLevel) && (
           <span className="inline-flex items-center gap-1">

@@ -62,7 +62,7 @@ const agriSpecializations = [
 ];
 
 const experienceLevels = [
-  "Fresher / Any (0-1 Years)",
+  "0-1 Years (Fresher)",
   "1-2 Years",
   "2-3 Years",
   "3-5 Years",

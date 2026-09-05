@@ -625,8 +625,8 @@ const AdminDashboard = () => {
                             <Star size={10} fill="currentColor" /> Boost Requested
                           </span>
                         )}
-                        <span className="text-[11px] font-medium bg-gray-100 text-gray-700 px-2.5 py-0.5 rounded-md">
-                          {job.employmentType}
+                        <span className="text-[11px] font-medium bg-gray-100 text-gray-700 px-2.5 py-0.5 rounded-md capitalize">
+                          {job.employmentType?.replace(/-/g, " ")}
                         </span>
                         {job.category?.name && (
                           <span className="text-[11px] font-medium bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-md">

@@ -12,7 +12,8 @@ const jobSchema = new mongoose.Schema(
     cropTags: [{ type: String }],
     employmentType: {
       type: String,
-      enum: ["full-time", "part-time", "seasonal", "daily-wage", "contract", "internship"],
+      enum: ["full-time", "part-time", "work-from-home", "internship", "seasonal", "daily-wage", "contract"],
+      default: "full-time",
       required: true,
     },
     experienceLevel: {
@@ -33,7 +34,7 @@ const jobSchema = new mongoose.Schema(
         "mid",
         "senior",
       ],
-      default: "any",
+      default: "0-1",
     },
     salaryMin: { type: Number },
     salaryMax: { type: Number },

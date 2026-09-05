@@ -4,9 +4,13 @@ import { Mail, ExternalLink, FileText, Building2, Sparkles, Loader2, ArrowLeft, 
 import { fetchCategories, createJob, fetchJobById, updateJob } from "../../services/jobService.js";
 import { useAuth } from "../../context/AuthContext.jsx";
 
-const employmentTypes = ["full-time", "part-time", "seasonal", "daily-wage", "contract", "internship"];
+const employmentTypes = [
+  { value: "full-time", label: "Full-Time" },
+  { value: "part-time", label: "Part-Time" },
+  { value: "work-from-home", label: "Work From Home / Remote" },
+  { value: "internship", label: "Internship" },
+];
 const experienceLevels = [
-  { value: "any", label: "Any Experience / Freshers Welcome" },
   { value: "0-1", label: "0-1 Years (Fresher / Junior)" },
   { value: "1-2", label: "1-2 Years" },
   { value: "2-3", label: "2-3 Years" },
@@ -39,7 +43,7 @@ const PostJob = () => {
     category: "",
     customCategory: "",
     employmentType: "full-time",
-    experienceLevel: "any",
+    experienceLevel: "0-1",
     location: "",
     salaryMin: "",
     salaryMax: "",
@@ -77,7 +81,7 @@ const PostJob = () => {
             benefits: (job.benefits || []).join("\n"),
             category: job.category?._id || job.category || "",
             employmentType: job.employmentType || "full-time",
-            experienceLevel: job.experienceLevel || "any",
+            experienceLevel: job.experienceLevel === "any" ? "0-1" : (job.experienceLevel || "0-1"),
             location: job.location || "",
             salaryMin: job.salaryMin !== undefined ? String(job.salaryMin) : "",
             salaryMax: job.salaryMax !== undefined ? String(job.salaryMax) : "",
@@ -448,21 +452,15 @@ const PostJob = () => {
             </div>
 
             {form.category === "custom" ? (
-              <div className="mt-1 space-y-1.5">
-                <div className="relative">
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Hydroponics & Vertical Farming, Bio-Pesticides, Drone Operations..."
-                    className="input-field text-sm pr-9 bg-emerald-50/40 border-emerald-300 focus:border-brand-green"
-                    value={form.customCategory || ""}
-                    onChange={(e) => setForm({ ...form, customCategory: e.target.value })}
-                  />
-                  <Sparkles size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-green pointer-events-none" />
-                </div>
-                <p className="text-[11px] text-emerald-800">
-                  ✨ This custom category will be created and automatically associated with your job posting.
-                </p>
+              <div className="mt-1">
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Hydroponics & Vertical Farming, Bio-Pesticides, Drone Operations..."
+                  className="input-field text-sm"
+                  value={form.customCategory || ""}
+                  onChange={(e) => setForm({ ...form, customCategory: e.target.value })}
+                />
               </div>
             ) : (
               <select
@@ -483,8 +481,8 @@ const PostJob = () => {
                     {c.name}
                   </option>
                 ))}
-                <option value="custom" className="font-semibold text-brand-green-dark bg-emerald-50">
-                  ✨ + Add Custom Category...
+                <option value="custom" className="font-semibold text-brand-green-dark">
+                  + Add Custom Category...
                 </option>
               </select>
             )}
@@ -499,8 +497,8 @@ const PostJob = () => {
               onChange={(e) => setForm({ ...form, employmentType: e.target.value })}
             >
               {employmentTypes.map((t) => (
-                <option key={t} value={t}>
-                  {t.replace("-", " ")}
+                <option key={t.value} value={t.value}>
+                  {t.label}
                 </option>
               ))}
             </select>
