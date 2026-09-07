@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import {
   Printer,
   Sparkles,
@@ -21,9 +22,11 @@ import {
   FolderPlus,
   Download,
   Loader2,
+  CheckCircle2,
+  ArrowRight,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
-import { fetchUserProfile } from "../services/userService.js";
+import { fetchUserProfile, saveSeekerResume } from "../services/userService.js";
 
 const sampleData = {
   fullName: "Rahul Sharma",
@@ -207,6 +210,28 @@ const ResumeBuilder = () => {
   }, [user]);
 
   const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [savingResume, setSavingResume] = useState(false);
+  const [showDoneModal, setShowDoneModal] = useState(false);
+
+  const handleSaveAndFinish = async () => {
+    setSavingResume(true);
+    try {
+      if (user && user.role === "seeker") {
+        await saveSeekerResume({
+          ...data,
+          template,
+          updatedAt: new Date().toISOString(),
+        });
+      }
+      setShowDoneModal(true);
+    } catch (err) {
+      console.error("Error saving resume to profile:", err);
+      // Still open the next steps modal so the student is never blocked
+      setShowDoneModal(true);
+    } finally {
+      setSavingResume(false);
+    }
+  };
 
   const handleDownloadPDF = async () => {
     const element = document.getElementById("resume-canvas");
@@ -464,6 +489,24 @@ const ResumeBuilder = () => {
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
+              onClick={handleSaveAndFinish}
+              disabled={savingResume}
+              className="btn-primary text-xs py-2 px-4 flex items-center gap-1.5 font-bold shadow-md bg-emerald-700 hover:bg-emerald-800 text-white transition-all cursor-pointer"
+              title="Save resume and view next steps"
+            >
+              {savingResume ? (
+                <>
+                  <Loader2 size={13} className="animate-spin" /> Saving...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 size={14} /> Done / Submit Resume ✅
+                </>
+              )}
+            </button>
+
+            <button
+              type="button"
               onClick={handleLoadSample}
               className="px-3 py-2 rounded-xl border border-brand-border text-xs font-semibold text-brand-grey hover:text-brand-black hover:border-gray-300 transition-colors flex items-center gap-1"
               title="Load sample agriculture graduate example for reference"
@@ -493,7 +536,7 @@ const ResumeBuilder = () => {
               type="button"
               onClick={handleDownloadPDF}
               disabled={downloadingPdf}
-              className="btn-primary text-xs py-2 px-3.5 flex items-center gap-1.5 shadow-sm font-semibold"
+              className="btn-secondary text-xs py-2 px-3.5 flex items-center gap-1.5 shadow-2xs font-semibold"
               title="Download formatted resume as a PDF file"
             >
               {downloadingPdf ? (
@@ -1092,6 +1135,51 @@ const ResumeBuilder = () => {
                 </div>
               ))}
             </div>
+
+            {/* ══ BOTTOM SUBMIT / NEXT STEPS CALLOUT ══ */}
+            <div className="card p-6 bg-emerald-50/70 border-2 border-emerald-300 space-y-4 shadow-sm">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs mt-0.5">
+                  <CheckCircle2 size={22} />
+                </div>
+                <div>
+                  <h3 className="font-display font-bold text-base text-emerald-950">
+                    Finished your Resume Draft?
+                  </h3>
+                  <p className="text-xs text-emerald-800/90 mt-0.5 leading-relaxed">
+                    Click <strong>Submit & Save</strong> below to attach this resume to your profile and start applying for agriculture jobs.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={handleSaveAndFinish}
+                  disabled={savingResume}
+                  className="w-full sm:flex-1 py-3 px-5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-xl shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-[1.01]"
+                >
+                  {savingResume ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" /> Saving Resume...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 size={16} /> Submit / Done (Save to Profile) ✅
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleDownloadPDF}
+                  disabled={downloadingPdf}
+                  className="w-full sm:w-auto py-3 px-4 btn-secondary text-xs font-bold bg-white text-emerald-900 border-emerald-300 hover:bg-emerald-100 flex items-center justify-center gap-1.5 shadow-2xs"
+                >
+                  <Download size={15} /> Download PDF
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* ══ RIGHT: LIVE PREVIEW CANVAS ══ */}
@@ -1119,7 +1207,102 @@ const ResumeBuilder = () => {
           </div>
         </div>
       </div>
-    </div>
+
+      {/* ══ NEXT STEPS COMPLETION MODAL ══ */}
+      {showDoneModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-gray-100 animate-in fade-in zoom-in-95 duration-200">
+            <div className="text-center space-y-2">
+              <div className="w-16 h-16 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto shadow-inner">
+                <CheckCircle2 size={36} />
+              </div>
+              <h2 className="text-xl sm:text-2xl font-display font-bold text-brand-black">
+                Resume Completed & Saved! 🎉
+              </h2>
+              <p className="text-xs sm:text-sm text-brand-grey leading-relaxed">
+                Great job, <strong>{data.fullName || "Candidate"}</strong>! Your agriculture resume has been saved to your profile and is ready for job applications.
+              </p>
+            </div>
+
+            {/* Next Steps Action Cards */}
+            <div className="space-y-3">
+              <p className="text-xs font-bold uppercase tracking-wider text-brand-grey text-center">
+                What would you like to do next?
+              </p>
+
+              {/* Option 1: Explore & Apply */}
+              <Link
+                to="/jobs"
+                className="p-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white flex items-center justify-between gap-3 shadow-md hover:shadow-lg transition-all group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                    <Briefcase size={20} className="text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold leading-tight">Apply for Agriculture Jobs 🌾</p>
+                    <p className="text-[11px] text-white/80 mt-0.5">Explore active openings and submit your CV</p>
+                  </div>
+                </div>
+                <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform shrink-0" />
+              </Link>
+
+              {/* Option 2: Download PDF Copy */}
+              <button
+                type="button"
+                onClick={() => {
+                  handleDownloadPDF();
+                }}
+                disabled={downloadingPdf}
+                className="w-full p-3.5 rounded-2xl border-2 border-emerald-200 hover:border-emerald-400 bg-emerald-50/50 hover:bg-emerald-50 text-emerald-950 flex items-center justify-between gap-3 transition-colors text-left cursor-pointer"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+                    <Download size={18} />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold">Download Offline PDF Copy</p>
+                    <p className="text-[10px] text-brand-grey mt-0.5">Save a high-res PDF to your phone or computer</p>
+                  </div>
+                </div>
+                <span className="text-xs font-bold text-emerald-700 shrink-0">
+                  {downloadingPdf ? "Generating..." : "Download 📥"}
+                </span>
+              </button>
+
+              {/* Option 3: Seeker Dashboard */}
+              {user?.role === "seeker" && (
+                <Link
+                  to="/seeker"
+                  className="p-3.5 rounded-2xl border border-gray-200 hover:border-gray-300 bg-gray-50 hover:bg-gray-100 text-gray-800 flex items-center justify-between gap-3 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-white border border-gray-200 text-gray-700 flex items-center justify-center shrink-0">
+                      <Layers size={18} />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold">Go to Seeker Dashboard</p>
+                      <p className="text-[10px] text-brand-grey mt-0.5">Track your applications & resume</p>
+                    </div>
+                  </div>
+                  <span className="text-xs font-semibold text-brand-grey shrink-0">Dashboard →</span>
+                </Link>
+              )}
+            </div>
+
+            {/* Footer: Close / Keep Editing */}
+            <div className="pt-2 text-center border-t border-gray-100">
+              <button
+                type="button"
+                onClick={() => setShowDoneModal(false)}
+                className="text-xs font-semibold text-brand-grey hover:text-brand-black transition-colors"
+              >
+                ← Keep Editing Resume
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
   );
 };
 
