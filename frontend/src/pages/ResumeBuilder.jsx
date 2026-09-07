@@ -23,6 +23,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
+import { fetchUserProfile } from "../services/userService.js";
 
 const sampleData = {
   fullName: "Rahul Sharma",
@@ -134,17 +135,14 @@ const ResumeBuilder = () => {
   const [template, setTemplate] = useState("agri_clean"); // "agri_clean" | "modern_green" | "classic_serif"
   const [activeTab, setActiveTab] = useState("editor"); // For mobile: "editor" | "preview"
 
-  const [data, setData] = useState(() => {
-    if (user) {
-      return {
-        ...sampleData,
-        fullName: user.name || sampleData.fullName,
-        email: user.email || sampleData.email,
-        phone: user.phone || sampleData.phone,
-      };
-    }
-    return sampleData;
-  });
+  const [autofilling, setAutofilling] = useState(false);
+
+  const [data, setData] = useState(() => ({
+    ...initialEmptyData,
+    fullName: user?.name || "",
+    email: user?.email || "",
+    phone: user?.phone || "",
+  }));
 
   const [downloadingPdf, setDownloadingPdf] = useState(false);
 
@@ -188,13 +186,97 @@ const ResumeBuilder = () => {
     window.print();
   };
 
-  const handleAutofill = () => {
-    setData(sampleData);
+  const handleAutofillFromProfile = async () => {
+    if (!user) {
+      alert("Please log in to autofill from your AgriYuvaa profile.");
+      return;
+    }
+    setAutofilling(true);
+    try {
+      const res = await fetchUserProfile();
+      const p = res?.profile || {};
+      const u = res?.user || user || {};
+
+      const skillsFormatted = Array.isArray(p.skills)
+        ? p.skills.filter(Boolean).join(", ")
+        : p.skills || "";
+
+      const educationFormatted =
+        p.education && p.education.length > 0
+          ? p.education.map((e) => ({
+              degree: e.degree || "",
+              institution: e.institution || "",
+              year: e.year || "",
+              score: e.score || "",
+            }))
+          : initialEmptyData.education;
+
+      const experienceFormatted =
+        p.experience && p.experience.length > 0
+          ? p.experience.map((e) => ({
+              role: e.title || e.role || "",
+              company: e.company || "",
+              duration: e.duration || "",
+              description: e.description || "",
+            }))
+          : initialEmptyData.experience;
+
+      setData((prev) => ({
+        ...prev,
+        fullName: u.name || prev.fullName || "",
+        email: u.email || prev.email || "",
+        phone: u.phone || prev.phone || "",
+        location: p.location || prev.location || "",
+        website: p.website || prev.website || "",
+        objective: p.description || prev.objective || "",
+        skills: skillsFormatted || prev.skills || "",
+        education: educationFormatted,
+        experience: experienceFormatted,
+        title:
+          p.experience?.[0]?.title ||
+          (p.education?.[0]?.degree
+            ? `${p.education[0].degree} Graduate`
+            : prev.title || "Agriculture Professional"),
+      }));
+
+      alert("✨ Profile details successfully autofilled into your resume!");
+    } catch (err) {
+      console.error("Failed to load profile for autofill:", err);
+      setData((prev) => ({
+        ...prev,
+        fullName: user.name || prev.fullName,
+        email: user.email || prev.email,
+        phone: user.phone || prev.phone,
+      }));
+      alert("✨ Autofilled basic contact information from your account.");
+    } finally {
+      setAutofilling(false);
+    }
+  };
+
+  const handleLoadSample = () => {
+    if (
+      window.confirm(
+        "Load sample agriculture resume template?\n\nThis will populate the editor with an example format for inspiration."
+      )
+    ) {
+      setData({
+        ...sampleData,
+        fullName: user?.name || sampleData.fullName,
+        email: user?.email || sampleData.email,
+        phone: user?.phone || sampleData.phone,
+      });
+    }
   };
 
   const handleReset = () => {
-    if (window.confirm("Are you sure you want to clear all fields?")) {
-      setData(initialEmptyData);
+    if (window.confirm("Are you sure you want to clear all fields to a blank resume?")) {
+      setData({
+        ...initialEmptyData,
+        fullName: user?.name || "",
+        email: user?.email || "",
+        phone: user?.phone || "",
+      });
     }
   };
 
@@ -385,44 +467,68 @@ const ResumeBuilder = () => {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2">
+            {user && (
+              <button
+                type="button"
+                onClick={handleAutofillFromProfile}
+                disabled={autofilling}
+                className="btn-secondary text-xs py-2 px-3.5 flex items-center gap-1.5 font-bold bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100 transition-colors shadow-2xs"
+                title="Autofill degree, skills, experience, and contact details from your AgriYuvaa profile"
+              >
+                {autofilling ? (
+                  <>
+                    <Loader2 size={13} className="animate-spin text-emerald-700" /> Autofilling...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={13} className="text-emerald-700" /> Autofill from Profile
+                  </>
+                )}
+              </button>
+            )}
+
             <button
-              onClick={handleAutofill}
-              className="px-3 py-2.5 rounded-xl border border-brand-border text-xs text-brand-grey hover:text-brand-black hover:border-gray-300 transition-colors flex items-center gap-1.5"
-              title="Load sample agriculture graduate data"
+              type="button"
+              onClick={handleLoadSample}
+              className="px-3 py-2 rounded-xl border border-brand-border text-xs font-semibold text-brand-grey hover:text-brand-black hover:border-gray-300 transition-colors flex items-center gap-1"
+              title="Load sample agriculture graduate example for reference"
             >
-              <Sparkles size={14} className="text-brand-green" /> Autofill
+              <FileBadge2 size={13} /> Load Sample
             </button>
 
             <button
+              type="button"
               onClick={handleReset}
-              className="px-3 py-2.5 rounded-xl border border-brand-border text-xs text-brand-grey hover:text-red-600 hover:border-red-200 transition-colors"
-              title="Clear all fields"
+              className="px-3 py-2 rounded-xl border border-brand-border text-xs font-semibold text-brand-grey hover:text-red-600 hover:border-red-200 transition-colors flex items-center gap-1"
+              title="Clear all fields to a blank resume"
             >
-              <RotateCcw size={14} />
+              <RotateCcw size={13} /> Clear
             </button>
 
             <button
+              type="button"
               onClick={handlePrint}
-              className="btn-secondary text-xs py-2.5 px-3 flex items-center gap-1.5 shadow-2xs"
+              className="btn-secondary text-xs py-2 px-3 flex items-center gap-1 shadow-2xs font-semibold"
               title="Open browser print dialog"
             >
-              <Printer size={14} /> Print
+              <Printer size={13} /> Print
             </button>
 
             <button
+              type="button"
               onClick={handleDownloadPDF}
               disabled={downloadingPdf}
-              className="btn-primary text-xs py-2.5 px-4 flex items-center gap-1.5 shadow-sm"
+              className="btn-primary text-xs py-2 px-3.5 flex items-center gap-1.5 shadow-sm font-semibold"
               title="Download formatted resume as a PDF file"
             >
               {downloadingPdf ? (
                 <>
-                  <Loader2 size={14} className="animate-spin" /> Generating PDF...
+                  <Loader2 size={13} className="animate-spin" /> Generating...
                 </>
               ) : (
                 <>
-                  <Download size={14} /> Download PDF
+                  <Download size={13} /> Download PDF
                 </>
               )}
             </button>
