@@ -45,3 +45,6 @@ export const authorize = (...roles) => {
     next();
   };
 };
+
+// Backwards-compatible alias for authenticate
+export const protect = authenticate;
