@@ -29,10 +29,10 @@ import Profile from "./pages/Profile.jsx";
 
 function App() {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col w-full max-w-full overflow-x-hidden">
       <ScrollToTop />
       <Navbar />
-      <main className="flex-1">
+      <main className="flex-1 w-full max-w-full min-w-0">
         <Routes>
           {/* Public */}
           <Route path="/" element={<Home />} />

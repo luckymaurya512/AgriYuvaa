@@ -342,9 +342,9 @@ const JobDetails = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 grid md:grid-cols-3 gap-8">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10 grid md:grid-cols-3 gap-8 w-full min-w-0">
       {/* Left Column: Job Info */}
-      <div className="md:col-span-2 space-y-6">
+      <div className="md:col-span-2 space-y-6 min-w-0 w-full">
         {isExpired && (
           <div className="p-4 bg-amber-50 border border-amber-300 rounded-2xl text-amber-900 text-xs font-semibold flex items-center gap-2.5 shadow-2xs">
             <Clock size={18} className="text-amber-700 shrink-0" />
@@ -528,8 +528,8 @@ const JobDetails = () => {
       </div>
 
       {/* Right Column: Application Card */}
-      <div className="space-y-4">
-        <div className="card p-6 sticky top-24">
+      <div className="space-y-4 min-w-0 w-full">
+        <div className="card p-4 sm:p-6 sticky top-24 min-w-0 w-full overflow-hidden">
           {isExpired ? (
             <div className="p-6 text-center space-y-4 bg-amber-50/40 rounded-2xl border border-amber-200/80">
               <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center mx-auto shadow-xs">
@@ -547,21 +547,21 @@ const JobDetails = () => {
             </div>
           ) : /* ── CASE 1: DIRECT HR EMAIL APPLICATION ── */
           job.applyType === "email" ? (
-            <div className="space-y-4">
+            <div className="space-y-4 min-w-0 w-full">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center shrink-0">
                   <Mail size={18} />
                 </div>
-                <div>
-                  <h2 className="font-display font-semibold text-base leading-tight">Apply via HR Email</h2>
-                  <p className="text-xs text-brand-grey">Direct submission to company HR</p>
+                <div className="min-w-0">
+                  <h2 className="font-display font-semibold text-base leading-tight truncate">Apply via HR Email</h2>
+                  <p className="text-xs text-brand-grey truncate">Direct submission to company HR</p>
                 </div>
               </div>
 
               {/* Instructions Callout */}
-              <div className="p-3.5 bg-blue-50/70 border border-blue-100 rounded-xl text-xs text-blue-900 space-y-1.5">
+              <div className="p-3.5 bg-blue-50/70 border border-blue-100 rounded-xl text-xs text-blue-900 space-y-1.5 break-words">
                 <p className="font-semibold flex items-center gap-1.5 text-blue-800">
-                  <Info size={14} /> Instructions:
+                  <Info size={14} className="shrink-0" /> Instructions:
                 </p>
                 <p className="leading-relaxed">
                   {job.applyEmailInstructions ||
@@ -574,11 +574,11 @@ const JobDetails = () => {
                 <label className="text-xs font-semibold text-brand-grey uppercase tracking-wide">
                   HR Email Address
                 </label>
-                <div className="flex items-center gap-2 mt-1">
+                <div className="flex items-center gap-2 mt-1 min-w-0">
                   <input
                     readOnly
                     value={job.applyEmail || ""}
-                    className="input-field text-sm font-medium bg-gray-50 flex-1 cursor-text select-all"
+                    className="input-field text-sm font-medium bg-gray-50 flex-1 min-w-0 cursor-text select-all"
                   />
                   <button
                     onClick={() => handleCopy(job.applyEmail, "email")}
@@ -603,11 +603,11 @@ const JobDetails = () => {
                 <label className="text-xs font-semibold text-brand-grey uppercase tracking-wide">
                   Recommended Subject Line
                 </label>
-                <div className="flex items-center gap-2 mt-1">
+                <div className="flex items-center gap-2 mt-1 min-w-0">
                   <input
                     readOnly
                     value={defaultEmailSubject}
-                    className="input-field text-xs bg-gray-50 flex-1 cursor-text select-all"
+                    className="input-field text-xs bg-gray-50 flex-1 min-w-0 cursor-text select-all"
                   />
                   <button
                     onClick={() => handleCopy(defaultEmailSubject, "subject")}
@@ -816,14 +816,14 @@ const JobDetails = () => {
                     {resumeMode === "upload" ? (
                       <div>
                         {resumeUrl && uploadedFileName ? (
-                          <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-2 min-w-0">
+                          <div className="w-full min-w-0 p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between gap-2 overflow-hidden">
+                            <div className="flex items-center gap-2.5 min-w-0 flex-1">
                               <FileText size={18} className="text-emerald-700 shrink-0" />
-                              <div className="min-w-0">
-                                <p className="text-xs font-bold text-emerald-950 truncate">
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs font-bold text-emerald-950 truncate block w-full" title={uploadedFileName}>
                                   {uploadedFileName}
                                 </p>
-                                <span className="text-[10px] text-emerald-700">✓ Ready to submit</span>
+                                <span className="text-[10px] text-emerald-700 block truncate">✓ Ready to submit</span>
                               </div>
                             </div>
                             <label className="text-[11px] font-bold text-emerald-800 bg-white border border-emerald-300 hover:bg-emerald-100 px-2.5 py-1 rounded-lg cursor-pointer shrink-0">
@@ -842,7 +842,7 @@ const JobDetails = () => {
                             onDragEnter={handleDragOver}
                             onDragLeave={handleDragLeave}
                             onDrop={handleDrop}
-                            className={`border-2 border-dashed rounded-xl p-5 flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all ${
+                            className={`border-2 border-dashed rounded-xl p-5 flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all w-full min-w-0 ${
                               isDragging
                                 ? "border-emerald-600 bg-emerald-100/70 scale-[1.02] shadow-sm"
                                 : "border-gray-300 hover:border-emerald-500 bg-gray-50/50 hover:bg-emerald-50/30"
@@ -880,27 +880,27 @@ const JobDetails = () => {
                       </div>
                     ) : (
                       /* Mode 2: Paste URL */
-                      <div>
+                      <div className="w-full min-w-0">
                         <input
                           required
-                          className="input-field text-sm"
+                          className="input-field text-sm w-full min-w-0"
                           placeholder="e.g. https://drive.google.com/file/d/..."
                           value={resumeUrl}
                           onChange={(e) => setResumeUrl(e.target.value)}
                         />
-                        <p className="text-[11px] text-brand-grey mt-1">
+                        <p className="text-[11px] text-brand-grey mt-1 break-words">
                           Ensure link access is set to "Anyone with the link".
                         </p>
                       </div>
                     )}
                   </div>
 
-                  <div>
+                  <div className="w-full min-w-0">
                     <label className="text-xs font-bold text-brand-grey uppercase tracking-wide">
                       Cover Note (optional)
                     </label>
                     <textarea
-                      className="input-field mt-1 text-sm"
+                      className="input-field mt-1 text-sm w-full min-w-0"
                       rows={3}
                       placeholder="Brief note to the hiring manager..."
                       value={coverNote}
@@ -908,12 +908,12 @@ const JobDetails = () => {
                     />
                   </div>
 
-                  {error && <p className="text-xs text-red-600 font-medium">{error}</p>}
+                  {error && <p className="text-xs text-red-600 font-medium break-words">{error}</p>}
 
                   <button
                     type="submit"
                     disabled={uploadingResume || !resumeUrl}
-                    className="btn-primary w-full py-3 text-sm font-bold shadow-sm disabled:opacity-50"
+                    className="btn-primary w-full py-3 text-sm font-bold shadow-sm disabled:opacity-50 min-w-0"
                   >
                     {uploadingResume ? "Uploading Resume..." : "Submit Application 🚀"}
                   </button>
