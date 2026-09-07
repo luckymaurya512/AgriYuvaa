@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Leaf, Facebook, Instagram, Linkedin } from "lucide-react";
+import { Leaf, Facebook, Instagram, Linkedin, Youtube } from "lucide-react";
 
 const Footer = () => {
   return (
@@ -40,10 +40,43 @@ const Footer = () => {
             <li><Link to="/about" className="hover:text-brand-green">About Us</Link></li>
             <li><Link to="/contact" className="hover:text-brand-green">Contact</Link></li>
           </ul>
-          <div className="flex gap-3">
-            <Facebook size={18} className="text-white/60 hover:text-brand-green cursor-pointer" />
-            <Instagram size={18} className="text-white/60 hover:text-brand-green cursor-pointer" />
-            <Linkedin size={18} className="text-white/60 hover:text-brand-green cursor-pointer" />
+          <div className="flex items-center gap-3">
+            <a
+              href="https://www.linkedin.com/company/agriyuvaa/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="AgriYuvaa on LinkedIn"
+              className="text-white/60 hover:text-brand-green transition-colors p-1"
+            >
+              <Linkedin size={19} />
+            </a>
+            <a
+              href="https://www.instagram.com/agri_yuvaa/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="AgriYuvaa on Instagram"
+              className="text-white/60 hover:text-brand-green transition-colors p-1"
+            >
+              <Instagram size={19} />
+            </a>
+            <a
+              href="https://www.youtube.com/@agri_yuvaa"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="AgriYuvaa on YouTube"
+              className="text-white/60 hover:text-brand-green transition-colors p-1"
+            >
+              <Youtube size={20} />
+            </a>
+            <a
+              href="https://www.facebook.com/share/1GH5dT8Cuk/?mibextid=wwXIfr"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="AgriYuvaa on Facebook"
+              className="text-white/60 hover:text-brand-green transition-colors p-1"
+            >
+              <Facebook size={19} />
+            </a>
           </div>
         </div>
       </div>
