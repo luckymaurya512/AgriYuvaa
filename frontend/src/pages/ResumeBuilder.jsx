@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Printer,
   Sparkles,
@@ -135,14 +135,76 @@ const ResumeBuilder = () => {
   const [template, setTemplate] = useState("agri_clean"); // "agri_clean" | "modern_green" | "classic_serif"
   const [activeTab, setActiveTab] = useState("editor"); // For mobile: "editor" | "preview"
 
-  const [autofilling, setAutofilling] = useState(false);
-
   const [data, setData] = useState(() => ({
     ...initialEmptyData,
     fullName: user?.name || "",
     email: user?.email || "",
     phone: user?.phone || "",
   }));
+
+  // Automatically populate profile details on page load if user is logged in
+  useEffect(() => {
+    if (!user) return;
+    let isMounted = true;
+
+    const autoLoadProfile = async () => {
+      try {
+        const res = await fetchUserProfile();
+        if (!isMounted) return;
+        const p = res?.profile || {};
+        const u = res?.user || user || {};
+
+        const skillsFormatted = Array.isArray(p.skills)
+          ? p.skills.filter(Boolean).join(", ")
+          : p.skills || "";
+
+        const educationFormatted =
+          p.education && p.education.length > 0
+            ? p.education.map((e) => ({
+                degree: e.degree || "",
+                institution: e.institution || "",
+                year: e.year || "",
+                score: e.score || "",
+              }))
+            : initialEmptyData.education;
+
+        const experienceFormatted =
+          p.experience && p.experience.length > 0
+            ? p.experience.map((e) => ({
+                role: e.title || e.role || "",
+                company: e.company || "",
+                duration: e.duration || "",
+                description: e.description || "",
+              }))
+            : initialEmptyData.experience;
+
+        setData((prev) => ({
+          ...prev,
+          fullName: u.name || prev.fullName || "",
+          email: u.email || prev.email || "",
+          phone: u.phone || prev.phone || "",
+          location: p.location || prev.location || "",
+          website: p.website || prev.website || "",
+          objective: p.description || prev.objective || "",
+          skills: skillsFormatted || prev.skills || "",
+          education: educationFormatted,
+          experience: experienceFormatted,
+          title:
+            p.experience?.[0]?.title ||
+            (p.education?.[0]?.degree
+              ? `${p.education[0].degree} Graduate`
+              : prev.title || "Agriculture Professional"),
+        }));
+      } catch (err) {
+        console.error("Auto-loading profile error:", err);
+      }
+    };
+
+    autoLoadProfile();
+    return () => {
+      isMounted = false;
+    };
+  }, [user]);
 
   const [downloadingPdf, setDownloadingPdf] = useState(false);
 
@@ -184,74 +246,6 @@ const ResumeBuilder = () => {
 
   const handlePrint = () => {
     window.print();
-  };
-
-  const handleAutofillFromProfile = async () => {
-    if (!user) {
-      alert("Please log in to autofill from your AgriYuvaa profile.");
-      return;
-    }
-    setAutofilling(true);
-    try {
-      const res = await fetchUserProfile();
-      const p = res?.profile || {};
-      const u = res?.user || user || {};
-
-      const skillsFormatted = Array.isArray(p.skills)
-        ? p.skills.filter(Boolean).join(", ")
-        : p.skills || "";
-
-      const educationFormatted =
-        p.education && p.education.length > 0
-          ? p.education.map((e) => ({
-              degree: e.degree || "",
-              institution: e.institution || "",
-              year: e.year || "",
-              score: e.score || "",
-            }))
-          : initialEmptyData.education;
-
-      const experienceFormatted =
-        p.experience && p.experience.length > 0
-          ? p.experience.map((e) => ({
-              role: e.title || e.role || "",
-              company: e.company || "",
-              duration: e.duration || "",
-              description: e.description || "",
-            }))
-          : initialEmptyData.experience;
-
-      setData((prev) => ({
-        ...prev,
-        fullName: u.name || prev.fullName || "",
-        email: u.email || prev.email || "",
-        phone: u.phone || prev.phone || "",
-        location: p.location || prev.location || "",
-        website: p.website || prev.website || "",
-        objective: p.description || prev.objective || "",
-        skills: skillsFormatted || prev.skills || "",
-        education: educationFormatted,
-        experience: experienceFormatted,
-        title:
-          p.experience?.[0]?.title ||
-          (p.education?.[0]?.degree
-            ? `${p.education[0].degree} Graduate`
-            : prev.title || "Agriculture Professional"),
-      }));
-
-      alert("✨ Profile details successfully autofilled into your resume!");
-    } catch (err) {
-      console.error("Failed to load profile for autofill:", err);
-      setData((prev) => ({
-        ...prev,
-        fullName: user.name || prev.fullName,
-        email: user.email || prev.email,
-        phone: user.phone || prev.phone,
-      }));
-      alert("✨ Autofilled basic contact information from your account.");
-    } finally {
-      setAutofilling(false);
-    }
   };
 
   const handleLoadSample = () => {
@@ -468,26 +462,6 @@ const ResumeBuilder = () => {
 
           {/* Action Buttons */}
           <div className="flex flex-wrap items-center gap-2">
-            {user && (
-              <button
-                type="button"
-                onClick={handleAutofillFromProfile}
-                disabled={autofilling}
-                className="btn-secondary text-xs py-2 px-3.5 flex items-center gap-1.5 font-bold bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100 transition-colors shadow-2xs"
-                title="Autofill degree, skills, experience, and contact details from your AgriYuvaa profile"
-              >
-                {autofilling ? (
-                  <>
-                    <Loader2 size={13} className="animate-spin text-emerald-700" /> Autofilling...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles size={13} className="text-emerald-700" /> Autofill from Profile
-                  </>
-                )}
-              </button>
-            )}
-
             <button
               type="button"
               onClick={handleLoadSample}
