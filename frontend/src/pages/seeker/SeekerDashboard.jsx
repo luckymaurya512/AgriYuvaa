@@ -121,7 +121,7 @@ const SeekerDashboard = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 w-full min-w-0">
       <h1 className="text-2xl font-display font-bold mb-1">
         Welcome back, {user?.name?.split(" ")[0]}
       </h1>
@@ -431,7 +431,7 @@ const SeekerDashboard = () => {
 
       {/* TAB 4: MY RESUME */}
       {activeTab === "resume" && (
-        <div className="card p-6 md:p-8 space-y-6">
+        <div className="card p-4 sm:p-6 md:p-8 space-y-6 w-full min-w-0 overflow-hidden">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-brand-border">
             <div>
               <h2 className="text-lg font-bold font-display text-brand-black">Your Agriculture Resume</h2>
@@ -447,9 +447,9 @@ const SeekerDashboard = () => {
             </Link>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full min-w-0">
             {/* Upload Box */}
-            <div className="space-y-3">
+            <div className="space-y-3 w-full min-w-0">
               <label className="text-xs font-bold text-brand-grey uppercase tracking-wide">
                 Upload / Update PDF Resume
               </label>
@@ -459,7 +459,7 @@ const SeekerDashboard = () => {
                 onDragEnter={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
-                className={`border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all ${
+                className={`border-2 border-dashed rounded-2xl p-5 sm:p-6 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all w-full min-w-0 overflow-hidden ${
                   isDragging
                     ? "border-emerald-600 bg-emerald-100/70 scale-[1.02] shadow-sm"
                     : "border-gray-300 hover:border-emerald-500 bg-gray-50/50 hover:bg-emerald-50/30"
@@ -498,28 +498,28 @@ const SeekerDashboard = () => {
             </div>
 
             {/* Current Resume Preview / Status */}
-            <div className="space-y-3 flex flex-col justify-between">
+            <div className="space-y-3 flex flex-col justify-between w-full min-w-0">
               <label className="text-xs font-bold text-brand-grey uppercase tracking-wide">
                 Active Resume on Profile
               </label>
 
               {resumeUrl ? (
-                <div className="p-5 rounded-2xl bg-emerald-50/70 border border-emerald-200 space-y-4 flex-1 flex flex-col justify-between">
-                  <div className="flex items-start gap-3">
+                <div className="p-4 sm:p-5 rounded-2xl bg-emerald-50/70 border border-emerald-200 space-y-4 flex-1 flex flex-col justify-between w-full min-w-0 overflow-hidden">
+                  <div className="flex items-start gap-3 min-w-0 w-full">
                     <div className="h-10 w-10 rounded-xl bg-white border border-emerald-300 text-emerald-800 flex items-center justify-center shrink-0 shadow-2xs">
                       <FileText size={20} />
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-xs font-bold text-emerald-950 flex items-center gap-1">
-                        <CheckCircle2 size={14} className="text-emerald-600" /> Resume Attached
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-bold text-emerald-950 flex items-center gap-1 truncate">
+                        <CheckCircle2 size={14} className="text-emerald-600 shrink-0" /> Resume Attached
                       </p>
-                      <p className="text-[11px] text-emerald-800/80 truncate mt-0.5 max-w-[280px]">
-                        {resumeUrl}
+                      <p className="text-[11px] text-emerald-800/80 truncate mt-0.5 w-full block" title={resumeUrl}>
+                        {resumeUrl.split("/").pop() || "Active Resume.pdf"}
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 pt-3 border-t border-emerald-200">
+                  <div className="flex items-center gap-2 pt-3 border-t border-emerald-200 w-full min-w-0">
                     <a
                       href={(() => {
                         const backendBase = (
@@ -532,14 +532,14 @@ const SeekerDashboard = () => {
                       })()}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="btn-secondary text-xs py-2 px-3 flex-1 text-center bg-white"
+                      className="btn-secondary text-xs py-2.5 px-3 flex-1 text-center bg-white font-semibold"
                     >
                       View / Download Resume 📥
                     </a>
                   </div>
                 </div>
               ) : (
-                <div className="p-6 rounded-2xl bg-gray-50 border border-brand-border text-center space-y-2 flex-1 flex flex-col items-center justify-center">
+                <div className="p-6 rounded-2xl bg-gray-50 border border-brand-border text-center space-y-2 flex-1 flex flex-col items-center justify-center w-full min-w-0">
                   <FileText size={28} className="text-gray-300" />
                   <p className="text-xs text-brand-grey">No resume uploaded yet.</p>
                   <p className="text-[11px] text-gray-400">
