@@ -2,6 +2,7 @@ import React from "react";
 import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar.jsx";
 import Footer from "./components/Footer.jsx";
+import ScrollToTop from "./components/ScrollToTop.jsx";
 import ProtectedRoute from "./routes/ProtectedRoute.jsx";
 
 import Home from "./pages/Home.jsx";
@@ -29,6 +30,7 @@ import Profile from "./pages/Profile.jsx";
 function App() {
   return (
     <div className="min-h-screen flex flex-col">
+      <ScrollToTop />
       <Navbar />
       <main className="flex-1">
         <Routes>

@@ -278,7 +278,10 @@ const JobListings = () => {
               {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
                 <button
                   key={p}
-                  onClick={() => setPage(p)}
+                  onClick={() => {
+                    setPage(p);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
                   className={`h-9 w-9 rounded-lg text-sm font-medium transition-colors ${
                     p === page ? "bg-brand-black text-white" : "bg-white border border-brand-border text-brand-grey hover:border-brand-black"
                   }`}
