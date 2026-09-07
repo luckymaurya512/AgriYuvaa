@@ -1303,6 +1303,7 @@ const ResumeBuilder = () => {
           </div>
         </div>
       )}
+    </div>
   );
 };
 
