@@ -13,6 +13,7 @@ import {
   UploadCloud,
   Loader2,
   CheckCircle2,
+  Calendar,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { fetchMyApplications } from "../../services/jobService.js";
@@ -129,84 +130,84 @@ const SeekerDashboard = () => {
       </p>
 
       {/* Top 4 Stats Cards */}
-      <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-5 mb-10">
-        <div className="card p-5">
-          <p className="text-xs text-brand-grey uppercase font-semibold">Applications Sent</p>
-          <p className="text-3xl font-display font-bold mt-2 text-brand-black">{applications.length}</p>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
+        <div className="card p-4 sm:p-5">
+          <p className="text-[11px] sm:text-xs text-brand-grey uppercase font-semibold">Applications Sent</p>
+          <p className="text-2xl sm:text-3xl font-display font-bold mt-1.5 text-brand-black">{applications.length}</p>
         </div>
-        <div className="card p-5">
-          <p className="text-xs text-brand-grey uppercase font-semibold">Shortlisted</p>
-          <p className="text-3xl font-display font-bold mt-2 text-emerald-700">
+        <div className="card p-4 sm:p-5">
+          <p className="text-[11px] sm:text-xs text-brand-grey uppercase font-semibold">Shortlisted</p>
+          <p className="text-2xl sm:text-3xl font-display font-bold mt-1.5 text-emerald-700">
             {applications.filter((a) => a.status === "shortlisted").length}
           </p>
         </div>
         <div
           onClick={() => setActiveTab("saved")}
-          className="card p-5 cursor-pointer hover:border-emerald-400 transition-colors"
+          className="card p-4 sm:p-5 cursor-pointer hover:border-emerald-400 transition-colors"
         >
-          <p className="text-xs text-brand-grey uppercase font-semibold flex items-center gap-1">
+          <p className="text-[11px] sm:text-xs text-brand-grey uppercase font-semibold flex items-center gap-1">
             <Bookmark size={13} className="text-emerald-700" /> Saved Jobs
           </p>
-          <p className="text-3xl font-display font-bold mt-2 text-brand-black">{savedJobs.length}</p>
+          <p className="text-2xl sm:text-3xl font-display font-bold mt-1.5 text-brand-black">{savedJobs.length}</p>
         </div>
         <div
           onClick={() => setActiveTab("following")}
-          className="card p-5 cursor-pointer hover:border-emerald-400 transition-colors"
+          className="card p-4 sm:p-5 cursor-pointer hover:border-emerald-400 transition-colors"
         >
-          <p className="text-xs text-brand-grey uppercase font-semibold flex items-center gap-1">
-            <Bell size={13} className="text-emerald-700" /> Followed Companies
+          <p className="text-[11px] sm:text-xs text-brand-grey uppercase font-semibold flex items-center gap-1 truncate">
+            <Bell size={13} className="text-emerald-700 shrink-0" /> Followed Companies
           </p>
-          <p className="text-3xl font-display font-bold mt-2 text-brand-black">{followedEmployers.length}</p>
+          <p className="text-2xl sm:text-3xl font-display font-bold mt-1.5 text-brand-black">{followedEmployers.length}</p>
         </div>
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex border-b border-brand-border mb-6">
+      <div className="flex border-b border-brand-border mb-6 overflow-x-auto no-scrollbar whitespace-nowrap scroll-smooth pb-0.5">
         <button
           onClick={() => setActiveTab("applications")}
-          className={`px-5 py-3 text-sm font-bold border-b-2 transition-all flex items-center gap-2 ${
+          className={`px-4 sm:px-5 py-3 text-xs sm:text-sm font-bold border-b-2 transition-all flex items-center gap-1.5 shrink-0 ${
             activeTab === "applications"
               ? "border-brand-green text-brand-green-dark"
               : "border-transparent text-brand-grey hover:text-brand-black"
           }`}
         >
           My Applications
-          <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 font-semibold">
+          <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 font-semibold">
             {applications.length}
           </span>
         </button>
 
         <button
           onClick={() => setActiveTab("saved")}
-          className={`px-5 py-3 text-sm font-bold border-b-2 transition-all flex items-center gap-2 ${
+          className={`px-4 sm:px-5 py-3 text-xs sm:text-sm font-bold border-b-2 transition-all flex items-center gap-1.5 shrink-0 ${
             activeTab === "saved"
               ? "border-brand-green text-brand-green-dark"
               : "border-transparent text-brand-grey hover:text-brand-black"
           }`}
         >
           Saved Jobs
-          <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold">
+          <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold">
             {savedJobs.length}
           </span>
         </button>
 
         <button
           onClick={() => setActiveTab("following")}
-          className={`px-5 py-3 text-sm font-bold border-b-2 transition-all flex items-center gap-2 ${
+          className={`px-4 sm:px-5 py-3 text-xs sm:text-sm font-bold border-b-2 transition-all flex items-center gap-1.5 shrink-0 ${
             activeTab === "following"
               ? "border-brand-green text-brand-green-dark"
               : "border-transparent text-brand-grey hover:text-brand-black"
           }`}
         >
           Followed Companies
-          <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold">
+          <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold">
             {followedEmployers.length}
           </span>
         </button>
 
         <button
           onClick={() => setActiveTab("resume")}
-          className={`px-5 py-3 text-sm font-bold border-b-2 transition-all flex items-center gap-2 ${
+          className={`px-4 sm:px-5 py-3 text-xs sm:text-sm font-bold border-b-2 transition-all flex items-center gap-1.5 shrink-0 ${
             activeTab === "resume"
               ? "border-brand-green text-brand-green-dark"
               : "border-transparent text-brand-grey hover:text-brand-black"
@@ -230,60 +231,108 @@ const SeekerDashboard = () => {
               </Link>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-brand-surface text-xs uppercase text-brand-grey">
-                  <tr>
-                    <th className="text-left px-5 py-3.5">Job Title</th>
-                    <th className="text-left px-5 py-3.5">Company</th>
-                    <th className="text-left px-5 py-3.5">Applied On</th>
-                    <th className="text-left px-5 py-3.5">Status</th>
-                    <th className="text-right px-5 py-3.5">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {applications.map((app) => (
-                    <tr key={app._id} className="border-t border-brand-border hover:bg-gray-50/50">
-                      <td className="px-5 py-3.5 font-medium">
+            <>
+              {/* Mobile Card List View (Visible on screens < 768px) */}
+              <div className="md:hidden divide-y divide-gray-100">
+                {applications.map((app) => (
+                  <div key={app._id} className="p-4 space-y-2.5 hover:bg-gray-50/50 transition-colors">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
                         <Link
                           to={`/jobs/${app.job?._id}`}
-                          className="hover:text-brand-green-dark font-semibold"
+                          className="font-bold text-sm text-brand-black hover:text-brand-green-dark block leading-snug line-clamp-2"
                         >
                           {app.job?.title || "Position"}
                         </Link>
-                      </td>
-                      <td className="px-5 py-3.5 text-brand-grey">
-                        {app.job?.companyName || app.job?.employer?.name || "Hiring Company"}
-                      </td>
-                      <td className="px-5 py-3.5 text-brand-grey">
-                        {new Date(app.createdAt).toLocaleDateString("en-IN", {
+                        <p className="text-xs text-brand-grey font-medium mt-0.5">
+                          {app.job?.companyName || app.job?.employer?.name || "Hiring Company"}
+                        </p>
+                      </div>
+                      <span
+                        className={`text-[11px] font-bold px-2.5 py-1 rounded-full capitalize shrink-0 ${
+                          statusColors[app.status] || "bg-gray-100 text-gray-700"
+                        }`}
+                      >
+                        {app.status}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs pt-2 border-t border-gray-100 text-brand-grey">
+                      <span className="flex items-center gap-1 text-[11px]">
+                        <Calendar size={12} className="text-brand-green shrink-0" />
+                        Applied on {new Date(app.createdAt).toLocaleDateString("en-IN", {
                           day: "numeric",
                           month: "short",
                           year: "numeric",
                         })}
-                      </td>
-                      <td className="px-5 py-3.5">
-                        <span
-                          className={`text-xs font-semibold px-2.5 py-1 rounded-full capitalize ${
-                            statusColors[app.status] || "bg-gray-100 text-gray-700"
-                          }`}
-                        >
-                          {app.status}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3.5 text-right">
-                        <Link
-                          to={`/jobs/${app.job?._id}`}
-                          className="text-xs font-bold text-brand-green-dark hover:underline"
-                        >
-                          View Job →
-                        </Link>
-                      </td>
+                      </span>
+                      <Link
+                        to={`/jobs/${app.job?._id}`}
+                        className="text-xs font-bold text-brand-green-dark hover:underline inline-flex items-center gap-0.5"
+                      >
+                        View Job →
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop Table View (Visible on screens >= 768px) */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-sm min-w-[650px]">
+                  <thead className="bg-brand-surface text-xs uppercase text-brand-grey">
+                    <tr>
+                      <th className="text-left px-5 py-3.5">Job Title</th>
+                      <th className="text-left px-5 py-3.5">Company</th>
+                      <th className="text-left px-5 py-3.5">Applied On</th>
+                      <th className="text-left px-5 py-3.5">Status</th>
+                      <th className="text-right px-5 py-3.5">Action</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {applications.map((app) => (
+                      <tr key={app._id} className="border-t border-brand-border hover:bg-gray-50/50">
+                        <td className="px-5 py-3.5 font-medium">
+                          <Link
+                            to={`/jobs/${app.job?._id}`}
+                            className="hover:text-brand-green-dark font-semibold"
+                          >
+                            {app.job?.title || "Position"}
+                          </Link>
+                        </td>
+                        <td className="px-5 py-3.5 text-brand-grey">
+                          {app.job?.companyName || app.job?.employer?.name || "Hiring Company"}
+                        </td>
+                        <td className="px-5 py-3.5 text-brand-grey">
+                          {new Date(app.createdAt).toLocaleDateString("en-IN", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })}
+                        </td>
+                        <td className="px-5 py-3.5">
+                          <span
+                            className={`text-xs font-semibold px-2.5 py-1 rounded-full capitalize ${
+                              statusColors[app.status] || "bg-gray-100 text-gray-700"
+                            }`}
+                          >
+                            {app.status}
+                          </span>
+                        </td>
+                        <td className="px-5 py-3.5 text-right">
+                          <Link
+                            to={`/jobs/${app.job?._id}`}
+                            className="text-xs font-bold text-brand-green-dark hover:underline"
+                          >
+                            View Job →
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
       )}

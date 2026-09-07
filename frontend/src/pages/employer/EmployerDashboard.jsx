@@ -75,27 +75,27 @@ const EmployerDashboard = () => {
           </button>
         </div>
       )}
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="card p-5">
-          <p className="text-xs text-brand-grey uppercase font-semibold">Total Jobs</p>
-          <p className="text-3xl font-display font-bold mt-2 text-brand-black">{jobs.length}</p>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
+        <div className="card p-4 sm:p-5">
+          <p className="text-[11px] sm:text-xs text-brand-grey uppercase font-semibold">Total Jobs</p>
+          <p className="text-2xl sm:text-3xl font-display font-bold mt-1.5 text-brand-black">{jobs.length}</p>
         </div>
-        <div className="card p-5">
-          <p className="text-xs text-brand-grey uppercase font-semibold">Live / Approved</p>
-          <p className="text-3xl font-display font-bold mt-2 text-emerald-700">
+        <div className="card p-4 sm:p-5">
+          <p className="text-[11px] sm:text-xs text-brand-grey uppercase font-semibold">Live / Approved</p>
+          <p className="text-2xl sm:text-3xl font-display font-bold mt-1.5 text-emerald-700">
             {jobs.filter((j) => j.status === "approved").length}
           </p>
         </div>
-        <div className="card p-5">
-          <p className="text-xs text-brand-grey uppercase font-semibold">Pending Moderation</p>
-          <p className="text-3xl font-display font-bold mt-2 text-amber-700">
+        <div className="card p-4 sm:p-5">
+          <p className="text-[11px] sm:text-xs text-brand-grey uppercase font-semibold">Pending Review</p>
+          <p className="text-2xl sm:text-3xl font-display font-bold mt-1.5 text-amber-700">
             {jobs.filter((j) => j.status === "pending").length}
           </p>
         </div>
-        <div className="card p-5">
-          <p className="text-xs text-brand-grey uppercase font-semibold">Total Views</p>
-          <p className="text-3xl font-display font-bold mt-2 text-blue-700">
+        <div className="card p-4 sm:p-5">
+          <p className="text-[11px] sm:text-xs text-brand-grey uppercase font-semibold">Total Views</p>
+          <p className="text-2xl sm:text-3xl font-display font-bold mt-1.5 text-blue-700">
             {jobs.reduce((sum, j) => sum + (j.views || 0), 0)}
           </p>
         </div>
@@ -120,105 +120,184 @@ const EmployerDashboard = () => {
             </Link>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-brand-surface text-xs uppercase text-brand-grey border-b border-brand-border">
-                <tr>
-                  <th className="text-left px-5 py-3">Title & Category</th>
-                  <th className="text-left px-5 py-3">Views</th>
-                  <th className="text-left px-5 py-3">Status</th>
-                  <th className="text-left px-5 py-3">Deadline</th>
-                  <th className="text-left px-5 py-3">Applicants</th>
-                  <th className="text-right px-5 py-3">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-brand-border">
-                {jobs.map((job) => {
-                  const deadlineDate = job.applicationDeadline || job.expiresAt;
-                  const isExpired = deadlineDate && new Date(deadlineDate) < new Date();
+          <>
+            {/* Mobile View (< 768px) */}
+            <div className="md:hidden divide-y divide-gray-100">
+              {jobs.map((job) => {
+                const deadlineDate = job.applicationDeadline || job.expiresAt;
+                const isExpired = deadlineDate && new Date(deadlineDate) < new Date();
 
-                  return (
-                    <tr key={job._id} className="hover:bg-gray-50/60 transition-colors">
-                      <td className="px-5 py-3.5 font-medium">
+                return (
+                  <div key={job._id} className="p-4 space-y-3 hover:bg-gray-50/50 transition-colors">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
                         <Link
                           to={`/jobs/${job._id}`}
-                          className="font-bold text-brand-black hover:text-brand-green-dark hover:underline block"
+                          className="font-bold text-sm text-brand-black hover:text-brand-green-dark block leading-snug line-clamp-2"
                         >
                           {job.title}
                         </Link>
                         <span className="text-xs text-brand-grey mt-0.5 inline-block capitalize">
                           {job.category?.name || "Agriculture"} · {job.employmentType?.replace(/-/g, " ")}
                         </span>
-                      </td>
+                      </div>
+                      <span
+                        className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border capitalize shrink-0 ${
+                          statusColors[job.status] || "bg-gray-100 text-gray-700"
+                        }`}
+                      >
+                        {job.status}
+                      </span>
+                    </div>
 
-                      <td className="px-5 py-3.5 text-brand-grey font-medium">{job.views || 0}</td>
-
-                      <td className="px-5 py-3.5">
-                        <span
-                          className={`text-xs font-bold px-2.5 py-1 rounded-full border capitalize ${
-                            statusColors[job.status] || "bg-gray-100 text-gray-700"
-                          }`}
-                        >
-                          {job.status}
+                    <div className="flex flex-wrap items-center gap-3 text-xs text-brand-grey">
+                      <span>👁️ {job.views || 0} views</span>
+                      <span>•</span>
+                      {deadlineDate ? (
+                        <span className={`flex items-center gap-1 ${isExpired ? "text-amber-800 font-bold" : ""}`}>
+                          <Clock size={11} className={isExpired ? "text-amber-700" : "text-gray-400"} />
+                          Closes {new Date(deadlineDate).toLocaleDateString("en-IN", {
+                            day: "numeric",
+                            month: "short",
+                          })}
                         </span>
-                      </td>
+                      ) : (
+                        <span className="text-gray-400">No deadline</span>
+                      )}
+                    </div>
 
-                      <td className="px-5 py-3.5 text-xs text-brand-grey">
-                        {deadlineDate ? (
+                    <div className="flex items-center justify-between pt-2 border-t border-gray-100 gap-2">
+                      <Link
+                        to={`/employer/jobs/${job._id}/applicants`}
+                        className="text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5 transition-colors"
+                      >
+                        <Users size={13} /> Applicants
+                      </Link>
+
+                      <div className="flex items-center gap-1.5">
+                        <Link
+                          to={`/employer/post-job?edit=${job._id}`}
+                          className="text-xs font-semibold text-gray-700 hover:text-black bg-gray-100 hover:bg-gray-200 px-2.5 py-1.5 rounded-lg border border-gray-200 transition-colors inline-flex items-center gap-1"
+                        >
+                          <Edit3 size={12} /> Edit
+                        </Link>
+
+                        <button
+                          type="button"
+                          disabled={deletingId === job._id}
+                          onClick={() => handleDeleteJob(job)}
+                          className="text-xs font-semibold text-red-600 hover:text-white bg-red-50 hover:bg-red-600 px-2.5 py-1.5 rounded-lg border border-red-200 hover:border-red-600 transition-colors inline-flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                        >
+                          <Trash2 size={12} /> Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop Table (>= 768px) */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm min-w-[700px]">
+                <thead className="bg-brand-surface text-xs uppercase text-brand-grey border-b border-brand-border">
+                  <tr>
+                    <th className="text-left px-5 py-3">Title & Category</th>
+                    <th className="text-left px-5 py-3">Views</th>
+                    <th className="text-left px-5 py-3">Status</th>
+                    <th className="text-left px-5 py-3">Deadline</th>
+                    <th className="text-left px-5 py-3">Applicants</th>
+                    <th className="text-right px-5 py-3">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-brand-border">
+                  {jobs.map((job) => {
+                    const deadlineDate = job.applicationDeadline || job.expiresAt;
+                    const isExpired = deadlineDate && new Date(deadlineDate) < new Date();
+
+                    return (
+                      <tr key={job._id} className="hover:bg-gray-50/60 transition-colors">
+                        <td className="px-5 py-3.5 font-medium">
+                          <Link
+                            to={`/jobs/${job._id}`}
+                            className="font-bold text-brand-black hover:text-brand-green-dark hover:underline block"
+                          >
+                            {job.title}
+                          </Link>
+                          <span className="text-xs text-brand-grey mt-0.5 inline-block capitalize">
+                            {job.category?.name || "Agriculture"} · {job.employmentType?.replace(/-/g, " ")}
+                          </span>
+                        </td>
+
+                        <td className="px-5 py-3.5 text-brand-grey font-medium">{job.views || 0}</td>
+
+                        <td className="px-5 py-3.5">
                           <span
-                            className={`inline-flex items-center gap-1 font-medium ${
-                              isExpired ? "text-amber-800 font-bold" : "text-gray-700"
+                            className={`text-xs font-bold px-2.5 py-1 rounded-full border capitalize ${
+                              statusColors[job.status] || "bg-gray-100 text-gray-700"
                             }`}
                           >
-                            <Clock size={12} className={isExpired ? "text-amber-700" : "text-gray-400"} />
-                            {new Date(deadlineDate).toLocaleDateString("en-IN", {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                            })}
-                            {isExpired && <span className="text-[10px] text-amber-700 font-bold">(Passed)</span>}
+                            {job.status}
                           </span>
-                        ) : (
-                          <span className="text-gray-400 italic">No deadline</span>
-                        )}
-                      </td>
+                        </td>
 
-                      <td className="px-5 py-3.5">
-                        <Link
-                          to={`/employer/jobs/${job._id}/applicants`}
-                          className="text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5 transition-colors"
-                        >
-                          <Users size={13} /> View Applicants
-                        </Link>
-                      </td>
+                        <td className="px-5 py-3.5 text-xs text-brand-grey">
+                          {deadlineDate ? (
+                            <span
+                              className={`inline-flex items-center gap-1 font-medium ${
+                                isExpired ? "text-amber-800 font-bold" : "text-gray-700"
+                              }`}
+                            >
+                              <Clock size={12} className={isExpired ? "text-amber-700" : "text-gray-400"} />
+                              {new Date(deadlineDate).toLocaleDateString("en-IN", {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                              })}
+                              {isExpired && <span className="text-[10px] text-amber-700 font-bold">(Passed)</span>}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400 italic">No deadline</span>
+                          )}
+                        </td>
 
-                      <td className="px-5 py-3.5 text-right">
-                        <div className="inline-flex items-center gap-1.5">
+                        <td className="px-5 py-3.5">
                           <Link
-                            to={`/employer/post-job?edit=${job._id}`}
-                            className="text-xs font-semibold text-gray-700 hover:text-black bg-gray-100 hover:bg-gray-200 px-2.5 py-1.5 rounded-lg border border-gray-200 transition-colors inline-flex items-center gap-1"
-                            title="Edit Job"
+                            to={`/employer/jobs/${job._id}/applicants`}
+                            className="text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5 transition-colors"
                           >
-                            <Edit3 size={13} /> Edit
+                            <Users size={13} /> View Applicants
                           </Link>
+                        </td>
 
-                          <button
-                            type="button"
-                            disabled={deletingId === job._id}
-                            onClick={() => handleDeleteJob(job)}
-                            className="text-xs font-semibold text-red-600 hover:text-white bg-red-50 hover:bg-red-600 px-2.5 py-1.5 rounded-lg border border-red-200 hover:border-red-600 transition-colors inline-flex items-center gap-1 cursor-pointer disabled:opacity-50"
-                            title="Delete Job"
-                          >
-                            <Trash2 size={13} /> Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                        <td className="px-5 py-3.5 text-right">
+                          <div className="inline-flex items-center gap-1.5">
+                            <Link
+                              to={`/employer/post-job?edit=${job._id}`}
+                              className="text-xs font-semibold text-gray-700 hover:text-black bg-gray-100 hover:bg-gray-200 px-2.5 py-1.5 rounded-lg border border-gray-200 transition-colors inline-flex items-center gap-1"
+                              title="Edit Job"
+                            >
+                              <Edit3 size={13} /> Edit
+                            </Link>
+
+                            <button
+                              type="button"
+                              disabled={deletingId === job._id}
+                              onClick={() => handleDeleteJob(job)}
+                              className="text-xs font-semibold text-red-600 hover:text-white bg-red-50 hover:bg-red-600 px-2.5 py-1.5 rounded-lg border border-red-200 hover:border-red-600 transition-colors inline-flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                              title="Delete Job"
+                            >
+                              <Trash2 size={13} /> Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
     </div>
