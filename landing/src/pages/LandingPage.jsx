@@ -17,6 +17,7 @@ import {
   Mail,
   Phone,
   Send,
+} from "lucide-react";
 import { fetchWorkshops, fetchTestimonials, fetchBlogs } from "../services/landingService.js";
 import logo from "../assets/logo.png";
 

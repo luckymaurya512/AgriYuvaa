@@ -14,7 +14,6 @@ const navLinks = [
 const LandingNavbar = () => {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [imgError, setImgError] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
