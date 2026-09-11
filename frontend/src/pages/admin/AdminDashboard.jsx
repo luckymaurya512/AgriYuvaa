@@ -26,6 +26,11 @@ import {
   ShieldCheck,
   FileSpreadsheet,
   Eye,
+  BookOpen,
+  GraduationCap,
+  MessageSquare,
+  Save,
+  X,
 } from "lucide-react";
 import ResumePreviewModal from "../../components/ResumePreviewModal.jsx";
 import {
@@ -37,6 +42,11 @@ import {
   toggleJobFeatured,
 } from "../../services/adminService.js";
 import { deleteJob } from "../../services/jobService.js";
+import {
+  fetchAllBlogs, createBlog, updateBlog, deleteBlog,
+  fetchAllWorkshops, createWorkshop, updateWorkshop, deleteWorkshop,
+  fetchAllTestimonials, createTestimonial, updateTestimonial, deleteTestimonial,
+} from "../../services/landingService.js";
 
 const AdminDashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -67,6 +77,15 @@ const AdminDashboard = () => {
   const [previewApp, setPreviewApp] = useState(null);
 
   const [actionSuccess, setActionSuccess] = useState("");
+
+  // ── CMS State ──
+  const [cmsBlogs, setCmsBlogs] = useState([]);
+  const [cmsWorkshops, setCmsWorkshops] = useState([]);
+  const [cmsTestimonials, setCmsTestimonials] = useState([]);
+  const [cmsEditItem, setCmsEditItem] = useState(null);
+  const [cmsEditType, setCmsEditType] = useState("");
+  const [cmsForm, setCmsForm] = useState({});
+  const [cmsLoading, setCmsLoading] = useState(false);
 
   const handleExportCSV = (customList = null, filenamePrefix = "all_applications") => {
     const listToExport = customList || applications;
@@ -399,6 +418,44 @@ const AdminDashboard = () => {
               {pendingJobs.length}
             </span>
           )}
+        </button>
+
+        <div className="w-px h-6 bg-gray-300 mx-1 hidden lg:block" />
+
+        <button
+          type="button"
+          onClick={() => setTab("blogs")}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl transition-all whitespace-nowrap ${
+            activeTab === "blogs"
+              ? "bg-blue-900 text-white shadow-2xs"
+              : "text-gray-600 hover:text-black hover:bg-gray-100"
+          }`}
+        >
+          <BookOpen size={15} /> Blogs
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setTab("workshops")}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl transition-all whitespace-nowrap ${
+            activeTab === "workshops"
+              ? "bg-blue-900 text-white shadow-2xs"
+              : "text-gray-600 hover:text-black hover:bg-gray-100"
+          }`}
+        >
+          <GraduationCap size={15} /> Workshops
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setTab("testimonials")}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl transition-all whitespace-nowrap ${
+            activeTab === "testimonials"
+              ? "bg-blue-900 text-white shadow-2xs"
+              : "text-gray-600 hover:text-black hover:bg-gray-100"
+          }`}
+        >
+          <MessageSquare size={15} /> Testimonials
         </button>
 
         <Link
@@ -1293,6 +1350,95 @@ const AdminDashboard = () => {
         </div>
       )}
 
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/* ── TAB: BLOGS CMS ──────────────────────────────────────────────── */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {activeTab === "blogs" && (
+        <CmsPanel
+          type="blog"
+          items={cmsBlogs}
+          loading={cmsLoading}
+          onLoad={() => { setCmsLoading(true); fetchAllBlogs().then(setCmsBlogs).catch(() => setCmsBlogs([])).finally(() => setCmsLoading(false)); }}
+          onDelete={async (id) => { await deleteBlog(id); setCmsBlogs(cmsBlogs.filter(b => b._id !== id)); setActionSuccess("Blog deleted"); setTimeout(() => setActionSuccess(""), 3000); }}
+          onSave={async (item, isNew) => {
+            if (isNew) { const created = await createBlog(item); setCmsBlogs([created, ...cmsBlogs]); }
+            else { const updated = await updateBlog(item._id, item); setCmsBlogs(cmsBlogs.map(b => b._id === updated._id ? updated : b)); }
+            setActionSuccess(isNew ? "Blog created!" : "Blog updated!"); setTimeout(() => setActionSuccess(""), 3000);
+          }}
+          fields={[
+            { key: "title", label: "Title", type: "text", required: true },
+            { key: "slug", label: "Slug", type: "text" },
+            { key: "excerpt", label: "Excerpt", type: "text" },
+            { key: "content", label: "Content", type: "textarea", required: true },
+            { key: "coverImage", label: "Cover Image URL", type: "text" },
+            { key: "author", label: "Author", type: "text" },
+            { key: "tags", label: "Tags (comma-separated)", type: "tags" },
+            { key: "isPublished", label: "Published", type: "toggle" },
+          ]}
+          columns={["title", "author", "isPublished", "createdAt"]}
+        />
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/* ── TAB: WORKSHOPS CMS ──────────────────────────────────────────── */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {activeTab === "workshops" && (
+        <CmsPanel
+          type="workshop"
+          items={cmsWorkshops}
+          loading={cmsLoading}
+          onLoad={() => { setCmsLoading(true); fetchAllWorkshops().then(setCmsWorkshops).catch(() => setCmsWorkshops([])).finally(() => setCmsLoading(false)); }}
+          onDelete={async (id) => { await deleteWorkshop(id); setCmsWorkshops(cmsWorkshops.filter(w => w._id !== id)); setActionSuccess("Workshop deleted"); setTimeout(() => setActionSuccess(""), 3000); }}
+          onSave={async (item, isNew) => {
+            if (isNew) { const created = await createWorkshop(item); setCmsWorkshops([created, ...cmsWorkshops]); }
+            else { const updated = await updateWorkshop(item._id, item); setCmsWorkshops(cmsWorkshops.map(w => w._id === updated._id ? updated : w)); }
+            setActionSuccess(isNew ? "Workshop created!" : "Workshop updated!"); setTimeout(() => setActionSuccess(""), 3000);
+          }}
+          fields={[
+            { key: "title", label: "Title", type: "text", required: true },
+            { key: "slug", label: "Slug", type: "text" },
+            { key: "description", label: "Description", type: "textarea", required: true },
+            { key: "category", label: "Category", type: "text" },
+            { key: "instructor", label: "Instructor", type: "text" },
+            { key: "duration", label: "Duration", type: "text" },
+            { key: "price", label: "Price (₹)", type: "number" },
+            { key: "registrationUrl", label: "Registration URL", type: "text" },
+            { key: "coverImage", label: "Cover Image URL", type: "text" },
+            { key: "order", label: "Display Order", type: "number" },
+            { key: "isActive", label: "Active", type: "toggle" },
+          ]}
+          columns={["title", "category", "duration", "isActive"]}
+        />
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/* ── TAB: TESTIMONIALS CMS ───────────────────────────────────────── */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {activeTab === "testimonials" && (
+        <CmsPanel
+          type="testimonial"
+          items={cmsTestimonials}
+          loading={cmsLoading}
+          onLoad={() => { setCmsLoading(true); fetchAllTestimonials().then(setCmsTestimonials).catch(() => setCmsTestimonials([])).finally(() => setCmsLoading(false)); }}
+          onDelete={async (id) => { await deleteTestimonial(id); setCmsTestimonials(cmsTestimonials.filter(t => t._id !== id)); setActionSuccess("Testimonial deleted"); setTimeout(() => setActionSuccess(""), 3000); }}
+          onSave={async (item, isNew) => {
+            if (isNew) { const created = await createTestimonial(item); setCmsTestimonials([created, ...cmsTestimonials]); }
+            else { const updated = await updateTestimonial(item._id, item); setCmsTestimonials(cmsTestimonials.map(t => t._id === updated._id ? updated : t)); }
+            setActionSuccess(isNew ? "Testimonial created!" : "Testimonial updated!"); setTimeout(() => setActionSuccess(""), 3000);
+          }}
+          fields={[
+            { key: "name", label: "Name", type: "text", required: true },
+            { key: "role", label: "Role / Title", type: "text" },
+            { key: "content", label: "Testimonial Text", type: "textarea", required: true },
+            { key: "rating", label: "Rating (1-5)", type: "number" },
+            { key: "avatarUrl", label: "Avatar URL", type: "text" },
+            { key: "order", label: "Display Order", type: "number" },
+            { key: "isActive", label: "Active", type: "toggle" },
+          ]}
+          columns={["name", "role", "rating", "isActive"]}
+        />
+      )}
+
       {/* Resume In-Browser Preview Modal */}
       {previewApp && (
         <ResumePreviewModal
@@ -1310,5 +1456,181 @@ const StatCard = ({ label, value }) => (
     <p className="text-3xl font-display font-bold mt-2">{value}</p>
   </div>
 );
+
+/* ─── Reusable CMS Panel Component ─────────────────────── */
+const CmsPanel = ({ type, items, loading, onLoad, onDelete, onSave, fields, columns }) => {
+  const [editing, setEditing] = useState(null); // null = list view, {} = new, {...} = editing
+  const [form, setForm] = useState({});
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => { onLoad(); }, []);
+
+  const startNew = () => {
+    const defaults = {};
+    fields.forEach(f => {
+      if (f.type === "toggle") defaults[f.key] = true;
+      else if (f.type === "number") defaults[f.key] = 0;
+      else if (f.type === "tags") defaults[f.key] = [];
+      else defaults[f.key] = "";
+    });
+    setForm(defaults);
+    setEditing("new");
+  };
+
+  const startEdit = (item) => {
+    const data = { ...item };
+    fields.forEach(f => {
+      if (f.type === "tags" && Array.isArray(data[f.key])) data[f.key] = data[f.key].join(", ");
+    });
+    setForm(data);
+    setEditing(item._id);
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const payload = { ...form };
+      fields.forEach(f => {
+        if (f.type === "tags" && typeof payload[f.key] === "string") {
+          payload[f.key] = payload[f.key].split(",").map(t => t.trim()).filter(Boolean);
+        }
+        if (f.type === "number") payload[f.key] = Number(payload[f.key]) || 0;
+      });
+      await onSave(payload, editing === "new");
+      setEditing(null);
+      setForm({});
+    } catch (err) {
+      alert(err.response?.data?.message || `Failed to save ${type}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm(`Delete this ${type}? This cannot be undone.`)) return;
+    try { await onDelete(id); } catch { alert(`Failed to delete ${type}`); }
+  };
+
+  const formatCell = (item, col) => {
+    const val = item[col];
+    if (col === "isPublished" || col === "isActive") return val ? "✅ Yes" : "❌ No";
+    if (col === "createdAt") return new Date(val).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+    if (col === "rating") return "⭐".repeat(val || 0);
+    if (typeof val === "string" && val.length > 50) return val.substring(0, 50) + "...";
+    return val ?? "—";
+  };
+
+  // ── Edit Form View ──
+  if (editing !== null) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-bold capitalize">{editing === "new" ? `New ${type}` : `Edit ${type}`}</h2>
+          <button onClick={() => { setEditing(null); setForm({}); }} className="text-xs text-gray-500 hover:text-gray-800 flex items-center gap-1"><X size={14} /> Cancel</button>
+        </div>
+        <div className="card p-6 space-y-4">
+          {fields.map(f => (
+            <div key={f.key}>
+              <label className="block text-xs font-semibold text-gray-700 mb-1">{f.label}{f.required && <span className="text-red-500"> *</span>}</label>
+              {f.type === "textarea" ? (
+                <textarea
+                  value={form[f.key] || ""}
+                  onChange={e => setForm({ ...form, [f.key]: e.target.value })}
+                  rows={6}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500"
+                />
+              ) : f.type === "toggle" ? (
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, [f.key]: !form[f.key] })}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                    form[f.key] ? "bg-emerald-100 text-emerald-800 border border-emerald-300" : "bg-gray-100 text-gray-500 border border-gray-200"
+                  }`}
+                >
+                  {form[f.key] ? "✅ Yes" : "❌ No"}
+                </button>
+              ) : f.type === "number" ? (
+                <input
+                  type="number"
+                  value={form[f.key] ?? 0}
+                  onChange={e => setForm({ ...form, [f.key]: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500"
+                />
+              ) : (
+                <input
+                  type="text"
+                  value={form[f.key] || ""}
+                  onChange={e => setForm({ ...form, [f.key]: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500"
+                  placeholder={f.type === "tags" ? "tag1, tag2, tag3" : ""}
+                />
+              )}
+            </div>
+          ))}
+          <div className="flex items-center gap-3 pt-2">
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="btn-primary text-sm flex items-center gap-2 py-2.5 px-6"
+            >
+              <Save size={14} /> {saving ? "Saving..." : "Save"}
+            </button>
+            <button onClick={() => { setEditing(null); setForm({}); }} className="btn-secondary text-sm py-2.5 px-6">Cancel</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── List View ──
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-bold capitalize">{type}s Management</h2>
+        <button onClick={startNew} className="btn-primary text-sm flex items-center gap-2 py-2.5 px-4">
+          <PlusCircle size={15} /> New {type}
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="space-y-3">{[1,2,3].map(n => <div key={n} className="h-16 bg-gray-100 rounded-xl animate-pulse" />)}</div>
+      ) : items.length === 0 ? (
+        <div className="card p-10 text-center">
+          <p className="text-sm text-gray-500">No {type}s yet. Create your first one!</p>
+        </div>
+      ) : (
+        <div className="card overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-200">
+                  {columns.map(col => (
+                    <th key={col} className="text-left px-4 py-3 text-xs font-bold uppercase text-gray-500 tracking-wider capitalize">{col.replace(/([A-Z])/g, " $1")}</th>
+                  ))}
+                  <th className="text-right px-4 py-3 text-xs font-bold uppercase text-gray-500 tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {items.map(item => (
+                  <tr key={item._id} className="hover:bg-gray-50 transition-colors">
+                    {columns.map(col => (
+                      <td key={col} className="px-4 py-3 text-sm text-gray-700">{formatCell(item, col)}</td>
+                    ))}
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <button onClick={() => startEdit(item)} className="text-xs font-semibold text-blue-700 hover:text-blue-900 flex items-center gap-1"><Edit3 size={12} /> Edit</button>
+                        <button onClick={() => handleDelete(item._id)} className="text-xs font-semibold text-red-600 hover:text-red-800 flex items-center gap-1"><Trash2 size={12} /> Delete</button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default AdminDashboard;

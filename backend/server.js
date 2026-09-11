@@ -18,6 +18,9 @@ import adminRoutes from "./routes/adminRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import govtJobRoutes from "./routes/govtJobRoutes.js";
+import blogRoutes from "./routes/blogRoutes.js";
+import workshopRoutes from "./routes/workshopRoutes.js";
+import testimonialRoutes from "./routes/testimonialRoutes.js";
 
 import fs from "fs";
 import path from "path";
@@ -115,6 +118,9 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/govt-jobs", govtJobRoutes);
+app.use("/api/blogs", blogRoutes);
+app.use("/api/workshops", workshopRoutes);
+app.use("/api/testimonials", testimonialRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
