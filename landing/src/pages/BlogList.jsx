@@ -81,8 +81,19 @@ const BlogList = () => {
                   to={`/blog/${blog.slug}`}
                   className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group flex flex-col"
                 >
-                  <div className="h-48 bg-gradient-to-br from-emerald-100 to-lime-50 flex items-center justify-center">
-                    <span className="text-5xl">📰</span>
+                  <div className="h-48 bg-gradient-to-br from-emerald-100 to-lime-50 flex items-center justify-center overflow-hidden">
+                    {blog.coverImage ? (
+                      <img
+                        src={blog.coverImage}
+                        alt={blog.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          e.target.style.display = "none";
+                          e.target.nextSibling.style.display = "flex";
+                        }}
+                      />
+                    ) : null}
+                    <span className="text-5xl" style={{ display: blog.coverImage ? "none" : "block" }}>📰</span>
                   </div>
                   <div className="p-6 flex-1 flex flex-col justify-between">
                     <div>

@@ -80,6 +80,16 @@ const BlogDetail = () => {
 
       {/* Content */}
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {blog.coverImage && (
+          <div className="mb-8 rounded-2xl overflow-hidden shadow-sm border border-gray-100">
+            <img
+              src={blog.coverImage}
+              alt={blog.title}
+              className="w-full max-h-[420px] object-cover"
+              onError={(e) => { e.target.style.display = "none"; }}
+            />
+          </div>
+        )}
         <article className="prose prose-lg max-w-none">
           <div className="text-gray-700 leading-relaxed whitespace-pre-line text-base">
             {blog.content}
