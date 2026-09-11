@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Leaf, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import logo from "../assets/logo.png";
 
 const LandingFooter = () => {
   return (
@@ -13,7 +14,7 @@ const LandingFooter = () => {
           {/* Brand */}
           <div className="lg:col-span-1">
             <div className="flex items-center gap-2.5 mb-4">
-              <Leaf className="text-emerald-500" size={24} />
+              <img src={logo} alt="AgriYuvaa" className="h-8 w-8 object-contain rounded-lg" />
               <span className="font-bold text-xl">
                 Agri<span className="text-emerald-500">Yuvaa</span>
               </span>

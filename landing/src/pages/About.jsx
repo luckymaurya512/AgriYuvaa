@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Sprout, Users, Target, Award, ArrowRight } from "lucide-react";
+import { Users, Target, Award, ArrowRight } from "lucide-react";
+import logo from "../assets/logo.png";
 
 const About = () => {
   return (
@@ -8,6 +9,7 @@ const About = () => {
       {/* Hero */}
       <div className="bg-gradient-to-br from-gray-950 via-emerald-950 to-gray-900 py-16 -mt-24 pt-36 text-white text-center">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <img src={logo} alt="AgriYuvaa" className="w-16 h-16 object-contain mx-auto mb-4 drop-shadow-md" />
           <div className="inline-flex items-center gap-2 bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-xs font-semibold px-4 py-1.5 rounded-full mb-6">
             🌾 About AgriYuvaa
           </div>

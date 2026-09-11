@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, ArrowRight, Sprout } from "lucide-react";
+import logo from "../assets/logo.png";
 
 const navLinks = [
   { label: "Home", to: "/" },
@@ -57,18 +58,11 @@ const LandingNavbar = () => {
       {/* Main nav */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2.5 shrink-0">
-          {!imgError ? (
-            <img
-              src="/logo.png"
-              alt="AgriYuvaa"
-              className="h-10 w-10 object-contain"
-              onError={() => setImgError(true)}
-            />
-          ) : (
-            <div className="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-md shadow-emerald-600/30">
-              <Sprout size={22} />
-            </div>
-          )}
+          <img
+            src={logo}
+            alt="AgriYuvaa"
+            className="h-10 w-10 object-contain rounded-lg"
+          />
           <span className={`font-bold text-xl tracking-tight transition-colors ${textColor}`}>
             Agri<span className="text-emerald-500">Yuvaa</span>
           </span>

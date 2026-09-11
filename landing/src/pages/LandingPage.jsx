@@ -17,8 +17,8 @@ import {
   Mail,
   Phone,
   Send,
-} from "lucide-react";
 import { fetchWorkshops, fetchTestimonials, fetchBlogs } from "../services/landingService.js";
+import logo from "../assets/logo.png";
 
 /* ─── Animated Counter ───────────────────────────── */
 const AnimatedCounter = ({ target, suffix = "" }) => {
@@ -234,7 +234,7 @@ const LandingPage = () => {
           <div className="relative">
             <div className="bg-gradient-to-br from-emerald-100 to-lime-50 rounded-3xl p-8 aspect-square flex items-center justify-center relative overflow-hidden">
               <div className="text-center space-y-4 relative z-10">
-                <div className="text-8xl">🌾</div>
+                <img src={logo} alt="AgriYuvaa" className="w-28 h-28 object-contain mx-auto drop-shadow-md" />
                 <h3 className="text-2xl font-bold text-emerald-900">AgriYuvaa</h3>
                 <p className="text-emerald-700 text-sm max-w-xs mx-auto">Where Youth Meets Agriculture — Building the future of farming, one student at a time.</p>
               </div>

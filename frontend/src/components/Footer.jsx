@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Leaf, Facebook, Instagram, Linkedin, Youtube } from "lucide-react";
+import { Facebook, Instagram, Linkedin, Youtube } from "lucide-react";
+import logo from "../assets/logo.png";
 
 const Footer = () => {
   return (
@@ -8,7 +9,7 @@ const Footer = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 grid grid-cols-1 md:grid-cols-4 gap-10">
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <Leaf className="text-brand-green" size={22} />
+            <img src={logo} alt="AgriYuvaa" className="h-7 w-7 object-contain rounded-md" />
             <span className="font-display font-bold text-lg">AgriYuvaa</span>
           </div>
           <p className="text-sm text-white/60">
