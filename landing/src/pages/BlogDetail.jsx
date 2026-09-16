@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Calendar, User, Tag } from "lucide-react";
 import { fetchBlogBySlug } from "../services/landingService.js";
+import RichTextRenderer from "../components/RichTextRenderer.jsx";
 
 const BlogDetail = () => {
   const { slug } = useParams();
@@ -91,9 +92,10 @@ const BlogDetail = () => {
           </div>
         )}
         <article className="prose prose-lg max-w-none">
-          <div className="text-gray-700 leading-relaxed whitespace-pre-line text-base">
-            {blog.content}
-          </div>
+          <RichTextRenderer
+            content={blog.content}
+            className="text-gray-700 leading-relaxed text-base"
+          />
         </article>
 
         {/* Share & Back */}

@@ -33,6 +33,7 @@ import { toggleFollowEmployer, enablePushNotifications } from "../services/notif
 import { useAuth } from "../context/AuthContext.jsx";
 import JobCard from "../components/JobCard.jsx";
 import WhatsAppIcon from "../components/WhatsAppIcon.jsx";
+import RichTextRenderer from "../components/common/RichTextRenderer.jsx";
 
 const formatEmploymentType = (type) => {
   if (!type) return "Full-time";
@@ -489,7 +490,7 @@ const JobDetails = () => {
 
         <div className="card p-6">
           <h2 className="font-display font-semibold mb-3">Job Description</h2>
-          <p className="text-sm text-brand-grey whitespace-pre-line leading-relaxed">{job.description}</p>
+          <RichTextRenderer content={job.description} className="text-sm text-brand-grey leading-relaxed" />
         </div>
 
         {job.responsibilities?.length > 0 && (
@@ -498,7 +499,8 @@ const JobDetails = () => {
             <ul className="space-y-2">
               {job.responsibilities.map((r, i) => (
                 <li key={i} className="text-sm text-brand-grey flex gap-2">
-                  <CheckCircle2 size={16} className="text-brand-green shrink-0 mt-0.5" /> {r}
+                  <CheckCircle2 size={16} className="text-brand-green shrink-0 mt-0.5" />
+                  <RichTextRenderer content={r} className="inline space-y-0" />
                 </li>
               ))}
             </ul>
@@ -511,7 +513,8 @@ const JobDetails = () => {
             <ul className="space-y-2">
               {job.requirements.map((r, i) => (
                 <li key={i} className="text-sm text-brand-grey flex gap-2">
-                  <CheckCircle2 size={16} className="text-brand-green shrink-0 mt-0.5" /> {r}
+                  <CheckCircle2 size={16} className="text-brand-green shrink-0 mt-0.5" />
+                  <RichTextRenderer content={r} className="inline space-y-0" />
                 </li>
               ))}
             </ul>

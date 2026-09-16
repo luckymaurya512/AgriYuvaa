@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams, useParams } from "react-router-dom";
 import { Mail, ExternalLink, FileText, Building2, Sparkles, Loader2, ArrowLeft, Calendar, PlusCircle } from "lucide-react";
 import { fetchCategories, createJob, fetchJobById, updateJob } from "../../services/jobService.js";
 import { useAuth } from "../../context/AuthContext.jsx";
+import RichTextEditor from "../../components/common/RichTextEditor.jsx";
 
 const employmentTypes = [
   { value: "full-time", label: "Full-Time" },
@@ -363,19 +364,14 @@ const PostJob = () => {
         )}
 
         {/* Description */}
-        <div>
-          <label className="text-xs font-semibold text-brand-grey uppercase tracking-wide">
-            Job Overview / Description *
-          </label>
-          <textarea
-            required
-            rows={4}
-            placeholder="Brief overview of the role, team, and company mission..."
-            className="input-field mt-1 text-sm"
-            value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
-          />
-        </div>
+        <RichTextEditor
+          label="Job Overview / Description"
+          required
+          rows={5}
+          placeholder="Brief overview of the role, team, and company mission..."
+          value={form.description}
+          onChange={(val) => setForm({ ...form, description: val })}
+        />
 
         {/* Responsibilities */}
         <div>

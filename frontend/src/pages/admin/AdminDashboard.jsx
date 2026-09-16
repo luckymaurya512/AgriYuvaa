@@ -47,6 +47,7 @@ import {
   fetchAllWorkshops, createWorkshop, updateWorkshop, deleteWorkshop,
   fetchAllTestimonials, createTestimonial, updateTestimonial, deleteTestimonial,
 } from "../../services/landingService.js";
+import RichTextEditor from "../../components/common/RichTextEditor.jsx";
 
 const AdminDashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -1369,7 +1370,7 @@ const AdminDashboard = () => {
             { key: "title", label: "Title", type: "text", required: true },
             { key: "slug", label: "Slug", type: "text" },
             { key: "excerpt", label: "Excerpt", type: "text" },
-            { key: "content", label: "Content", type: "textarea", required: true },
+            { key: "content", label: "Content", type: "richtext", required: true },
             { key: "coverImage", label: "Cover Image URL", type: "text" },
             { key: "author", label: "Author", type: "text" },
             { key: "tags", label: "Tags (comma-separated)", type: "tags" },
@@ -1532,7 +1533,13 @@ const CmsPanel = ({ type, items, loading, onLoad, onDelete, onSave, fields, colu
           {fields.map(f => (
             <div key={f.key}>
               <label className="block text-xs font-semibold text-gray-700 mb-1">{f.label}{f.required && <span className="text-red-500"> *</span>}</label>
-              {f.type === "textarea" ? (
+              {f.type === "richtext" ? (
+                <RichTextEditor
+                  value={form[f.key] || ""}
+                  onChange={val => setForm({ ...form, [f.key]: val })}
+                  rows={8}
+                />
+              ) : f.type === "textarea" ? (
                 <textarea
                   value={form[f.key] || ""}
                   onChange={e => setForm({ ...form, [f.key]: e.target.value })}
