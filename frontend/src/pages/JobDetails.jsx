@@ -81,6 +81,7 @@ const JobDetails = () => {
   const [copiedEmail, setCopiedEmail] = useState(false);
   const [copiedSubject, setCopiedSubject] = useState(false);
   const [copiedShare, setCopiedShare] = useState(false);
+  const [copiedCc, setCopiedCc] = useState(false);
 
   useEffect(() => {
     fetchJobById(id)
@@ -268,6 +269,9 @@ const JobDetails = () => {
     if (type === "email") {
       setCopiedEmail(true);
       setTimeout(() => setCopiedEmail(false), 2000);
+    } else if (type === "cc") {
+      setCopiedCc(true);
+      setTimeout(() => setCopiedCc(false), 2000);
     } else if (type === "subject") {
       setCopiedSubject(true);
       setTimeout(() => setCopiedSubject(false), 2000);
@@ -297,13 +301,19 @@ const JobDetails = () => {
 
   const emailBody = `Dear Hiring Team at ${companyDisplayName},\n\nI am writing to apply for the "${job.title}" position at ${companyDisplayName} via AgriYuvaa (Agriculture Career & Talent Platform).\n\nPlease find attached my resume for your review and consideration.\n\nApplicant Details:\n- Name: ${user?.name || "Candidate"}\n- Email: ${user?.email || ""}${candidatePhone}${resumeRef}\n\nThank you for your time and consideration.\n\nBest regards,\n${user?.name || "Candidate"}\n(Applied through AgriYuvaa - https://frontend-lime-nine-60.vercel.app)`;
 
+  const platformCcEmail = import.meta.env.VITE_PLATFORM_CC_EMAIL || "agriyuvaa@gmail.com";
+
   const gmailWebLink = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
     job.applyEmail || ""
-  )}&su=${encodeURIComponent(defaultEmailSubject)}&body=${encodeURIComponent(emailBody)}`;
-
-  const mailtoLink = `mailto:${job.applyEmail}?subject=${encodeURIComponent(
+  )}&cc=${encodeURIComponent(platformCcEmail)}&su=${encodeURIComponent(
     defaultEmailSubject
   )}&body=${encodeURIComponent(emailBody)}`;
+
+  const mailtoLink = `mailto:${job.applyEmail}?cc=${encodeURIComponent(
+    platformCcEmail
+  )}&subject=${encodeURIComponent(defaultEmailSubject)}&body=${encodeURIComponent(
+    emailBody
+  )}`;
 
   const isOwner = user && (job.employer?._id === user._id || job.employer === user._id);
   const isAdmin = user && ["admin", "superadmin"].includes(user.role);
@@ -594,6 +604,40 @@ const JobDetails = () => {
                     title="Copy Email"
                   >
                     {copiedEmail ? (
+                      <>
+                        <Check size={14} className="text-brand-green" /> Copied
+                      </>
+                    ) : (
+                      <>
+                        <Copy size={14} /> Copy
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* CC Email Copy Box */}
+              <div>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-brand-grey uppercase tracking-wide">
+                    CC Email Address
+                  </label>
+                  <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">
+                    Platform CC
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 mt-1 min-w-0">
+                  <input
+                    readOnly
+                    value={platformCcEmail}
+                    className="input-field text-sm font-medium bg-gray-50 flex-1 min-w-0 cursor-text select-all"
+                  />
+                  <button
+                    onClick={() => handleCopy(platformCcEmail, "cc")}
+                    className="btn-secondary text-xs px-3 py-2.5 shrink-0 flex items-center gap-1"
+                    title="Copy CC Email"
+                  >
+                    {copiedCc ? (
                       <>
                         <Check size={14} className="text-brand-green" /> Copied
                       </>
