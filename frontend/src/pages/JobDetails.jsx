@@ -118,6 +118,11 @@ const JobDetails = () => {
                 if (profile?.resumeUrl) {
                   setResumeUrl(profile.resumeUrl);
                   setUploadedFileName("Profile Resume (Ready)");
+                } else if (profile?.resumeData) {
+                  setResumeUrl(`https://agriyuvaa.com/resume-builder`);
+                  setUploadedFileName(
+                    `${profile.resumeData.fullName || "AgriYuvaa"} Resume (Built via Builder)`
+                  );
                 }
               })
               .catch(() => {});

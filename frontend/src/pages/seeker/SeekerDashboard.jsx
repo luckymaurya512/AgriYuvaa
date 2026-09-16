@@ -14,6 +14,7 @@ import {
   Loader2,
   CheckCircle2,
   Calendar,
+  Edit3,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { fetchMyApplications } from "../../services/jobService.js";
@@ -36,6 +37,7 @@ const SeekerDashboard = () => {
   const [savedJobs, setSavedJobs] = useState([]);
   const [followedEmployers, setFollowedEmployers] = useState([]);
   const [resumeUrl, setResumeUrl] = useState("");
+  const [resumeData, setResumeData] = useState(null);
   const [uploadingResume, setUploadingResume] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -50,6 +52,7 @@ const SeekerDashboard = () => {
       setSavedJobs(profile?.savedJobs || []);
       setFollowedEmployers(profile?.followedEmployers || []);
       setResumeUrl(profile?.resumeUrl || "");
+      setResumeData(profile?.resumeData || null);
     } finally {
       setLoading(false);
     }
@@ -503,45 +506,99 @@ const SeekerDashboard = () => {
                 Active Resume on Profile
               </label>
 
-              {resumeUrl ? (
-                <div className="p-4 sm:p-5 rounded-2xl bg-emerald-50/70 border border-emerald-200 space-y-4 flex-1 flex flex-col justify-between w-full min-w-0 overflow-hidden">
-                  <div className="flex items-start gap-3 min-w-0 w-full">
-                    <div className="h-10 w-10 rounded-xl bg-white border border-emerald-300 text-emerald-800 flex items-center justify-center shrink-0 shadow-2xs">
-                      <FileText size={20} />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs font-bold text-emerald-950 flex items-center gap-1 truncate">
-                        <CheckCircle2 size={14} className="text-emerald-600 shrink-0" /> Resume Attached
-                      </p>
-                      <p className="text-[11px] text-emerald-800/80 truncate mt-0.5 w-full block" title={resumeUrl}>
-                        {resumeUrl.split("/").pop() || "Active Resume.pdf"}
-                      </p>
-                    </div>
-                  </div>
+              {resumeData || resumeUrl ? (
+                <div className="space-y-3 flex-1 flex flex-col justify-between w-full min-w-0">
+                  {/* Case 1: Created with Resume Builder */}
+                  {resumeData && (
+                    <div className="p-4 sm:p-5 rounded-2xl bg-emerald-50/80 border border-emerald-300 space-y-4 flex-1 flex flex-col justify-between w-full min-w-0 overflow-hidden shadow-2xs">
+                      <div className="flex items-start gap-3 min-w-0 w-full">
+                        <div className="h-10 w-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                          <CheckCircle2 size={20} />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-xs font-bold text-emerald-950 truncate">
+                              {resumeData.fullName || user?.name || "Agriculture Resume"}
+                            </p>
+                            <span className="text-[10px] font-bold bg-emerald-200/80 text-emerald-900 px-2 py-0.5 rounded-md">
+                              Builder Resume
+                            </span>
+                          </div>
+                          <p className="text-xs text-emerald-800/90 font-medium truncate mt-0.5">
+                            {resumeData.title || "Agriculture Professional"}
+                          </p>
+                          {resumeData.updatedAt && (
+                            <p className="text-[11px] text-emerald-700/70 mt-1">
+                              Last saved:{" "}
+                              {new Date(resumeData.updatedAt).toLocaleDateString("en-IN", {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                              })}
+                            </p>
+                          )}
+                        </div>
+                      </div>
 
-                  <div className="flex items-center gap-2 pt-3 border-t border-emerald-200 w-full min-w-0">
-                    <a
-                      href={(() => {
-                        const backendBase = (
-                          import.meta.env.VITE_API_URL || "https://agriyuvaa.onrender.com"
-                        ).replace(/\/api\/?$/, "");
-                        let target = (resumeUrl || "").trim().replace(/^https?:\/\/\/+/, "/");
-                        if (target.startsWith("/uploads/")) return `${backendBase}${target}`;
-                        if (target.startsWith("http://") || target.startsWith("https://")) return target;
-                        return `https://${target}`;
-                      })()}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn-secondary text-xs py-2.5 px-3 flex-1 text-center bg-white font-semibold"
-                    >
-                      View / Download Resume 📥
-                    </a>
-                  </div>
+                      <div className="flex items-center gap-2 pt-3 border-t border-emerald-200/80 w-full min-w-0">
+                        <Link
+                          to="/resume-builder"
+                          className="btn-primary text-xs py-2 px-3 flex-1 text-center font-bold flex items-center justify-center gap-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl shadow-xs"
+                        >
+                          <Edit3 size={13} /> Edit in Builder
+                        </Link>
+                        <Link
+                          to="/resume-builder"
+                          className="btn-secondary text-xs py-2 px-3 flex-1 text-center bg-white font-semibold border border-emerald-300 hover:bg-emerald-100/50 rounded-xl"
+                        >
+                          View / Download 📥
+                        </Link>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Case 2: Uploaded Document */}
+                  {resumeUrl && (
+                    <div className="p-4 sm:p-5 rounded-2xl bg-emerald-50/70 border border-emerald-200 space-y-4 flex-1 flex flex-col justify-between w-full min-w-0 overflow-hidden">
+                      <div className="flex items-start gap-3 min-w-0 w-full">
+                        <div className="h-10 w-10 rounded-xl bg-white border border-emerald-300 text-emerald-800 flex items-center justify-center shrink-0 shadow-2xs">
+                          <FileText size={20} />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-bold text-emerald-950 flex items-center gap-1 truncate">
+                            <CheckCircle2 size={14} className="text-emerald-600 shrink-0" /> Uploaded Document
+                          </p>
+                          <p className="text-[11px] text-emerald-800/80 truncate mt-0.5 w-full block" title={resumeUrl}>
+                            {resumeUrl.split("/").pop() || "Active Resume.pdf"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 pt-3 border-t border-emerald-200 w-full min-w-0">
+                        <a
+                          href={(() => {
+                            const backendBase = (
+                              import.meta.env.VITE_API_URL || "https://agriyuvaa.onrender.com"
+                            ).replace(/\/api\/?$/, "");
+                            let target = (resumeUrl || "").trim().replace(/^https?:\/\/\/+/, "/");
+                            if (target.startsWith("/uploads/")) return `${backendBase}${target}`;
+                            if (target.startsWith("http://") || target.startsWith("https://")) return target;
+                            return `https://${target}`;
+                          })()}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn-secondary text-xs py-2.5 px-3 flex-1 text-center bg-white font-semibold"
+                        >
+                          View / Download File 📥
+                        </a>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="p-6 rounded-2xl bg-gray-50 border border-brand-border text-center space-y-2 flex-1 flex flex-col items-center justify-center w-full min-w-0">
                   <FileText size={28} className="text-gray-300" />
-                  <p className="text-xs text-brand-grey">No resume uploaded yet.</p>
+                  <p className="text-xs text-brand-grey font-semibold">No resume uploaded yet.</p>
                   <p className="text-[11px] text-gray-400">
                     Upload a file on the left or create one using the builder.
                   </p>

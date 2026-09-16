@@ -157,6 +157,21 @@ const ResumeBuilder = () => {
         const p = res?.profile || {};
         const u = res?.user || user || {};
 
+        // If seeker already has saved resume data from a previous session, restore it directly!
+        if (p.resumeData && typeof p.resumeData === "object" && Object.keys(p.resumeData).length > 0) {
+          setData((prev) => ({
+            ...prev,
+            ...p.resumeData,
+            fullName: p.resumeData.fullName || u.name || prev.fullName || "",
+            email: p.resumeData.email || u.email || prev.email || "",
+            phone: p.resumeData.phone || u.phone || prev.phone || "",
+          }));
+          if (p.resumeData.template) {
+            setTemplate(p.resumeData.template);
+          }
+          return;
+        }
+
         const skillsFormatted = Array.isArray(p.skills)
           ? p.skills.filter(Boolean).join(", ")
           : p.skills || "";
