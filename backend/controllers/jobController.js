@@ -39,6 +39,13 @@ const resolveCategory = async (categoryId, customCategoryName) => {
   return null;
 };
 
+const cleanSalaryNum = (val) => {
+  if (val === undefined || val === null || val === "") return undefined;
+  if (typeof val === "number") return isNaN(val) ? undefined : val;
+  const parsed = Number(String(val).replace(/,/g, "").trim());
+  return isNaN(parsed) || parsed < 0 ? undefined : parsed;
+};
+
 // @desc  Create a job (employer or admin/superadmin)
 // @route POST /api/jobs
 export const createJob = asyncHandler(async (req, res) => {
@@ -80,8 +87,13 @@ export const createJob = asyncHandler(async (req, res) => {
     }
   }
 
+  const salaryMin = cleanSalaryNum(req.body.salaryMin);
+  const salaryMax = cleanSalaryNum(req.body.salaryMax);
+
   const job = await Job.create({
     ...req.body,
+    salaryMin,
+    salaryMax,
     category: categoryId,
     employer: req.user._id,
     status: initialStatus,
@@ -290,6 +302,13 @@ export const updateJob = asyncHandler(async (req, res) => {
       fieldsToUpdate.applicationDeadline = null;
       fieldsToUpdate.expiresAt = null;
     }
+  }
+
+  if (fieldsToUpdate.salaryMin !== undefined) {
+    fieldsToUpdate.salaryMin = cleanSalaryNum(fieldsToUpdate.salaryMin);
+  }
+  if (fieldsToUpdate.salaryMax !== undefined) {
+    fieldsToUpdate.salaryMax = cleanSalaryNum(fieldsToUpdate.salaryMax);
   }
 
   Object.assign(job, fieldsToUpdate);

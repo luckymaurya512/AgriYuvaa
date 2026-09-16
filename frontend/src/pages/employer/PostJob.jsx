@@ -19,6 +19,24 @@ const experienceLevels = [
   { value: "5+", label: "5+ Years (Senior / Lead)" },
 ];
 
+const cleanSalaryInput = (val) => {
+  if (!val) return "";
+  return String(val).replace(/[^0-9,]/g, "");
+};
+
+const parseSalaryToNumber = (val) => {
+  if (!val) return undefined;
+  const raw = String(val).replace(/,/g, "").trim();
+  const num = Number(raw);
+  return isNaN(num) || num <= 0 ? undefined : num;
+};
+
+const formatSalaryDisplay = (val) => {
+  const num = parseSalaryToNumber(val);
+  if (!num) return "";
+  return `₹${num.toLocaleString("en-IN")}`;
+};
+
 const PostJob = () => {
   const navigate = useNavigate();
   const { id: paramId } = useParams();
@@ -84,8 +102,8 @@ const PostJob = () => {
             employmentType: job.employmentType || "full-time",
             experienceLevel: job.experienceLevel === "any" ? "0-1" : (job.experienceLevel || "0-1"),
             location: job.location || "",
-            salaryMin: job.salaryMin !== undefined ? String(job.salaryMin) : "",
-            salaryMax: job.salaryMax !== undefined ? String(job.salaryMax) : "",
+            salaryMin: job.salaryMin !== undefined && job.salaryMin !== null ? Number(job.salaryMin).toLocaleString("en-IN") : "",
+            salaryMax: job.salaryMax !== undefined && job.salaryMax !== null ? Number(job.salaryMax).toLocaleString("en-IN") : "",
             cropTags: (job.cropTags || []).join(", "),
             applicationDeadline: deadlineStr,
             applyType: job.applyType || "platform",
@@ -140,8 +158,8 @@ const PostJob = () => {
         responsibilities: parseList(form.responsibilities),
         requirements: parseList(form.requirements),
         benefits: parseList(form.benefits),
-        salaryMin: form.salaryMin ? Number(form.salaryMin) : undefined,
-        salaryMax: form.salaryMax ? Number(form.salaryMax) : undefined,
+        salaryMin: parseSalaryToNumber(form.salaryMin),
+        salaryMax: parseSalaryToNumber(form.salaryMax),
         cropTags: form.cropTags ? form.cropTags.split(",").map((t) => t.trim()).filter(Boolean) : [],
         applicationDeadline: form.applicationDeadline ? form.applicationDeadline : null,
         expiresAt: form.applicationDeadline ? form.applicationDeadline : null,
@@ -533,27 +551,43 @@ const PostJob = () => {
         {/* Salary */}
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
-            <label className="text-xs font-semibold text-brand-grey uppercase tracking-wide">
-              Salary Min (₹)
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-semibold text-brand-grey uppercase tracking-wide">
+                Salary Min (₹)
+              </label>
+              {formatSalaryDisplay(form.salaryMin) && (
+                <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded">
+                  {formatSalaryDisplay(form.salaryMin)}
+                </span>
+              )}
+            </div>
             <input
-              type="number"
-              placeholder="e.g. 25000"
+              type="text"
+              inputMode="numeric"
+              placeholder="e.g. 25,000 or 25000"
               className="input-field mt-1 text-sm"
               value={form.salaryMin}
-              onChange={(e) => setForm({ ...form, salaryMin: e.target.value })}
+              onChange={(e) => setForm({ ...form, salaryMin: cleanSalaryInput(e.target.value) })}
             />
           </div>
           <div>
-            <label className="text-xs font-semibold text-brand-grey uppercase tracking-wide">
-              Salary Max (₹)
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-semibold text-brand-grey uppercase tracking-wide">
+                Salary Max (₹)
+              </label>
+              {formatSalaryDisplay(form.salaryMax) && (
+                <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded">
+                  {formatSalaryDisplay(form.salaryMax)}
+                </span>
+              )}
+            </div>
             <input
-              type="number"
-              placeholder="e.g. 45000"
+              type="text"
+              inputMode="numeric"
+              placeholder="e.g. 45,000 or 45000"
               className="input-field mt-1 text-sm"
               value={form.salaryMax}
-              onChange={(e) => setForm({ ...form, salaryMax: e.target.value })}
+              onChange={(e) => setForm({ ...form, salaryMax: cleanSalaryInput(e.target.value) })}
             />
           </div>
         </div>
