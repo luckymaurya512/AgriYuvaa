@@ -59,26 +59,34 @@ const RichTextEditor = ({
     }, 0);
   };
 
+  // Saved selection range so focus loss doesn't clear insert position
+  const [savedRange, setSavedRange] = useState({ start: 0, end: 0 });
+
   // Open Link Modal
   const openLinkDialog = () => {
     const textarea = textareaRef.current;
     const currentVal = value || "";
+    let start = currentVal.length;
+    let end = currentVal.length;
     let selected = "";
     if (textarea) {
-      selected = currentVal.substring(
-        textarea.selectionStart,
-        textarea.selectionEnd
-      );
+      start = textarea.selectionStart ?? currentVal.length;
+      end = textarea.selectionEnd ?? currentVal.length;
+      selected = currentVal.substring(start, end);
     }
+    setSavedRange({ start, end });
     setLinkText(selected || "");
     setLinkUrl("");
     setShowLinkModal(true);
   };
 
-  // Insert Link
+  // Insert Link (Safely without triggering parent form submits)
   const handleInsertLink = (e) => {
-    e.preventDefault();
-    if (!linkUrl) return;
+    if (e) {
+      if (typeof e.preventDefault === "function") e.preventDefault();
+      if (typeof e.stopPropagation === "function") e.stopPropagation();
+    }
+    if (!linkUrl.trim()) return;
 
     let formattedUrl = linkUrl.trim();
     if (!/^https?:\/\//i.test(formattedUrl)) {
@@ -90,19 +98,24 @@ const RichTextEditor = ({
 
     const textarea = textareaRef.current;
     const currentVal = value || "";
-    if (textarea) {
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      const updated =
-        currentVal.substring(0, start) + linkHtml + currentVal.substring(end);
-      onChange(updated);
-    } else {
-      onChange(currentVal ? `${currentVal} ${linkHtml}` : linkHtml);
-    }
+    const start = savedRange.start ?? currentVal.length;
+    const end = savedRange.end ?? currentVal.length;
+
+    const updated =
+      currentVal.substring(0, start) + linkHtml + currentVal.substring(end);
+    onChange(updated);
 
     setShowLinkModal(false);
     setLinkUrl("");
     setLinkText("");
+
+    setTimeout(() => {
+      if (textarea) {
+        textarea.focus();
+        const newCursor = start + linkHtml.length;
+        textarea.setSelectionRange(newCursor, newCursor);
+      }
+    }, 50);
   };
 
   // Insert List
@@ -322,10 +335,16 @@ const RichTextEditor = ({
 
       {/* Inline Link Modal */}
       {showLinkModal && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-2xs flex items-center justify-center p-4">
-          <form
-            onSubmit={handleInsertLink}
+        <div
+          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-2xs flex items-center justify-center p-4"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (e.target === e.currentTarget) setShowLinkModal(false);
+          }}
+        >
+          <div
             className="bg-white rounded-2xl max-w-md w-full p-5 space-y-4 shadow-xl border border-gray-100 animate-in fade-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between pb-2 border-b border-gray-100">
               <h3 className="text-sm font-bold text-brand-black flex items-center gap-1.5">
@@ -333,8 +352,12 @@ const RichTextEditor = ({
               </h3>
               <button
                 type="button"
-                onClick={() => setShowLinkModal(false)}
-                className="text-gray-400 hover:text-gray-700"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowLinkModal(false);
+                }}
+                className="text-gray-400 hover:text-gray-700 cursor-pointer"
               >
                 <X size={16} />
               </button>
@@ -351,6 +374,13 @@ const RichTextEditor = ({
                   className="input-field text-sm"
                   value={linkText}
                   onChange={(e) => setLinkText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleInsertLink(e);
+                    }
+                  }}
                   autoFocus
                 />
               </div>
@@ -361,11 +391,17 @@ const RichTextEditor = ({
                 </label>
                 <input
                   type="text"
-                  required
                   placeholder="https://example.com or company.com/apply"
                   className="input-field text-sm"
                   value={linkUrl}
                   onChange={(e) => setLinkUrl(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleInsertLink(e);
+                    }
+                  }}
                 />
               </div>
             </div>
@@ -373,19 +409,25 @@ const RichTextEditor = ({
             <div className="flex items-center justify-end gap-2 pt-2">
               <button
                 type="button"
-                onClick={() => setShowLinkModal(false)}
-                className="btn-secondary text-xs py-2 px-3.5"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowLinkModal(false);
+                }}
+                className="btn-secondary text-xs py-2 px-3.5 cursor-pointer"
               >
                 Cancel
               </button>
               <button
-                type="submit"
-                className="btn-primary text-xs py-2 px-4 flex items-center gap-1 font-bold"
+                type="button"
+                onClick={handleInsertLink}
+                disabled={!linkUrl.trim()}
+                className="btn-primary text-xs py-2 px-4 flex items-center gap-1 font-bold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Check size={14} /> Insert Link
               </button>
             </div>
-          </form>
+          </div>
         </div>
       )}
     </div>
