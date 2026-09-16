@@ -22,6 +22,7 @@ const RichTextEditor = ({
   rows = 6,
   required = false,
   className = "",
+  mode = "full", // "full" | "linkOnly"
 }) => {
   const [activeTab, setActiveTab] = useState("edit"); // "edit" | "preview"
   const [showLinkModal, setShowLinkModal] = useState(false);
@@ -146,18 +147,20 @@ const RichTextEditor = ({
   // Keyboard shortcuts (Ctrl+B, Ctrl+I, Ctrl+U, Ctrl+K)
   const handleKeyDown = (e) => {
     if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey) {
-      if (e.key === "b" || e.key === "B") {
-        e.preventDefault();
-        applyFormatting("<b>", "</b>", "bold text");
-      } else if (e.key === "i" || e.key === "I") {
-        e.preventDefault();
-        applyFormatting("<i>", "</i>", "italic text");
-      } else if (e.key === "u" || e.key === "U") {
-        e.preventDefault();
-        applyFormatting("<u>", "</u>", "underlined text");
-      } else if (e.key === "k" || e.key === "K") {
+      if (e.key === "k" || e.key === "K") {
         e.preventDefault();
         openLinkDialog();
+      } else if (mode !== "linkOnly") {
+        if (e.key === "b" || e.key === "B") {
+          e.preventDefault();
+          applyFormatting("<b>", "</b>", "bold text");
+        } else if (e.key === "i" || e.key === "I") {
+          e.preventDefault();
+          applyFormatting("<i>", "</i>", "italic text");
+        } else if (e.key === "u" || e.key === "U") {
+          e.preventDefault();
+          applyFormatting("<u>", "</u>", "underlined text");
+        }
       }
     }
   };
@@ -171,7 +174,9 @@ const RichTextEditor = ({
             {required && <span className="text-red-500 ml-0.5">*</span>}
           </label>
           <span className="text-[11px] text-brand-grey">
-            Supports Bold, Italic, Underline & Hyperlinks
+            {mode === "linkOnly"
+              ? "Supports Clickable Hyperlinks"
+              : "Supports Bold, Italic, Underline & Hyperlinks"}
           </span>
         </div>
       )}
@@ -181,70 +186,82 @@ const RichTextEditor = ({
         {/* Formatting Toolbar */}
         <div className="flex flex-wrap items-center justify-between gap-1 p-2 bg-gray-50 border-b border-gray-200">
           <div className="flex flex-wrap items-center gap-1">
-            {/* Bold */}
-            <button
-              type="button"
-              onClick={() => applyFormatting("<b>", "</b>", "bold text")}
-              className="p-1.5 rounded-lg hover:bg-white hover:text-brand-black text-gray-700 hover:shadow-2xs transition-all cursor-pointer"
-              title="Bold (Ctrl+B)"
-            >
-              <Bold size={14} />
-            </button>
+            {mode !== "linkOnly" && (
+              <>
+                {/* Bold */}
+                <button
+                  type="button"
+                  onClick={() => applyFormatting("<b>", "</b>", "bold text")}
+                  className="p-1.5 rounded-lg hover:bg-white hover:text-brand-black text-gray-700 hover:shadow-2xs transition-all cursor-pointer"
+                  title="Bold (Ctrl+B)"
+                >
+                  <Bold size={14} />
+                </button>
 
-            {/* Italic */}
-            <button
-              type="button"
-              onClick={() => applyFormatting("<i>", "</i>", "italic text")}
-              className="p-1.5 rounded-lg hover:bg-white hover:text-brand-black text-gray-700 hover:shadow-2xs transition-all cursor-pointer"
-              title="Italic (Ctrl+I)"
-            >
-              <Italic size={14} />
-            </button>
+                {/* Italic */}
+                <button
+                  type="button"
+                  onClick={() => applyFormatting("<i>", "</i>", "italic text")}
+                  className="p-1.5 rounded-lg hover:bg-white hover:text-brand-black text-gray-700 hover:shadow-2xs transition-all cursor-pointer"
+                  title="Italic (Ctrl+I)"
+                >
+                  <Italic size={14} />
+                </button>
 
-            {/* Underline */}
-            <button
-              type="button"
-              onClick={() => applyFormatting("<u>", "</u>", "underlined text")}
-              className="p-1.5 rounded-lg hover:bg-white hover:text-brand-black text-gray-700 hover:shadow-2xs transition-all cursor-pointer"
-              title="Underline (Ctrl+U)"
-            >
-              <Underline size={14} />
-            </button>
+                {/* Underline */}
+                <button
+                  type="button"
+                  onClick={() => applyFormatting("<u>", "</u>", "underlined text")}
+                  className="p-1.5 rounded-lg hover:bg-white hover:text-brand-black text-gray-700 hover:shadow-2xs transition-all cursor-pointer"
+                  title="Underline (Ctrl+U)"
+                >
+                  <Underline size={14} />
+                </button>
 
-            <span className="w-px h-4 bg-gray-300 mx-1" />
+                <span className="w-px h-4 bg-gray-300 mx-1" />
+              </>
+            )}
 
             {/* Hyperlink */}
             <button
               type="button"
               onClick={openLinkDialog}
-              className="px-2 py-1.5 rounded-lg hover:bg-white hover:text-brand-green text-gray-700 hover:shadow-2xs transition-all cursor-pointer flex items-center gap-1 text-xs font-semibold"
+              className={`px-2.5 py-1.5 rounded-lg text-gray-800 transition-all cursor-pointer flex items-center gap-1.5 text-xs font-semibold ${
+                mode === "linkOnly"
+                  ? "bg-white border border-emerald-300 hover:border-emerald-500 shadow-2xs hover:bg-emerald-50/50"
+                  : "hover:bg-white hover:text-brand-green hover:shadow-2xs"
+              }`}
               title="Insert Link (Ctrl+K)"
             >
               <Link2 size={14} className="text-emerald-600" />
-              <span>Link</span>
+              <span>Insert Link</span>
             </button>
 
-            <span className="w-px h-4 bg-gray-300 mx-1" />
+            {mode !== "linkOnly" && (
+              <>
+                <span className="w-px h-4 bg-gray-300 mx-1" />
 
-            {/* Bullet List */}
-            <button
-              type="button"
-              onClick={() => insertList(false)}
-              className="p-1.5 rounded-lg hover:bg-white hover:text-brand-black text-gray-700 hover:shadow-2xs transition-all cursor-pointer"
-              title="Bullet List"
-            >
-              <List size={14} />
-            </button>
+                {/* Bullet List */}
+                <button
+                  type="button"
+                  onClick={() => insertList(false)}
+                  className="p-1.5 rounded-lg hover:bg-white hover:text-brand-black text-gray-700 hover:shadow-2xs transition-all cursor-pointer"
+                  title="Bullet List"
+                >
+                  <List size={14} />
+                </button>
 
-            {/* Numbered List */}
-            <button
-              type="button"
-              onClick={() => insertList(true)}
-              className="p-1.5 rounded-lg hover:bg-white hover:text-brand-black text-gray-700 hover:shadow-2xs transition-all cursor-pointer"
-              title="Numbered List"
-            >
-              <ListOrdered size={14} />
-            </button>
+                {/* Numbered List */}
+                <button
+                  type="button"
+                  onClick={() => insertList(true)}
+                  className="p-1.5 rounded-lg hover:bg-white hover:text-brand-black text-gray-700 hover:shadow-2xs transition-all cursor-pointer"
+                  title="Numbered List"
+                >
+                  <ListOrdered size={14} />
+                </button>
+              </>
+            )}
           </div>
 
           {/* Mode Switch: Edit vs Live Preview */}

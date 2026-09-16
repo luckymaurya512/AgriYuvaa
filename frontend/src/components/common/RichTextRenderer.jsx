@@ -12,8 +12,11 @@ const RichTextRenderer = ({ content = "", className = "" }) => {
 
   // Convert markdown links [Label](https://...) -> <a href="..." target="_blank" rel="noopener noreferrer">Label</a>
   html = html.replace(
-    /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/gi,
-    '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-emerald-700 underline font-semibold hover:text-emerald-800 transition-colors inline-flex items-center gap-0.5">$1 ↗</a>'
+    /\[([^\]]+)\]\(((?:https?:\/\/|www\.)[^\s)]+)\)/gi,
+    (match, text, url) => {
+      const fullUrl = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+      return `<a href="${fullUrl}" target="_blank" rel="noopener noreferrer" class="text-emerald-700 underline font-semibold hover:text-emerald-800 transition-colors inline-flex items-center gap-0.5">${text} ↗</a>`;
+    }
   );
 
   // Convert markdown **bold** -> <strong>bold</strong>
@@ -28,6 +31,19 @@ const RichTextRenderer = ({ content = "", className = "" }) => {
   html = html.replace(
     urlRegex,
     '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-emerald-700 underline font-semibold hover:text-emerald-800 transition-colors inline-flex items-center gap-0.5 break-all">$1 ↗</a>'
+  );
+
+  // Auto-detect www. URLs without http:// or https://
+  const wwwRegex = /(?<!href=["']|\/)(www\.[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}[^\s<"']*)/gi;
+  html = html.replace(
+    wwwRegex,
+    '<a href="https://$1" target="_blank" rel="noopener noreferrer" class="text-emerald-700 underline font-semibold hover:text-emerald-800 transition-colors inline-flex items-center gap-0.5 break-all">$1 ↗</a>'
+  );
+
+  // Style any existing <a> tags that lack class attribute
+  html = html.replace(
+    /<a(?![^>]*class=)([^>]*)>/gi,
+    '<a class="text-emerald-700 underline font-semibold hover:text-emerald-800 transition-colors inline-flex items-center gap-0.5 break-all"$1>'
   );
 
   // Convert newlines to <br /> if there are no existing block tags like <p>, <ul>, <div>

@@ -384,6 +384,7 @@ const PostJob = () => {
         {/* Description */}
         <RichTextEditor
           label="Job Overview / Description"
+          mode="linkOnly"
           required
           rows={5}
           placeholder="Brief overview of the role, team, and company mission..."
