@@ -1230,34 +1230,52 @@ const ResumeBuilder = () => {
                 What would you like to do next?
               </p>
 
-              {/* Option 1: Explore & Apply */}
+              {/* Option 1: Save & Continue */}
               <Link
-                to="/jobs"
+                to={user?.role === "seeker" ? "/seeker" : "/jobs"}
+                onClick={() => setShowDoneModal(false)}
                 className="p-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white flex items-center justify-between gap-3 shadow-md hover:shadow-lg transition-all group"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-                    <Briefcase size={20} className="text-white" />
+                    <CheckCircle2 size={20} className="text-white" />
                   </div>
                   <div>
-                    <p className="text-sm font-bold leading-tight">Apply for Agriculture Jobs 🌾</p>
-                    <p className="text-[11px] text-white/80 mt-0.5">Explore active openings and submit your CV</p>
+                    <p className="text-sm font-bold leading-tight">Save & Continue</p>
+                    <p className="text-[11px] text-white/80 mt-0.5">Proceed to your dashboard & applications</p>
                   </div>
                 </div>
                 <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform shrink-0" />
               </Link>
 
-              {/* Option 2: Download PDF Copy */}
+              {/* Option 2: Explore & Apply */}
+              <Link
+                to="/jobs"
+                className="p-3.5 rounded-2xl border-2 border-emerald-200 hover:border-emerald-400 bg-emerald-50/50 hover:bg-emerald-50 text-emerald-950 flex items-center justify-between gap-3 transition-colors group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+                    <Briefcase size={18} />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold">Apply for Agriculture Jobs 🌾</p>
+                    <p className="text-[10px] text-brand-grey mt-0.5">Explore active openings and submit your CV</p>
+                  </div>
+                </div>
+                <ArrowRight size={16} className="text-emerald-700 group-hover:translate-x-1 transition-transform shrink-0" />
+              </Link>
+
+              {/* Option 3: Download PDF Copy */}
               <button
                 type="button"
                 onClick={() => {
                   handleDownloadPDF();
                 }}
                 disabled={downloadingPdf}
-                className="w-full p-3.5 rounded-2xl border-2 border-emerald-200 hover:border-emerald-400 bg-emerald-50/50 hover:bg-emerald-50 text-emerald-950 flex items-center justify-between gap-3 transition-colors text-left cursor-pointer"
+                className="w-full p-3.5 rounded-2xl border border-gray-200 hover:border-gray-300 bg-gray-50 hover:bg-gray-100 text-gray-800 flex items-center justify-between gap-3 transition-colors text-left cursor-pointer"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+                  <div className="w-9 h-9 rounded-xl bg-white border border-gray-200 text-gray-700 flex items-center justify-center shrink-0">
                     <Download size={18} />
                   </div>
                   <div>
@@ -1265,29 +1283,10 @@ const ResumeBuilder = () => {
                     <p className="text-[10px] text-brand-grey mt-0.5">Save a high-res PDF to your phone or computer</p>
                   </div>
                 </div>
-                <span className="text-xs font-bold text-emerald-700 shrink-0">
+                <span className="text-xs font-semibold text-emerald-700 shrink-0">
                   {downloadingPdf ? "Generating..." : "Download 📥"}
                 </span>
               </button>
-
-              {/* Option 3: Seeker Dashboard */}
-              {user?.role === "seeker" && (
-                <Link
-                  to="/seeker"
-                  className="p-3.5 rounded-2xl border border-gray-200 hover:border-gray-300 bg-gray-50 hover:bg-gray-100 text-gray-800 flex items-center justify-between gap-3 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-white border border-gray-200 text-gray-700 flex items-center justify-center shrink-0">
-                      <Layers size={18} />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold">Go to Seeker Dashboard</p>
-                      <p className="text-[10px] text-brand-grey mt-0.5">Track your applications & resume</p>
-                    </div>
-                  </div>
-                  <span className="text-xs font-semibold text-brand-grey shrink-0">Dashboard →</span>
-                </Link>
-              )}
             </div>
 
             {/* Footer: Close / Keep Editing */}
