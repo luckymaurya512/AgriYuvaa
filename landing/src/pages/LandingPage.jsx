@@ -142,17 +142,33 @@ const LandingPage = () => {
         }}
       />
       {/* ═══════════════════════════ HERO ═══════════════════════════ */}
-      <section className="relative min-h-[90vh] flex items-center bg-gradient-to-br from-gray-950 via-emerald-950 to-gray-900 overflow-hidden">
-        {/* Animated background elements */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-emerald-600/8 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
+      <section className="relative min-h-[92vh] flex items-center bg-gray-950 overflow-hidden">
+        {/* Background Image Layer with Cinematic Gradient Overlays */}
+        <div className="absolute inset-0 z-0">
+          <img
+            src="/hero-bg.jpg"
+            alt="AgriYuvaa Modern Agriculture"
+            className="w-full h-full object-cover object-center opacity-30 sm:opacity-40 scale-105"
+            onError={(e) => {
+              e.currentTarget.src = "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?q=80&w=2000&auto=format&fit=crop";
+            }}
+          />
+          {/* Radial & directional gradient overlays for pristine text readability */}
+          <div className="absolute inset-0 bg-gradient-to-r from-gray-950 via-gray-950/85 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-transparent to-gray-950/80" />
+          <div className="absolute inset-0 bg-emerald-950/40 mix-blend-multiply" />
+        </div>
+
+        {/* Animated ambient background glows */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none z-1">
+          <div className="absolute top-20 left-10 w-72 h-72 bg-emerald-500/15 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-emerald-600/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-500/5 rounded-full blur-3xl" />
           {/* Floating particles */}
           {[...Array(6)].map((_, i) => (
             <div
               key={i}
-              className="absolute w-1 h-1 bg-emerald-400/30 rounded-full"
+              className="absolute w-1 h-1 bg-emerald-400/40 rounded-full"
               style={{
                 top: `${15 + i * 15}%`,
                 left: `${10 + i * 14}%`,
@@ -207,14 +223,14 @@ const LandingPage = () => {
             {stats.map((stat, i) => (
               <div
                 key={stat.label}
-                className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all group"
+                className="bg-white/[0.08] backdrop-blur-md border border-white/15 rounded-2xl p-6 hover:bg-white/[0.14] hover:border-emerald-400/40 transition-all duration-300 shadow-xl group hover:-translate-y-0.5"
                 style={{ animationDelay: `${i * 0.1}s` }}
               >
                 <stat.icon size={28} className="text-emerald-400 mb-3 group-hover:scale-110 transition-transform" />
-                <div className="text-3xl font-extrabold text-white mb-1">
+                <div className="text-3xl font-extrabold text-white mb-1 tracking-tight">
                   <AnimatedCounter target={stat.value} suffix={stat.suffix} />
                 </div>
-                <div className="text-xs text-white/50">{stat.label}</div>
+                <div className="text-xs text-white/60 font-medium">{stat.label}</div>
               </div>
             ))}
           </div>
