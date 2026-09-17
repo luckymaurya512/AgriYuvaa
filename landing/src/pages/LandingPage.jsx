@@ -143,20 +143,19 @@ const LandingPage = () => {
       />
       {/* ═══════════════════════════ HERO ═══════════════════════════ */}
       <section className="relative min-h-[92vh] flex items-center bg-gray-950 overflow-hidden">
-        {/* Background Image Layer with Cinematic Gradient Overlays */}
+        {/* Background Image Layer with Balanced Cinematic Overlays */}
         <div className="absolute inset-0 z-0">
           <img
             src="/hero-bg.jpg"
             alt="AgriYuvaa Modern Agriculture"
-            className="w-full h-full object-cover object-center opacity-30 sm:opacity-40 scale-105"
+            className="w-full h-full object-cover object-center opacity-75 sm:opacity-85 scale-100 transition-all duration-700"
             onError={(e) => {
               e.currentTarget.src = "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?q=80&w=2000&auto=format&fit=crop";
             }}
           />
-          {/* Radial & directional gradient overlays for pristine text readability */}
-          <div className="absolute inset-0 bg-gradient-to-r from-gray-950 via-gray-950/85 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-transparent to-gray-950/80" />
-          <div className="absolute inset-0 bg-emerald-950/40 mix-blend-multiply" />
+          {/* Subtle directional gradient — keeps left side readable while letting the lush landscape & sunrise shine through */}
+          <div className="absolute inset-0 bg-gradient-to-r from-gray-950/90 via-gray-950/50 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-transparent to-gray-950/60" />
         </div>
 
         {/* Animated ambient background glows */}
@@ -186,7 +185,7 @@ const LandingPage = () => {
               <span>Where Youth Meets Agriculture</span>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-[1.1] mb-6">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-[1.1] mb-6 drop-shadow-lg">
               Empowering the{" "}
               <span className="relative">
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-lime-400">
@@ -196,7 +195,7 @@ const LandingPage = () => {
               of Agriculture
             </h1>
 
-            <p className="text-lg text-white/60 leading-relaxed mb-8 max-w-xl mx-auto lg:mx-0">
+            <p className="text-lg text-white/85 leading-relaxed mb-8 max-w-xl mx-auto lg:mx-0 drop-shadow-sm">
               AgriYuvaa is the best platform for agriculture students — connecting, inspiring, and
               empowering young individuals to lead the future of Indian agriculture.
             </p>
