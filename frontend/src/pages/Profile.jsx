@@ -29,6 +29,7 @@ import {
   uploadSeekerResume,
 } from "../services/userService.js";
 import ResumePreviewModal from "../components/ResumePreviewModal.jsx";
+import SEO from "../components/SEO.jsx";
 
 const qualificationsList = [
   "B.Sc Agriculture (Hons)",
@@ -260,6 +261,7 @@ const Profile = () => {
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+      <SEO title="My Profile" noindex={true} />
       
       {/* Toast Notification Alert */}
       {toast.message && (

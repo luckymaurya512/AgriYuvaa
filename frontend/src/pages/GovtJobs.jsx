@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import api from "../services/api.js";
 import { useAuth } from "../context/AuthContext.jsx";
+import SEO from "../components/SEO.jsx";
 
 const categories = [
   "All",
@@ -131,6 +132,11 @@ const GovtJobs = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <SEO
+        title="Government Agriculture Jobs, ICAR, NABARD, IBPS AFO Alerts"
+        description="Latest Government agriculture jobs, ICAR scientist recruitment, NABARD grade A/B, IBPS AFO, State ADO, and KVK Subject Matter Specialist vacancies."
+        canonical="/govt-jobs"
+      />
       {/* Header Banner */}
       <div className="rounded-3xl bg-gradient-to-r from-emerald-900 via-emerald-850 to-emerald-950 text-white p-8 sm:p-12 mb-10 shadow-lg relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="relative z-10 max-w-2xl space-y-3">

@@ -34,6 +34,7 @@ import { useAuth } from "../context/AuthContext.jsx";
 import JobCard from "../components/JobCard.jsx";
 import WhatsAppIcon from "../components/WhatsAppIcon.jsx";
 import RichTextRenderer from "../components/common/RichTextRenderer.jsx";
+import SEO from "../components/SEO.jsx";
 
 const formatEmploymentType = (type) => {
   if (!type) return "Full-time";
@@ -357,8 +358,51 @@ const JobDetails = () => {
     }
   };
 
+  const jobPostingSchema = {
+    "@context": "https://schema.org",
+    "@type": "JobPosting",
+    title: job.title,
+    description: (job.description || "").replace(/<[^>]+>/g, " ").slice(0, 500),
+    datePosted: job.createdAt,
+    validThrough: job.applicationDeadline || job.expiresAt,
+    employmentType: job.employmentType ? job.employmentType.toUpperCase().replace("-", "_") : "FULL_TIME",
+    hiringOrganization: {
+      "@type": "Organization",
+      name: companyDisplayName,
+      sameAs: job.companyWebsite || undefined,
+      logo: job.companyLogo || undefined,
+    },
+    jobLocation: {
+      "@type": "Place",
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: job.location || "India",
+        addressCountry: "IN",
+      },
+    },
+    baseSalary: (job.salaryMin || job.salaryMax) ? {
+      "@type": "MonetaryAmount",
+      currency: "INR",
+      value: {
+        "@type": "QuantitativeValue",
+        minValue: job.salaryMin || undefined,
+        maxValue: job.salaryMax || undefined,
+        unitText: "YEAR",
+      },
+    } : undefined,
+  };
+
+  const plainDesc = (job.description || "").replace(/<[^>]+>/g, " ").trim().slice(0, 160);
+
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10 grid md:grid-cols-3 gap-8 w-full min-w-0">
+      <SEO
+        title={`${job.title} at ${companyDisplayName}`}
+        description={plainDesc || `Apply for ${job.title} at ${companyDisplayName} in ${job.location || "India"}. Agriculture jobs on AgriYuvaa.`}
+        canonical={`/jobs/${job._id || id}`}
+        image={job.companyLogo}
+        jsonLd={jobPostingSchema}
+      />
       {/* Left Column: Job Info */}
       <div className="md:col-span-2 space-y-6 min-w-0 w-full">
         {isExpired && (

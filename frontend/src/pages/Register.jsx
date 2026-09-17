@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { resendOtp } from "../services/authService.js";
 import logo from "../assets/logo.png";
+import SEO from "../components/SEO.jsx";
 
 const OTP_LENGTH = 6;
 const RESEND_COOLDOWN = 60; // seconds
@@ -159,6 +160,7 @@ const Register = () => {
   if (step === "otp") {
     return (
       <div className="max-w-md mx-auto px-4 py-16">
+        <SEO title="Verify Account" noindex={true} />
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-brand-green-light mb-4">
             <svg className="w-8 h-8 text-brand-green-dark" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -239,6 +241,11 @@ const Register = () => {
   // ═══════════════════════════════════════════════════════════════════════════
   return (
     <div className="max-w-md mx-auto px-4 py-16">
+      <SEO
+        title="Create Account — Job Seeker & Employer Sign Up"
+        description="Register on AgriYuvaa. Discover agricultural career opportunities or hire top agribusiness & agronomy talent across India."
+        canonical="/register"
+      />
       <div className="text-center mb-8">
         <img src={logo} alt="AgriYuvaa" className="h-14 w-14 mx-auto mb-3" />
         <h1 className="text-2xl font-display font-bold">Join AgriYuvaa</h1>

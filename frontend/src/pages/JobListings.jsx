@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { SlidersHorizontal, Search, MapPin, X, RotateCcw } from "lucide-react";
 import { fetchJobs, fetchCategories } from "../services/jobService.js";
 import JobCard from "../components/JobCard.jsx";
+import SEO from "../components/SEO.jsx";
 
 const employmentTypes = [
   { value: "full-time", label: "Full-time" },
@@ -103,8 +104,23 @@ const JobListings = () => {
     currentKeyword || currentLocation || currentCategory || currentEmploymentType || currentExperienceLevel
   );
 
+  const pageTitle = currentKeyword
+    ? `${currentKeyword} Jobs in Agriculture`
+    : currentCategory
+    ? `${currentCategory} Jobs in Agriculture`
+    : "Browse Agriculture Jobs & Openings";
+
+  const pageDescription = currentKeyword || currentLocation
+    ? `Explore open agriculture positions for ${[currentKeyword, currentLocation].filter(Boolean).join(" in ")}. Apply today on AgriYuvaa.`
+    : "Browse full-time, part-time, internship, and fresher jobs in Indian agriculture, agritech, farming, and agribusiness.";
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <SEO
+        title={pageTitle}
+        description={pageDescription}
+        canonical="/jobs"
+      />
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-display font-bold mb-1">Browse Agriculture Jobs</h1>

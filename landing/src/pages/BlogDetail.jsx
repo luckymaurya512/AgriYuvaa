@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Calendar, User, Tag } from "lucide-react";
 import { fetchBlogBySlug } from "../services/landingService.js";
 import RichTextRenderer from "../components/RichTextRenderer.jsx";
+import SEO from "../components/SEO.jsx";
 
 const BlogDetail = () => {
   const { slug } = useParams();
@@ -43,8 +44,37 @@ const BlogDetail = () => {
     );
   }
 
+  const articleSchema = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: blog.title,
+    description: blog.excerpt || blog.title,
+    image: blog.coverImage || blog.image || "https://agriyuvaa.com/og-banner.png",
+    datePublished: blog.createdAt,
+    author: {
+      "@type": "Person",
+      name: blog.author || "AgriYuvaa Team"
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "AgriYuvaa",
+      logo: {
+        "@type": "ImageObject",
+        url: "https://agriyuvaa.com/logo.svg"
+      }
+    }
+  };
+
   return (
     <div className="pt-24 pb-20">
+      <SEO
+        title={blog.title}
+        description={blog.excerpt || (blog.content ? blog.content.substring(0, 150).replace(/<[^>]+>/g, "") : blog.title)}
+        image={blog.coverImage || blog.image}
+        canonical={`/blog/${slug}`}
+        type="article"
+        jsonLd={articleSchema}
+      />
       {/* Header */}
       <div className="bg-gradient-to-br from-gray-950 via-emerald-950 to-gray-900 py-16 -mt-24 pt-36">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">

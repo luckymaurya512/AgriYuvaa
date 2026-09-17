@@ -34,6 +34,7 @@ import {
   createAdmin,
   updateUserRole,
 } from "../../services/adminService.js";
+import SEO from "../../components/SEO.jsx";
 
 const SuperAdminDashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -269,6 +270,7 @@ const SuperAdminDashboard = () => {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+      <SEO title="Super Admin Control Hub" noindex={true} />
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>

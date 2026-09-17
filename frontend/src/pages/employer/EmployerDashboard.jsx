@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Plus, Edit3, Trash2, Users, Calendar, Clock, ExternalLink } from "lucide-react";
 import { fetchMyJobs, deleteJob } from "../../services/jobService.js";
+import SEO from "../../components/SEO.jsx";
 
 const statusColors = {
   draft: "bg-gray-100 text-gray-700 border-gray-200",
@@ -54,6 +55,7 @@ const EmployerDashboard = () => {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
+      <SEO title="Employer Dashboard" noindex={true} />
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-display font-bold mb-1">Employer Dashboard</h1>

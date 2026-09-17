@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { Download, FileSpreadsheet, ArrowLeft, ExternalLink, Mail, Phone, Calendar, Eye } from "lucide-react";
 import ResumePreviewModal from "../../components/ResumePreviewModal.jsx";
 import { fetchApplicationsForJob, updateApplicationStatus, fetchJobById } from "../../services/jobService.js";
+import SEO from "../../components/SEO.jsx";
 
 const statusOptions = ["applied", "viewed", "shortlisted", "rejected", "hired"];
 
@@ -97,6 +98,7 @@ const JobApplicants = () => {
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <SEO title="Job Applicants" noindex={true} />
       {/* Back button */}
       <Link
         to="/employer/dashboard"

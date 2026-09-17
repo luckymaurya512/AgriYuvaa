@@ -4,6 +4,7 @@ import { Search, MapPin, ArrowRight, UserPlus, SearchCheck, Handshake } from "lu
 import { fetchJobs, fetchCategories } from "../services/jobService.js";
 import JobCard from "../components/JobCard.jsx";
 import CategoryCard from "../components/CategoryCard.jsx";
+import SEO from "../components/SEO.jsx";
 
 const stats = [
   { label: "Active Jobs", value: "5,000+" },
@@ -42,8 +43,26 @@ const Home = () => {
     navigate(`/jobs?${params.toString()}`);
   };
 
+  const websiteSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "AgriYuvaa Jobs",
+    url: "https://job.agriyuvaa.com",
+    potentialAction: {
+      "@type": "SearchAction",
+      target: "https://job.agriyuvaa.com/jobs?keyword={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  };
+
   return (
     <div>
+      <SEO
+        title="Agriculture Jobs in India — Farming, AgriTech, Agribusiness"
+        description="Search & apply for 5,000+ agricultural jobs in India. Verified openings in agronomy, drone piloting, farm management, agrochemical, and research."
+        canonical="/"
+        jsonLd={websiteSchema}
+      />
       {/* Hero */}
       <section className="bg-brand-surface border-b border-brand-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 grid md:grid-cols-2 gap-10 items-center">

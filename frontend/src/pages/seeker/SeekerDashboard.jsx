@@ -21,6 +21,7 @@ import { fetchMyApplications } from "../../services/jobService.js";
 import { fetchSeekerProfile, toggleSaveJob, uploadSeekerResume } from "../../services/userService.js";
 import { toggleFollowEmployer } from "../../services/notificationService.js";
 import JobCard from "../../components/JobCard.jsx";
+import SEO from "../../components/SEO.jsx";
 
 const statusColors = {
   applied: "bg-blue-100 text-blue-700",
@@ -125,6 +126,7 @@ const SeekerDashboard = () => {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 w-full min-w-0">
+      <SEO title="Job Seeker Dashboard" noindex={true} />
       <h1 className="text-2xl font-display font-bold mb-1">
         Welcome back, {user?.name?.split(" ")[0]}
       </h1>

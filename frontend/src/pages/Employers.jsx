@@ -5,6 +5,7 @@ import api from "../services/api.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { fetchSeekerProfile } from "../services/userService.js";
 import { toggleFollowEmployer, enablePushNotifications } from "../services/notificationService.js";
+import SEO from "../components/SEO.jsx";
 
 const Employers = () => {
   const { user } = useAuth();
@@ -60,6 +61,11 @@ const Employers = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <SEO
+        title="Verified Employers & Farms Hiring on AgriYuvaa"
+        description="Browse agricultural companies, progressive farms, and seed enterprises actively hiring talent across India."
+        canonical="/employers"
+      />
       <div className="mb-8">
         <h1 className="text-2xl font-display font-bold mb-1">Hiring Employers on AgriYuvaa</h1>
         <p className="text-sm text-brand-grey">

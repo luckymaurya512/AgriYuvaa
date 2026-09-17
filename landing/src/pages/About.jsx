@@ -2,10 +2,16 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Users, Target, Award, ArrowRight } from "lucide-react";
 import logo from "../assets/logo.png";
+import SEO from "../components/SEO.jsx";
 
 const About = () => {
   return (
     <div className="pt-24 pb-20">
+      <SEO
+        title="About Us"
+        description="Learn about AgriYuvaa's mission to empower Indian youth in agriculture, agritech, and agribusiness through career opportunities, workshops, and mentorship."
+        canonical="/about"
+      />
       {/* Hero */}
       <div className="bg-gradient-to-br from-gray-950 via-emerald-950 to-gray-900 py-16 -mt-24 pt-36 text-white text-center">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">

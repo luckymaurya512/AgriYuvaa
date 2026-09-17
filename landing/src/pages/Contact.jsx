@@ -1,11 +1,17 @@
 import React, { useState } from "react";
 import { Mail, Phone, MapPin, CheckCircle, Send } from "lucide-react";
+import SEO from "../components/SEO.jsx";
 
 const Contact = () => {
   const [sent, setSent] = useState(false);
 
   return (
     <div className="pt-24 pb-20">
+      <SEO
+        title="Contact Us"
+        description="Get in touch with AgriYuvaa for inquiries regarding agriculture workshops, college partnerships, or career mentorship."
+        canonical="/contact"
+      />
       {/* Header */}
       <div className="bg-gradient-to-br from-gray-950 via-emerald-950 to-gray-900 py-16 -mt-24 pt-36 text-white text-center">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">

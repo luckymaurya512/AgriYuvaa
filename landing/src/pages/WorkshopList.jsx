@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Clock, ExternalLink, ArrowRight } from "lucide-react";
 import { fetchWorkshops } from "../services/landingService.js";
+import SEO from "../components/SEO.jsx";
 
 const workshopEmojis = {
   beekeeping: "🐝",
@@ -34,6 +35,11 @@ const WorkshopList = () => {
 
   return (
     <div className="pt-24 pb-20">
+      <SEO
+        title="Hands-on Agriculture Workshops & Practical Training"
+        description="Explore practical agricultural workshops on hydroponics, drone technology, beekeeping, biofloc, and precision farming for students and youth."
+        canonical="/workshops"
+      />
       {/* Header */}
       <div className="bg-gradient-to-br from-gray-950 via-emerald-950 to-gray-900 py-16 -mt-24 pt-36">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

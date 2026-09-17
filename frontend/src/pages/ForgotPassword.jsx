@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { forgotPassword, resetPassword, resendOtp } from "../services/authService.js";
 import logo from "../assets/logo.png";
+import SEO from "../components/SEO.jsx";
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
@@ -78,6 +79,7 @@ const ForgotPassword = () => {
 
   return (
     <div className="max-w-md mx-auto px-4 py-16">
+      <SEO title="Reset Password" noindex={true} />
       <div className="text-center mb-8">
         <img src={logo} alt="AgriYuvaa" className="h-14 w-14 mx-auto mb-3" />
         <h1 className="text-2xl font-display font-bold">

@@ -12,6 +12,7 @@ import {
   CheckCircle2,
   Users,
 } from "lucide-react";
+import SEO from "../components/SEO.jsx";
 
 const companyDirectory = [
   {
@@ -163,6 +164,11 @@ const Companies = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <SEO
+        title="Top AgriTech & Agribusiness Companies in India"
+        description="Explore top Indian agriculture and agritech companies hiring youth: DeHaat, Ninjacart, AgroStar, CropIn, UPL, Godrej Agrovet, and more."
+        canonical="/companies"
+      />
       {/* Header Banner */}
       <div className="rounded-3xl bg-gradient-to-r from-emerald-900 via-green-950 to-emerald-900 text-white p-8 sm:p-12 mb-10 shadow-lg relative overflow-hidden">
         <div className="relative z-10 max-w-2xl space-y-3">

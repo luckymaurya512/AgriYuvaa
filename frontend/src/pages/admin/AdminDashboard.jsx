@@ -48,6 +48,7 @@ import {
   fetchAllTestimonials, createTestimonial, updateTestimonial, deleteTestimonial,
 } from "../../services/landingService.js";
 import RichTextEditor from "../../components/common/RichTextEditor.jsx";
+import SEO from "../../components/SEO.jsx";
 
 const AdminDashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -311,6 +312,7 @@ const AdminDashboard = () => {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+      <SEO title="Admin Control Center" noindex={true} />
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>

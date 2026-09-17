@@ -4,6 +4,7 @@ import { Mail, ExternalLink, FileText, Building2, Sparkles, Loader2, ArrowLeft, 
 import { fetchCategories, createJob, fetchJobById, updateJob } from "../../services/jobService.js";
 import { useAuth } from "../../context/AuthContext.jsx";
 import RichTextEditor from "../../components/common/RichTextEditor.jsx";
+import SEO from "../../components/SEO.jsx";
 
 const employmentTypes = [
   { value: "full-time", label: "Full-Time" },
@@ -202,6 +203,7 @@ const PostJob = () => {
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <SEO title={isEdit ? "Edit Job" : "Post a Job"} noindex={true} />
       <div className="mb-8">
         <button
           type="button"

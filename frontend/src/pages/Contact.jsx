@@ -1,11 +1,17 @@
 import React, { useState } from "react";
 import { Mail, Phone, MapPin, Linkedin, Instagram, Youtube, Facebook } from "lucide-react";
+import SEO from "../components/SEO.jsx";
 
 const Contact = () => {
   const [sent, setSent] = useState(false);
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <SEO
+        title="Contact Us"
+        description="Contact AgriYuvaa support for employer job posting inquiries, recruiter partnerships, or candidate help."
+        canonical="/contact"
+      />
       <h1 className="text-3xl font-display font-bold mb-8">Contact Us</h1>
       <div className="grid md:grid-cols-2 gap-10">
         <div className="space-y-6">

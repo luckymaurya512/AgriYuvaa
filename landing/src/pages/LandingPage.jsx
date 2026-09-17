@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { fetchWorkshops, fetchTestimonials, fetchBlogs } from "../services/landingService.js";
 import logo from "../assets/logo.png";
+import SEO from "../components/SEO.jsx";
 
 /* ─── Animated Counter ───────────────────────────── */
 const AnimatedCounter = ({ target, suffix = "" }) => {
@@ -126,6 +127,20 @@ const LandingPage = () => {
 
   return (
     <div className="overflow-hidden">
+      <SEO
+        title="AgriYuvaa — Where Youth Meets Agriculture"
+        description="India's premier platform for agriculture students. Workshops, blogs, career guidance & community for the next generation of agricultural leaders."
+        path="/"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: "AgriYuvaa",
+          url: "https://agriyuvaa.com",
+          logo: "https://agriyuvaa.com/logo.png",
+          description: "India's premier platform for agriculture students. Workshops, blogs, career guidance & community for the next generation of agricultural leaders.",
+          sameAs: [],
+        }}
+      />
       {/* ═══════════════════════════ HERO ═══════════════════════════ */}
       <section className="relative min-h-[90vh] flex items-center bg-gradient-to-br from-gray-950 via-emerald-950 to-gray-900 overflow-hidden">
         {/* Animated background elements */}

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Search, Calendar } from "lucide-react";
 import { fetchBlogs } from "../services/landingService.js";
+import SEO from "../components/SEO.jsx";
 
 const BlogList = () => {
   const [blogs, setBlogs] = useState([]);
@@ -30,6 +31,11 @@ const BlogList = () => {
 
   return (
     <div className="pt-24 pb-20">
+      <SEO
+        title="Agriculture Blogs, News & Career Insights"
+        description="Read the latest news, technological trends, precision farming updates, and expert career insights for agriculture youth in India."
+        canonical="/blogs"
+      />
       {/* Header */}
       <div className="bg-gradient-to-br from-gray-950 via-emerald-950 to-gray-900 py-16 -mt-24 pt-36">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
