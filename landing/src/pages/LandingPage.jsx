@@ -17,6 +17,7 @@ import {
   Mail,
   Phone,
   Send,
+  Clock,
 } from "lucide-react";
 import { fetchWorkshops, fetchTestimonials, fetchBlogs } from "../services/landingService.js";
 import logo from "../assets/logo.png";
@@ -85,6 +86,61 @@ const getWorkshopThumbnail = (w = {}) => {
   return "https://images.unsplash.com/photo-1592417817098-8f3d69102553?q=80&w=800&auto=format&fit=crop";
 };
 
+/* ─── Blog Thumbnails & Fallbacks ─────────────────── */
+const defaultBlogImages = [
+  "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?q=80&w=1200&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1577896851231-70ef18881754?q=80&w=800&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1563514227147-6d2ff665a6a0?q=80&w=800&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1508614589041-895b88991e3e?q=80&w=800&auto=format&fit=crop",
+];
+
+const fallbackBlogs = [
+  {
+    _id: "fb_1",
+    slug: "how-ai-is-transforming-indian-agriculture-2026",
+    title: "How AI is Transforming Indian Agriculture in 2026",
+    excerpt: "From satellite-driven crop advisories to computer vision-powered pest detection, AI is reshaping farms across India.",
+    category: "AI",
+    tags: ["AI", "AgriTech"],
+    publishedAt: "2025-07-12",
+    readTime: "6 min",
+    coverImage: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?q=80&w=1200&auto=format&fit=crop",
+  },
+  {
+    _id: "fb_2",
+    slug: "top-10-agriculture-entrance-exams-2026",
+    title: "Top 10 Agriculture Entrance Exams for 2026",
+    excerpt: "Complete preparation guide and key dates for ICAR AIEEA, state agriculture CETs, and postgraduate entrance exams.",
+    category: "EXAMS",
+    tags: ["EXAMS"],
+    publishedAt: "2025-07-08",
+    readTime: "4 min",
+    coverImage: "https://images.unsplash.com/photo-1577896851231-70ef18881754?q=80&w=800&auto=format&fit=crop",
+  },
+  {
+    _id: "fb_3",
+    slug: "government-schemes-every-agri-student-must-know",
+    title: "Government Schemes Every Agri Student Must Know",
+    excerpt: "Subsidies, funding, and incubation grants under AC&ABC, RKVY-RAFTAAR, and PMFBY for young agriculture entrepreneurs.",
+    category: "SCHEMES",
+    tags: ["SCHEMES"],
+    publishedAt: "2025-07-04",
+    readTime: "5 min",
+    coverImage: "https://images.unsplash.com/photo-1563514227147-6d2ff665a6a0?q=80&w=800&auto=format&fit=crop",
+  },
+  {
+    _id: "fb_4",
+    slug: "career-roadmap-bsc-agriculture-to-agritech-founder",
+    title: "Career Roadmap: From B.Sc. Agriculture to AgriTech Founder",
+    excerpt: "How young graduates are leveraging domain agriculture knowledge and modern tech to build high-valuation agritech startups.",
+    category: "CAREERS",
+    tags: ["CAREERS"],
+    publishedAt: "2025-06-30",
+    readTime: "7 min",
+    coverImage: "https://images.unsplash.com/photo-1508614589041-895b88991e3e?q=80&w=800&auto=format&fit=crop",
+  },
+];
+
 /* ─── Main Landing Page ──────────────────────────── */
 const LandingPage = () => {
   const [workshops, setWorkshops] = useState([]);
@@ -100,7 +156,7 @@ const LandingPage = () => {
     fetchTestimonials()
       .then((data) => setTestimonials(data || []))
       .catch(() => setTestimonials([]));
-    fetchBlogs({ limit: 3 })
+    fetchBlogs({ limit: 4 })
       .then((data) => setBlogs(data.blogs || []))
       .catch(() => setBlogs([]));
   }, []);
@@ -533,77 +589,138 @@ const LandingPage = () => {
       )}
 
       {/* ═══════════════════════════ BLOG ════════════════════════ */}
-      {blogs.length > 0 && (
-        <section className="py-20 bg-gray-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-4">
-                ⭐ Our Blogs
-              </div>
-              <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900">
-                Agri News & <span className="text-emerald-600">Updates</span>
-              </h2>
-            </div>
+      {(() => {
+        const displayBlogs = blogs.length > 0 ? blogs : fallbackBlogs;
+        const featuredBlog = displayBlogs[0];
+        const sideBlogs = displayBlogs.slice(1, 4);
 
-            <div className="grid md:grid-cols-3 gap-6">
-              {blogs.map((blog) => (
+        const formatDate = (dateStr) => {
+          if (!dateStr) return "Recently";
+          try {
+            return new Date(dateStr).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            });
+          } catch {
+            return "Recently";
+          }
+        };
+
+        const getBlogImg = (b, idx) => {
+          return b.coverImage || defaultBlogImages[idx % defaultBlogImages.length];
+        };
+
+        return (
+          <section className="py-20 bg-gray-50/60">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              {/* Header */}
+              <div className="flex flex-wrap items-end justify-between gap-4 mb-12">
+                <div>
+                  <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
+                    ⭐ Agriculture Insights & News
+                  </div>
+                  <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900">
+                    Latest Agri <span className="text-emerald-600">Articles</span>
+                  </h2>
+                </div>
                 <Link
-                  key={blog._id}
-                  to={`/blog/${blog.slug}`}
-                  className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group"
+                  to="/blog"
+                  className="inline-flex items-center gap-1.5 text-sm font-bold text-emerald-700 hover:text-emerald-800 transition-colors"
                 >
-                  <div className="h-48 bg-gradient-to-br from-emerald-100 to-lime-50 flex items-center justify-center overflow-hidden">
-                    {blog.coverImage ? (
-                      <img
-                        src={blog.coverImage}
-                        alt={blog.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        onError={(e) => {
-                          e.target.style.display = "none";
-                          e.target.nextSibling.style.display = "flex";
-                        }}
-                      />
-                    ) : null}
-                    <span className="text-5xl" style={{ display: blog.coverImage ? "none" : "block" }}>📰</span>
-                  </div>
-                  <div className="p-6">
-                    <div className="flex items-center gap-2 mb-3">
-                      {blog.tags?.slice(0, 2).map((tag) => (
-                        <span key={tag} className="text-[10px] font-semibold bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-lg">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                    <h3 className="font-bold text-gray-900 mb-2 group-hover:text-emerald-600 transition-colors line-clamp-2">
-                      {blog.title}
-                    </h3>
-                    <p className="text-xs text-gray-500 line-clamp-3 leading-relaxed">{blog.excerpt}</p>
-                    <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-50">
-                      <span className="text-[11px] text-gray-400">
-                        {blog.publishedAt
-                          ? new Date(blog.publishedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
-                          : ""}
-                      </span>
-                      <span className="text-xs font-semibold text-emerald-600 flex items-center gap-1">
-                        Read More <ArrowRight size={12} />
-                      </span>
-                    </div>
-                  </div>
+                  View All Blogs <ArrowRight size={15} />
                 </Link>
-              ))}
-            </div>
+              </div>
 
-            <div className="text-center mt-10">
-              <Link
-                to="/blog"
-                className="inline-flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white font-semibold px-6 py-3 rounded-xl transition-all text-sm"
-              >
-                View All Blogs <ArrowRight size={15} />
-              </Link>
+              {/* 2-Column Grid: Featured Big Blog (Left) + 3 Small Blogs (Right) */}
+              <div className="grid lg:grid-cols-12 gap-8 items-start">
+                {/* ── LEFT: BIG FEATURED BLOG (7 cols) ── */}
+                {featuredBlog && (
+                  <div className="lg:col-span-7">
+                    <Link
+                      to={`/blog/${featuredBlog.slug || featuredBlog._id}`}
+                      className="group block"
+                    >
+                      <div className="relative h-64 sm:h-80 md:h-[360px] w-full rounded-3xl overflow-hidden bg-gray-100 mb-5 shadow-xs group-hover:shadow-xl transition-all duration-300">
+                        <img
+                          src={getBlogImg(featuredBlog, 0)}
+                          alt={featuredBlog.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                      </div>
+
+                      <div className="space-y-2.5">
+                        <div className="flex items-center gap-3 text-xs text-gray-500">
+                          <span className="uppercase tracking-wider px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 font-bold text-[11px]">
+                            {featuredBlog.category || featuredBlog.tags?.[0] || "AI"}
+                          </span>
+                          <span>
+                            {formatDate(featuredBlog.publishedAt || featuredBlog.createdAt)}
+                          </span>
+                          <span className="flex items-center gap-1 text-gray-400">
+                            <Clock size={13} /> {featuredBlog.readTime || "6 min"}
+                          </span>
+                        </div>
+
+                        <h3 className="text-2xl sm:text-3xl font-extrabold text-gray-900 group-hover:text-emerald-700 transition-colors leading-tight">
+                          {featuredBlog.title}
+                        </h3>
+
+                        <p className="text-sm sm:text-base text-gray-600 leading-relaxed line-clamp-3">
+                          {featuredBlog.excerpt ||
+                            (featuredBlog.content
+                              ? featuredBlog.content.substring(0, 160).replace(/<[^>]+>/g, "")
+                              : "Read the full article on AgriYuvaa for career insights and latest technology updates in Indian agriculture.")}
+                        </p>
+                      </div>
+                    </Link>
+                  </div>
+                )}
+
+                {/* ── RIGHT: 3 SMALLER SIDE BLOGS (5 cols) ── */}
+                <div className="lg:col-span-5 space-y-4 sm:space-y-5">
+                  {sideBlogs.map((b, idx) => (
+                    <Link
+                      key={b._id || idx}
+                      to={`/blog/${b.slug || b._id}`}
+                      className="bg-white p-4 sm:p-4.5 rounded-2xl border border-gray-200/80 shadow-2xs hover:shadow-md hover:border-emerald-200 transition-all duration-200 flex items-center gap-4 group cursor-pointer"
+                    >
+                      {/* Square Thumbnail */}
+                      <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-gray-100 shrink-0">
+                        <img
+                          src={getBlogImg(b, idx + 1)}
+                          alt={b.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      </div>
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700">
+                            {b.category || b.tags?.[0] || "Articles"}
+                          </span>
+                          <span className="text-[11px] text-gray-400">
+                            {formatDate(b.publishedAt || b.createdAt)}
+                          </span>
+                        </div>
+
+                        <h4 className="font-bold text-sm sm:text-base text-gray-900 group-hover:text-emerald-700 transition-colors line-clamp-2 leading-snug mb-2">
+                          {b.title}
+                        </h4>
+
+                        <span className="text-[11px] text-gray-400 flex items-center gap-1">
+                          <Clock size={12} /> {b.readTime || "4 min"}
+                        </span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
-        </section>
-      )}
+          </section>
+        );
+      })()}
 
       {/* ═══════════════════════════ JOB PORTAL CTA ═════════════ */}
       <section className="py-20">
