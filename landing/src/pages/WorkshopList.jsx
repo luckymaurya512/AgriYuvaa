@@ -4,22 +4,26 @@ import { Clock, ExternalLink, ArrowRight } from "lucide-react";
 import { fetchWorkshops } from "../services/landingService.js";
 import SEO from "../components/SEO.jsx";
 
-const workshopEmojis = {
-  beekeeping: "🐝",
-  biofloc: "🐟",
-  drone: "🚁",
-  hydroponics: "🌱",
-  mushroom: "🍄",
-  saffron: "🌸",
-  precision: "📡",
+/* ─── Workshop Thumbnails ─────────────────────────── */
+const defaultWorkshopImages = {
+  drone: "https://images.unsplash.com/photo-1508614589041-895b88991e3e?q=80&w=800&auto=format&fit=crop",
+  hydroponics: "https://images.unsplash.com/photo-1558449028-b53a39d100fc?q=80&w=800&auto=format&fit=crop",
+  mushroom: "https://images.unsplash.com/photo-1547514701-42782101795e?q=80&w=800&auto=format&fit=crop",
+  beekeeping: "https://images.unsplash.com/photo-1473081556163-2a17de81fc97?q=80&w=800&auto=format&fit=crop",
+  biofloc: "https://images.unsplash.com/photo-1524704654690-b56c05c78a00?q=80&w=800&auto=format&fit=crop",
+  saffron: "https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?q=80&w=800&auto=format&fit=crop",
+  precision: "https://images.unsplash.com/photo-1586771107445-d3ca888129ff?q=80&w=800&auto=format&fit=crop",
 };
 
-const getEmoji = (title = "") => {
-  const t = title.toLowerCase();
-  for (const [key, emoji] of Object.entries(workshopEmojis)) {
-    if (t.includes(key)) return emoji;
+const getWorkshopThumbnail = (w = {}) => {
+  if (w.coverImage && w.coverImage.trim()) {
+    return w.coverImage;
   }
-  return "🌾";
+  const title = (w.title || "").toLowerCase();
+  for (const [key, url] of Object.entries(defaultWorkshopImages)) {
+    if (title.includes(key)) return url;
+  }
+  return "https://images.unsplash.com/photo-1592417817098-8f3d69102553?q=80&w=800&auto=format&fit=crop";
 };
 
 const WorkshopList = () => {
@@ -71,21 +75,30 @@ const WorkshopList = () => {
             {workshops.map((w) => (
               <div
                 key={w._id}
-                className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group"
+                className="bg-white rounded-2xl border border-gray-200/80 overflow-hidden hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 group flex flex-col shadow-xs"
               >
-                {/* Visual header */}
-                <div className="h-40 bg-gradient-to-br from-emerald-100 to-lime-50 flex items-center justify-center relative overflow-hidden">
-                  <span className="text-6xl group-hover:scale-110 transition-transform">
-                    {getEmoji(w.title)}
-                  </span>
+                {/* Thumbnail */}
+                <div className="relative h-48 w-full overflow-hidden bg-gray-100">
+                  <img
+                    src={getWorkshopThumbnail(w)}
+                    alt={w.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-50" />
                   {w.category && (
-                    <span className="absolute top-3 right-3 text-[10px] font-bold bg-white/90 text-emerald-700 px-2.5 py-1 rounded-lg shadow-sm">
+                    <span className="absolute top-3 right-3 text-[11px] font-bold bg-white/95 text-emerald-800 px-3 py-1 rounded-full shadow-sm backdrop-blur-xs">
                       {w.category}
+                    </span>
+                  )}
+                  {w.duration && (
+                    <span className="absolute bottom-3 left-3 text-[11px] font-semibold bg-black/65 text-white px-2.5 py-0.5 rounded-md backdrop-blur-xs">
+                      ⏱️ {w.duration}
                     </span>
                   )}
                 </div>
 
-                <div className="p-6">
+                <div className="p-6 flex-1 flex flex-col justify-between">
                   <h3 className="font-bold text-lg text-gray-900 mb-2">{w.title}</h3>
                   <p className="text-sm text-gray-500 leading-relaxed mb-4 line-clamp-3">
                     {w.description}

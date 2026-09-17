@@ -63,23 +63,26 @@ const AnimatedCounter = ({ target, suffix = "" }) => {
   );
 };
 
-/* ─── Workshop Icon by Category ──────────────────── */
-const workshopEmojis = {
-  beekeeping: "🐝",
-  biofloc: "🐟",
-  drone: "🚁",
-  hydroponics: "🌱",
-  mushroom: "🍄",
-  saffron: "🌸",
-  precision: "📡",
+/* ─── Workshop Thumbnails & Badges ─────────────────── */
+const defaultWorkshopImages = {
+  drone: "https://images.unsplash.com/photo-1508614589041-895b88991e3e?q=80&w=800&auto=format&fit=crop",
+  hydroponics: "https://images.unsplash.com/photo-1558449028-b53a39d100fc?q=80&w=800&auto=format&fit=crop",
+  mushroom: "https://images.unsplash.com/photo-1547514701-42782101795e?q=80&w=800&auto=format&fit=crop",
+  beekeeping: "https://images.unsplash.com/photo-1473081556163-2a17de81fc97?q=80&w=800&auto=format&fit=crop",
+  biofloc: "https://images.unsplash.com/photo-1524704654690-b56c05c78a00?q=80&w=800&auto=format&fit=crop",
+  saffron: "https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?q=80&w=800&auto=format&fit=crop",
+  precision: "https://images.unsplash.com/photo-1586771107445-d3ca888129ff?q=80&w=800&auto=format&fit=crop",
 };
 
-const getWorkshopEmoji = (title = "") => {
-  const t = title.toLowerCase();
-  for (const [key, emoji] of Object.entries(workshopEmojis)) {
-    if (t.includes(key)) return emoji;
+const getWorkshopThumbnail = (w = {}) => {
+  if (w.coverImage && w.coverImage.trim()) {
+    return w.coverImage;
   }
-  return "🌾";
+  const title = (w.title || "").toLowerCase();
+  for (const [key, url] of Object.entries(defaultWorkshopImages)) {
+    if (title.includes(key)) return url;
+  }
+  return "https://images.unsplash.com/photo-1592417817098-8f3d69102553?q=80&w=800&auto=format&fit=crop";
 };
 
 /* ─── Main Landing Page ──────────────────────────── */
@@ -339,33 +342,108 @@ const LandingPage = () => {
           </div>
 
           {workshops.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
               {workshops.map((w) => (
                 <div
                   key={w._id}
-                  className="bg-white rounded-2xl border border-gray-100 p-6 text-center hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group cursor-pointer"
+                  className="bg-white rounded-2xl border border-gray-200/80 overflow-hidden hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col group shadow-xs"
                 >
-                  <div className="w-16 h-16 bg-gradient-to-br from-emerald-100 to-lime-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl group-hover:scale-110 transition-transform">
-                    {getWorkshopEmoji(w.title)}
+                  {/* Thumbnail */}
+                  <div className="relative h-48 w-full overflow-hidden bg-gray-100">
+                    <img
+                      src={getWorkshopThumbnail(w)}
+                      alt={w.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-50" />
+                    {w.category && (
+                      <span className="absolute top-3 right-3 text-[11px] font-bold bg-white/95 text-emerald-800 px-3 py-1 rounded-full shadow-sm backdrop-blur-xs">
+                        {w.category}
+                      </span>
+                    )}
+                    {w.duration && (
+                      <span className="absolute bottom-3 left-3 text-[11px] font-semibold bg-black/65 text-white px-2.5 py-0.5 rounded-md backdrop-blur-xs">
+                        ⏱️ {w.duration}
+                      </span>
+                    )}
                   </div>
-                  <h3 className="font-bold text-sm text-gray-900 mb-2">{w.title}</h3>
-                  <p className="text-xs text-gray-500 line-clamp-2">{w.description}</p>
-                  {w.duration && (
-                    <span className="inline-block mt-3 text-[10px] font-semibold bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-lg">
-                      {w.duration}
-                    </span>
-                  )}
+
+                  {/* Content: Title & Description */}
+                  <div className="p-6 flex-1 flex flex-col justify-between">
+                    <div>
+                      <h3 className="font-bold text-lg text-gray-900 group-hover:text-emerald-700 transition-colors mb-2 line-clamp-1">
+                        {w.title}
+                      </h3>
+                      <p className="text-sm text-gray-600 leading-relaxed line-clamp-3 mb-4">
+                        {w.description}
+                      </p>
+                    </div>
+
+                    <div className="pt-4 border-t border-gray-100 flex items-center justify-between mt-auto">
+                      <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg">
+                        {w.price > 0 ? `₹${w.price.toLocaleString("en-IN")}` : "Free Workshop"}
+                      </span>
+                      <Link
+                        to="/workshops"
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 hover:text-emerald-800 group-hover:translate-x-0.5 transition-transform"
+                      >
+                        View Details <ArrowRight size={14} />
+                      </Link>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-              {["Beekeeping", "Biofloc Fish", "Drone Tech", "Hydroponics", "Mushroom", "Saffron", "Precision"].map((name) => (
-                <div key={name} className="bg-white rounded-2xl border border-gray-100 p-6 text-center">
-                  <div className="w-16 h-16 bg-gradient-to-br from-emerald-100 to-lime-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl">
-                    {getWorkshopEmoji(name)}
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+              {[
+                { title: "Drone Technology in Agriculture", desc: "Master drone operations, precision aerial spraying, NDVI mapping, and automated crop health monitoring.", category: "AgriTech", key: "drone", duration: "3 Days" },
+                { title: "Hydroponics & Vertical Farming", desc: "Commercial soil-less cultivation techniques, nutrient management, and climate-controlled greenhouse setups.", category: "Modern Farming", key: "hydroponics", duration: "2 Days" },
+                { title: "Mushroom Cultivation & Processing", desc: "Step-by-step training on oyster and button mushroom spawning, farm shed setup, and profitable market linkages.", category: "Horticulture", key: "mushroom", duration: "2 Days" },
+                { title: "Commercial Beekeeping (Apiculture)", desc: "Comprehensive hive management, seasonal flora migration, honey extraction, and natural beeswax value addition.", category: "Farming", key: "beekeeping", duration: "3 Days" },
+                { title: "Biofloc Fish Farming System", desc: "Sustainable intensive aquaculture, zero water discharge methods, biofloc microbial balance, and commercial tanks.", category: "Aquaculture", key: "biofloc", duration: "3 Days" },
+                { title: "Precision Agriculture & Satellite GIS", desc: "Harness IoT sensors, soil telemetry, variable rate applications, and satellite analytics for yield maximization.", category: "AgriTech", key: "precision", duration: "4 Days" },
+              ].map((item) => (
+                <div
+                  key={item.title}
+                  className="bg-white rounded-2xl border border-gray-200/80 overflow-hidden hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col group shadow-xs"
+                >
+                  <div className="relative h-48 w-full overflow-hidden bg-gray-100">
+                    <img
+                      src={defaultWorkshopImages[item.key]}
+                      alt={item.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-50" />
+                    <span className="absolute top-3 right-3 text-[11px] font-bold bg-white/95 text-emerald-800 px-3 py-1 rounded-full shadow-sm">
+                      {item.category}
+                    </span>
+                    <span className="absolute bottom-3 left-3 text-[11px] font-semibold bg-black/65 text-white px-2.5 py-0.5 rounded-md">
+                      ⏱️ {item.duration}
+                    </span>
                   </div>
-                  <h3 className="font-bold text-sm text-gray-900">{name} Farming</h3>
+                  <div className="p-6 flex-1 flex flex-col justify-between">
+                    <div>
+                      <h3 className="font-bold text-lg text-gray-900 group-hover:text-emerald-700 transition-colors mb-2 line-clamp-1">
+                        {item.title}
+                      </h3>
+                      <p className="text-sm text-gray-600 leading-relaxed line-clamp-3 mb-4">
+                        {item.desc}
+                      </p>
+                    </div>
+                    <div className="pt-4 border-t border-gray-100 flex items-center justify-between mt-auto">
+                      <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg">
+                        Free Workshop
+                      </span>
+                      <Link
+                        to="/workshops"
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 hover:text-emerald-800"
+                      >
+                        View Details <ArrowRight size={14} />
+                      </Link>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
