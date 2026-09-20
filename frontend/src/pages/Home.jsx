@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Search, MapPin, ArrowRight, UserPlus, SearchCheck, Handshake } from "lucide-react";
-import { fetchJobs, fetchCategories } from "../services/jobService.js";
+import { fetchJobs, fetchCategories, fetchGovtJobs } from "../services/jobService.js";
 import JobCard from "../components/JobCard.jsx";
+import GovtJobCard from "../components/GovtJobCard.jsx";
 import CategoryCard from "../components/CategoryCard.jsx";
 import SEO from "../components/SEO.jsx";
 
@@ -23,6 +24,7 @@ const Home = () => {
   const [keyword, setKeyword] = useState("");
   const [location, setLocation] = useState("");
   const [featuredJobs, setFeaturedJobs] = useState([]);
+  const [govtJobs, setGovtJobs] = useState([]);
   const [categories, setCategories] = useState([]);
   const navigate = useNavigate();
 
@@ -30,6 +32,9 @@ const Home = () => {
     fetchJobs({ limit: 6, sort: "-isFeatured -createdAt" })
       .then((data) => setFeaturedJobs(data.jobs || []))
       .catch(() => setFeaturedJobs([]));
+    fetchGovtJobs()
+      .then((data) => setGovtJobs(Array.isArray(data) ? data.slice(0, 3) : []))
+      .catch(() => setGovtJobs([]));
     fetchCategories()
       .then((data) => setCategories(data || []))
       .catch(() => setCategories([]));
@@ -161,21 +166,49 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Featured Jobs */}
-      {featuredJobs.length > 0 && (
+      {/* Featured Jobs & Government Vacancies */}
+      {(featuredJobs.length > 0 || govtJobs.length > 0) && (
         <section className="bg-brand-surface border-y border-brand-border py-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-display font-bold">Featured Opportunities</h2>
-              <Link to="/jobs" className="text-sm font-semibold text-brand-green-dark inline-flex items-center gap-1">
-                View all <ArrowRight size={16} />
-              </Link>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              {featuredJobs.map((job) => (
-                <JobCard key={job._id} job={job} />
-              ))}
-            </div>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+            {featuredJobs.length > 0 && (
+              <div>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-display font-bold">Featured Opportunities</h2>
+                  <Link to="/jobs" className="text-sm font-semibold text-brand-green-dark inline-flex items-center gap-1">
+                    View all <ArrowRight size={16} />
+                  </Link>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                  {featuredJobs.map((job) => (
+                    <JobCard key={job._id} job={job} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 3 Cards of Government Jobs */}
+            {govtJobs.length > 0 && (
+              <div className={featuredJobs.length > 0 ? "pt-10 border-t border-brand-border" : ""}>
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-2xl font-display font-bold flex items-center gap-2">
+                      <span>🏛️</span> Government Agriculture Vacancies
+                    </h2>
+                    <p className="text-xs sm:text-sm text-brand-grey mt-0.5">
+                      Live recruitment notifications from ICAR, NABARD, State PSC & PSUs
+                    </p>
+                  </div>
+                  <Link to="/govt-jobs" className="text-sm font-semibold text-brand-green-dark inline-flex items-center gap-1 shrink-0">
+                    View all govt vacancies <ArrowRight size={16} />
+                  </Link>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                  {govtJobs.map((job) => (
+                    <GovtJobCard key={job._id} job={job} />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </section>
       )}
