@@ -40,6 +40,14 @@ const workshopSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    videoUrl: {
+      type: String,
+      default: "https://www.youtube.com/@agri_yuvaa",
+    },
+    youtubeUrl: {
+      type: String,
+      default: "https://www.youtube.com/@agri_yuvaa",
+    },
     registrationUrl: {
       type: String,
       default: "",

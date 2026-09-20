@@ -18,6 +18,8 @@ import {
   Phone,
   Send,
   Clock,
+  Play,
+  Youtube,
 } from "lucide-react";
 import { fetchWorkshops, fetchTestimonials, fetchBlogs } from "../services/landingService.js";
 import logo from "../assets/logo.png";
@@ -404,15 +406,23 @@ const LandingPage = () => {
                   key={w._id}
                   className="bg-white rounded-2xl border border-gray-200/80 overflow-hidden hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col group shadow-xs"
                 >
-                  {/* Thumbnail */}
-                  <div className="relative h-48 w-full overflow-hidden bg-gray-100">
+                  {/* Thumbnail with Play Overlay */}
+                  <Link to="/workshops" className="relative h-48 w-full overflow-hidden bg-gray-100 block group/thumb">
                     <img
                       src={getWorkshopThumbnail(w)}
                       alt={w.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="w-full h-full object-cover group-hover/thumb:scale-105 transition-transform duration-500"
                       loading="lazy"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-50" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+
+                    {/* Play Button Overlay */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-12 h-12 rounded-full bg-red-600/90 text-white flex items-center justify-center shadow-lg transition-transform group-hover/thumb:scale-115">
+                        <Play size={18} className="fill-current ml-0.5" />
+                      </div>
+                    </div>
+
                     {w.category && (
                       <span className="absolute top-3 right-3 text-[11px] font-bold bg-white/95 text-emerald-800 px-3 py-1 rounded-full shadow-sm backdrop-blur-xs">
                         {w.category}
@@ -423,7 +433,7 @@ const LandingPage = () => {
                         ⏱️ {w.duration}
                       </span>
                     )}
-                  </div>
+                  </Link>
 
                   {/* Content: Title & Description */}
                   <div className="p-6 flex-1 flex flex-col justify-between">
@@ -437,14 +447,14 @@ const LandingPage = () => {
                     </div>
 
                     <div className="pt-4 border-t border-gray-100 flex items-center justify-between mt-auto">
-                      <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg">
-                        {w.price > 0 ? `₹${w.price.toLocaleString("en-IN")}` : "Free Workshop"}
+                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-600 bg-red-50 px-2.5 py-1 rounded-lg">
+                        <Youtube size={14} /> Free Video
                       </span>
                       <Link
                         to="/workshops"
                         className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 hover:text-emerald-800 group-hover:translate-x-0.5 transition-transform"
                       >
-                        View Details <ArrowRight size={14} />
+                        <Play size={12} className="fill-current" /> Watch Now
                       </Link>
                     </div>
                   </div>
@@ -465,20 +475,28 @@ const LandingPage = () => {
                   key={item.title}
                   className="bg-white rounded-2xl border border-gray-200/80 overflow-hidden hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col group shadow-xs"
                 >
-                  <div className="relative h-48 w-full overflow-hidden bg-gray-100">
+                  <Link to="/workshops" className="relative h-48 w-full overflow-hidden bg-gray-100 block group/thumb">
                     <img
                       src={defaultWorkshopImages[item.key]}
                       alt={item.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="w-full h-full object-cover group-hover/thumb:scale-105 transition-transform duration-500"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-50" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+
+                    {/* Play Button Overlay */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-12 h-12 rounded-full bg-red-600/90 text-white flex items-center justify-center shadow-lg transition-transform group-hover/thumb:scale-115">
+                        <Play size={18} className="fill-current ml-0.5" />
+                      </div>
+                    </div>
+
                     <span className="absolute top-3 right-3 text-[11px] font-bold bg-white/95 text-emerald-800 px-3 py-1 rounded-full shadow-sm">
                       {item.category}
                     </span>
                     <span className="absolute bottom-3 left-3 text-[11px] font-semibold bg-black/65 text-white px-2.5 py-0.5 rounded-md">
                       ⏱️ {item.duration}
                     </span>
-                  </div>
+                  </Link>
                   <div className="p-6 flex-1 flex flex-col justify-between">
                     <div>
                       <h3 className="font-bold text-lg text-gray-900 group-hover:text-emerald-700 transition-colors mb-2 line-clamp-1">
@@ -489,14 +507,14 @@ const LandingPage = () => {
                       </p>
                     </div>
                     <div className="pt-4 border-t border-gray-100 flex items-center justify-between mt-auto">
-                      <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg">
-                        Free Workshop
+                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-600 bg-red-50 px-2.5 py-1 rounded-lg">
+                        <Youtube size={14} /> Free Video
                       </span>
                       <Link
                         to="/workshops"
                         className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 hover:text-emerald-800"
                       >
-                        View Details <ArrowRight size={14} />
+                        <Play size={12} className="fill-current" /> Watch Now
                       </Link>
                     </div>
                   </div>

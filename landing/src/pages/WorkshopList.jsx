@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Clock, ExternalLink, ArrowRight } from "lucide-react";
+import { Clock, Play, Youtube, X, ArrowRight } from "lucide-react";
 import { fetchWorkshops } from "../services/landingService.js";
 import SEO from "../components/SEO.jsx";
 
@@ -26,9 +26,16 @@ const getWorkshopThumbnail = (w = {}) => {
   return "https://images.unsplash.com/photo-1592417817098-8f3d69102553?q=80&w=800&auto=format&fit=crop";
 };
 
+const getYoutubeId = (url) => {
+  if (!url) return null;
+  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+  return match ? match[1] : null;
+};
+
 const WorkshopList = () => {
   const [workshops, setWorkshops] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeVideo, setActiveVideo] = useState(null);
 
   useEffect(() => {
     fetchWorkshops()
@@ -36,6 +43,16 @@ const WorkshopList = () => {
       .catch(() => setWorkshops([]))
       .finally(() => setLoading(false));
   }, []);
+
+  const handleWatch = (w) => {
+    const url = w.videoUrl || w.youtubeUrl || w.registrationUrl || "https://www.youtube.com/@agri_yuvaa";
+    const ytId = getYoutubeId(url);
+    if (ytId) {
+      setActiveVideo({ id: ytId, title: w.title, url });
+    } else {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+  };
 
   return (
     <div className="pt-24 pb-20">
@@ -77,15 +94,27 @@ const WorkshopList = () => {
                 key={w._id}
                 className="bg-white rounded-2xl border border-gray-200/80 overflow-hidden hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 group flex flex-col shadow-xs"
               >
-                {/* Thumbnail */}
-                <div className="relative h-48 w-full overflow-hidden bg-gray-100">
+                {/* Thumbnail with Play Trigger */}
+                <div
+                  onClick={() => handleWatch(w)}
+                  className="relative h-48 w-full overflow-hidden bg-gray-100 cursor-pointer group/thumb"
+                  title="Click to Watch Workshop"
+                >
                   <img
                     src={getWorkshopThumbnail(w)}
                     alt={w.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-full object-cover group-hover/thumb:scale-105 transition-transform duration-500"
                     loading="lazy"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-50" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+
+                  {/* Play Button Overlay */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-12 h-12 rounded-full bg-red-600/90 hover:bg-red-600 text-white flex items-center justify-center shadow-lg transition-transform group-hover/thumb:scale-115">
+                      <Play size={18} className="fill-current ml-0.5" />
+                    </div>
+                  </div>
+
                   {w.category && (
                     <span className="absolute top-3 right-3 text-[11px] font-bold bg-white/95 text-emerald-800 px-3 py-1 rounded-full shadow-sm backdrop-blur-xs">
                       {w.category}
@@ -99,46 +128,37 @@ const WorkshopList = () => {
                 </div>
 
                 <div className="p-6 flex-1 flex flex-col justify-between">
-                  <h3 className="font-bold text-lg text-gray-900 mb-2">{w.title}</h3>
-                  <p className="text-sm text-gray-500 leading-relaxed mb-4 line-clamp-3">
-                    {w.description}
-                  </p>
+                  <div>
+                    <h3 className="font-bold text-lg text-gray-900 mb-2">{w.title}</h3>
+                    <p className="text-sm text-gray-500 leading-relaxed mb-4 line-clamp-3">
+                      {w.description}
+                    </p>
 
-                  <div className="flex items-center gap-4 text-xs text-gray-400 mb-4">
-                    {w.duration && (
-                      <span className="flex items-center gap-1">
-                        <Clock size={12} /> {w.duration}
-                      </span>
-                    )}
-                    {w.instructor && (
-                      <span>By {w.instructor}</span>
-                    )}
+                    <div className="flex items-center gap-4 text-xs text-gray-400 mb-4">
+                      {w.duration && (
+                        <span className="flex items-center gap-1">
+                          <Clock size={12} /> {w.duration}
+                        </span>
+                      )}
+                      {w.instructor && (
+                        <span>By {w.instructor}</span>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="flex items-center justify-between pt-3 border-t border-gray-50">
-                    {w.price > 0 ? (
-                      <span className="text-sm font-bold text-emerald-600">₹{w.price.toLocaleString()}</span>
-                    ) : (
-                      <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">Free</span>
-                    )}
+                  {/* Action Row: Watch Now Button */}
+                  <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-3">
+                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-600 bg-red-50 px-2.5 py-1 rounded-lg">
+                      <Youtube size={14} /> Free Video
+                    </span>
 
-                    {w.registrationUrl ? (
-                      <a
-                        href={w.registrationUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-600 hover:text-emerald-700 transition-colors"
-                      >
-                        Register <ExternalLink size={13} />
-                      </a>
-                    ) : (
-                      <Link
-                        to="/contact"
-                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-600 hover:text-emerald-700 transition-colors"
-                      >
-                        Enquire <ArrowRight size={13} />
-                      </Link>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleWatch(w)}
+                      className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-xs hover:shadow-md cursor-pointer"
+                    >
+                      <Play size={13} className="fill-current" /> Watch Now
+                    </button>
                   </div>
                 </div>
               </div>
@@ -162,6 +182,62 @@ const WorkshopList = () => {
           </Link>
         </div>
       </div>
+
+      {/* YouTube Video Modal Player */}
+      {activeVideo && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setActiveVideo(null)}
+        >
+          <div
+            className="bg-gray-900 border border-gray-800 text-white rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-800 bg-gray-950">
+              <div className="flex items-center gap-2 min-w-0 pr-4">
+                <Youtube className="text-red-500 shrink-0" size={20} />
+                <h3 className="font-bold text-sm sm:text-base text-white truncate">
+                  {activeVideo.title}
+                </h3>
+              </div>
+              <button
+                onClick={() => setActiveVideo(null)}
+                className="p-1 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-colors cursor-pointer"
+                aria-label="Close video"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Video Iframe */}
+            <div className="relative aspect-video w-full bg-black">
+              <iframe
+                src={`https://www.youtube-nocookie.com/embed/${activeVideo.id}?autoplay=1&rel=0`}
+                title={activeVideo.title}
+                className="w-full h-full border-0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-3.5 bg-gray-950 flex items-center justify-between text-xs">
+              <span className="text-gray-400 flex items-center gap-1.5">
+                <span>🌾 Free Video Workshop by AgriYuvaa</span>
+              </span>
+              <a
+                href={activeVideo.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-red-400 hover:text-red-300 font-semibold"
+              >
+                Watch on YouTube ↗
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style>{`
         .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
