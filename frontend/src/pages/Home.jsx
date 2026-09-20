@@ -78,27 +78,27 @@ const Home = () => {
               livestock, food processing, and agri-business — across India.
             </p>
 
-            <form onSubmit={handleSearch} className="bg-white p-3 rounded-2xl shadow-md border border-brand-border flex flex-col sm:flex-row gap-2">
-              <div className="flex items-center gap-2 flex-1 px-3">
+            <form onSubmit={handleSearch} className="bg-white p-2.5 sm:p-3 rounded-2xl shadow-md border border-brand-border flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full max-w-xl lg:max-w-2xl">
+              <div className="flex items-center gap-2 flex-1 min-w-0 sm:min-w-[220px] px-3 py-1">
                 <Search size={18} className="text-brand-grey shrink-0" />
                 <input
                   value={keyword}
                   onChange={(e) => setKeyword(e.target.value)}
                   placeholder="Job title, crop, or keyword"
-                  className="w-full py-2 focus:outline-none text-sm"
+                  className="w-full py-1.5 focus:outline-none text-sm min-w-0"
                 />
               </div>
-              <div className="hidden sm:block w-px bg-brand-border" />
-              <div className="flex items-center gap-2 flex-1 px-3">
+              <div className="hidden sm:block w-px h-6 bg-brand-border self-center" />
+              <div className="flex items-center gap-2 flex-1 min-w-0 sm:min-w-[180px] px-3 py-1">
                 <MapPin size={18} className="text-brand-grey shrink-0" />
                 <input
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   placeholder="Location"
-                  className="w-full py-2 focus:outline-none text-sm"
+                  className="w-full py-1.5 focus:outline-none text-sm min-w-0"
                 />
               </div>
-              <button type="submit" className="btn-primary shrink-0">
+              <button type="submit" className="btn-primary shrink-0 px-6 py-2.5">
                 Search Jobs
               </button>
             </form>
@@ -132,9 +132,9 @@ const Home = () => {
 
       {/* Government Agriculture Vacancies Spotlight */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-        <div className="bg-gradient-to-r from-emerald-900 via-emerald-800 to-green-900 text-white rounded-3xl p-8 sm:p-10 shadow-lg border border-emerald-700/50 flex flex-col md:flex-row items-center justify-between gap-8">
+        <div className="bg-gradient-to-r from-emerald-900 via-emerald-800 to-green-900 text-white rounded-3xl p-8 sm:p-10 shadow-lg border border-emerald-700/50 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 lg:gap-10">
           <div className="space-y-3 max-w-2xl">
-            <div className="inline-flex items-center gap-2 bg-amber-400/20 text-amber-300 border border-amber-400/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+            <div className="inline-flex items-center gap-2 bg-amber-400/20 text-amber-300 border border-amber-400/30 px-3 py-1 rounded-full text-xs font-semibold">
               <span>🏛️ Central & State Govt Opportunities</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-white leading-tight">
@@ -150,10 +150,10 @@ const Home = () => {
               <span className="bg-white/10 text-white text-xs px-2.5 py-1 rounded-lg border border-white/10">IFFCO & PSUs</span>
             </div>
           </div>
-          <div className="shrink-0 w-full md:w-auto text-center md:text-right">
+          <div className="shrink-0 w-full sm:w-auto">
             <Link
               to="/govt-jobs"
-              className="inline-flex items-center justify-center gap-2 bg-white text-emerald-950 font-bold px-6 py-3.5 rounded-xl hover:bg-amber-300 hover:text-black transition-all shadow-md text-sm w-full md:w-auto"
+              className="inline-flex items-center justify-center gap-2 bg-white text-brand-black font-bold px-6 py-3.5 rounded-xl hover:bg-amber-300 transition-all shadow-md text-sm w-full sm:w-auto whitespace-nowrap"
             >
               Explore Govt Vacancies <ArrowRight size={16} />
             </Link>

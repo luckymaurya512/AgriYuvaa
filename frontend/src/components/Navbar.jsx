@@ -240,7 +240,12 @@ const Navbar = () => {
               <Link to={dashboardPathForRole(user.role)} className="btn-secondary text-xs py-2 px-3 flex items-center gap-1.5">
                 <span>Dashboard</span>
               </Link>
-              <button onClick={handleLogout} className="btn-primary text-xs py-2 px-3 flex items-center gap-1.5">
+              <button
+                onClick={handleLogout}
+                className="text-xs font-semibold text-brand-grey hover:text-red-600 hover:bg-red-50 border border-brand-border py-2 px-3 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
+                aria-label="Log out of account"
+                title="Log out"
+              >
                 <LogOut size={14} /> <span>Logout</span>
               </button>
             </>

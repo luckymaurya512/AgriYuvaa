@@ -18,7 +18,7 @@ const Footer = () => {
         </div>
 
         <div>
-          <h4 className="font-semibold mb-3 text-sm uppercase tracking-wide text-white/80">For Job Seekers</h4>
+          <h3 className="font-semibold mb-3 text-sm uppercase tracking-wide text-white/80">For Job Seekers</h3>
           <ul className="space-y-2 text-sm text-white/60">
             <li><Link to="/jobs" className="hover:text-brand-green">Browse Jobs</Link></li>
             <li><Link to="/register" className="hover:text-brand-green">Create Profile</Link></li>
@@ -27,7 +27,7 @@ const Footer = () => {
         </div>
 
         <div>
-          <h4 className="font-semibold mb-3 text-sm uppercase tracking-wide text-white/80">For Employers</h4>
+          <h3 className="font-semibold mb-3 text-sm uppercase tracking-wide text-white/80">For Employers</h3>
           <ul className="space-y-2 text-sm text-white/60">
             <li><Link to="/register" className="hover:text-brand-green">Post a Job</Link></li>
             <li><Link to="/employers" className="hover:text-brand-green">Browse Employers</Link></li>
@@ -36,7 +36,7 @@ const Footer = () => {
         </div>
 
         <div>
-          <h4 className="font-semibold mb-3 text-sm uppercase tracking-wide text-white/80">Company</h4>
+          <h3 className="font-semibold mb-3 text-sm uppercase tracking-wide text-white/80">Company</h3>
           <ul className="space-y-2 text-sm text-white/60 mb-4">
             <li><Link to="/about" className="hover:text-brand-green">About Us</Link></li>
             <li><Link to="/contact" className="hover:text-brand-green">Contact</Link></li>

@@ -82,13 +82,15 @@ const JobCard = ({ job, isSavedInitial = false, onBookmarkChange }) => {
               e.stopPropagation();
               const salaryInfo = job.salaryMin || job.salaryMax ? `\n💰 *Salary:* ${formatSalary(job.salaryMin, job.salaryMax)}` : "";
               const company = job.companyName || job.employer?.name || "Agri Company";
-              const text = `🌾 *Agriculture Hiring Alert on AgriYuvaa*:\n\n📌 *${job.title}*\n🏢 *Company:* ${company}\n📍 *Location:* ${job.location || "India"}\n💼 *Type:* ${job.employmentType || "Full-time"}${salaryInfo}\n\n👉 *View & Apply:* https://frontend-lime-nine-60.vercel.app/jobs/${job._id}`;
-              window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank");
+              const text = `🌾 *Agriculture Hiring Alert on AgriYuvaa*:\n\n📌 *${job.title}*\n🏢 *Company:* ${company}\n📍 *Location:* ${job.location || "India"}\n💼 *Type:* ${job.employmentType || "Full-time"}${salaryInfo}\n\n👉 *View & Apply:* https://job.agriyuvaa.com/jobs/${job._id}`;
+              window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
             }}
-            className="p-1.5 rounded-lg border border-emerald-200 bg-emerald-50/70 hover:bg-[#25D366]/15 text-[#25D366] hover:border-[#25D366]/40 transition-colors flex items-center justify-center"
-            title="Share on WhatsApp"
+            className="px-2 py-1 rounded-lg border border-emerald-200 bg-emerald-50/70 hover:bg-[#25D366]/15 text-[#25D366] hover:border-[#25D366]/40 transition-colors flex items-center gap-1 text-[11px] font-semibold cursor-pointer"
+            aria-label={`Share ${job.title} on WhatsApp`}
+            title="Share job opening on WhatsApp"
           >
-            <WhatsAppIcon size={14} className="text-[#25D366]" />
+            <WhatsAppIcon size={13} className="text-[#25D366]" />
+            <span>Share</span>
           </button>
 
           {user?.role === "seeker" && (
@@ -96,11 +98,12 @@ const JobCard = ({ job, isSavedInitial = false, onBookmarkChange }) => {
               type="button"
               onClick={handleBookmark}
               disabled={saving}
-              className={`p-1.5 rounded-lg border transition-all shrink-0 ${
+              className={`p-1.5 rounded-lg border transition-all shrink-0 cursor-pointer ${
                 isSaved
                   ? "bg-emerald-50 border-emerald-300 text-emerald-700"
                   : "bg-white border-gray-200 text-gray-400 hover:text-emerald-700 hover:border-emerald-200"
               }`}
+              aria-label={isSaved ? "Remove from saved jobs" : "Save this job"}
               title={isSaved ? "Remove from saved jobs" : "Save this job"}
             >
               <Bookmark size={15} fill={isSaved ? "currentColor" : "none"} />
@@ -117,43 +120,30 @@ const JobCard = ({ job, isSavedInitial = false, onBookmarkChange }) => {
         {job.companyName || job.employer?.name || "AgriYuvaa Employer"}
       </p>
 
-      <div className="flex flex-wrap gap-3 text-xs text-brand-grey">
+      {/* Primary Key Metadata: Location, Employment Type, Salary */}
+      <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-xs text-brand-grey">
         <span className="inline-flex items-center gap-1">
-          <MapPin size={14} className="text-brand-green" /> {job.location}
+          <MapPin size={13} className="text-brand-green shrink-0" /> {job.location || "India"}
         </span>
         <span className="inline-flex items-center gap-1">
-          <Briefcase size={14} className="text-brand-green" /> {formatEmploymentType(job.employmentType)}
+          <Briefcase size={13} className="text-brand-green shrink-0" /> {formatEmploymentType(job.employmentType)}
         </span>
-        {formatExperience(job.experienceLevel) && (
-          <span className="inline-flex items-center gap-1">
-            <Award size={14} className="text-brand-green" /> {formatExperience(job.experienceLevel)}
-          </span>
-        )}
-        <span className="inline-flex items-center gap-1">
-          <IndianRupee size={14} className="text-brand-green" /> {formatSalary(job.salaryMin, job.salaryMax)}
+        <span className="inline-flex items-center gap-1 font-semibold text-brand-black">
+          <IndianRupee size={13} className="text-brand-green shrink-0" /> {formatSalary(job.salaryMin, job.salaryMax)}
         </span>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 mt-auto pt-1">
+      {/* Clean Footer Row: Category Tag + Application Deadline */}
+      <div className="flex items-center justify-between gap-2 mt-auto pt-2 border-t border-brand-border/50 text-xs">
         {job.category?.name && (
-          <span className="text-xs font-medium text-brand-green-dark bg-brand-green-light px-3 py-1 rounded-full">
+          <span className="text-[11px] font-medium text-brand-green-dark bg-brand-green-light px-2.5 py-0.5 rounded-md truncate max-w-[150px]">
             {job.category.name}
           </span>
         )}
         {deadlineDate && (
-          <span className="text-[11px] font-medium text-amber-900 bg-amber-50 border border-amber-200/80 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-            <Calendar size={11} className="text-amber-700" />
-            Closes {new Date(deadlineDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
-          </span>
-        )}
-        {job.applyType === "email" && (
-          <span className="text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-full">
-            ✉️ Email HR
-          </span>
-        )}
-        {job.applyType === "external_link" && (
-          <span className="text-xs font-medium text-purple-700 bg-purple-50 border border-purple-200 px-2.5 py-0.5 rounded-full">
-            🌐 Company Site
+          <span className="text-[11px] text-brand-grey flex items-center gap-1 ml-auto">
+            <Calendar size={11} className="text-brand-grey shrink-0" />
+            <span>Closes {new Date(deadlineDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</span>
           </span>
         )}
       </div>
