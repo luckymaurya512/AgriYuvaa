@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import logo from "../assets/logo.png";
 import SEO from "../components/SEO.jsx";
@@ -16,6 +16,8 @@ const dashboardPathForRole = (role) => {
 const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirect = searchParams.get("redirect");
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -26,7 +28,11 @@ const Login = () => {
     setLoading(true);
     try {
       const user = await login(form.email, form.password);
-      navigate(dashboardPathForRole(user.role));
+      if (redirect && redirect.startsWith("/") && !redirect.startsWith("//")) {
+        navigate(redirect);
+      } else {
+        navigate(dashboardPathForRole(user.role));
+      }
     } catch (err) {
       setError(err.response?.data?.message || "Invalid email or password");
     } finally {
@@ -78,7 +84,12 @@ const Login = () => {
 
       <p className="text-sm text-brand-grey text-center mt-6">
         New to AgriYuvaa?{" "}
-        <Link to="/register" className="text-brand-green-dark font-semibold">Create an account</Link>
+        <Link
+          to={redirect ? `/register?redirect=${encodeURIComponent(redirect)}` : "/register"}
+          className="text-brand-green-dark font-semibold"
+        >
+          Create an account
+        </Link>
       </p>
     </div>
   );

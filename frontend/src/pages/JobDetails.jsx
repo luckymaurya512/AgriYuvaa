@@ -25,6 +25,8 @@ import {
   Trash2,
   Clock,
   Award,
+  Lock,
+  LogIn,
 } from "lucide-react";
 import { fetchJobById, applyToJob, fetchMyApplications, fetchJobs, deleteJob } from "../services/jobService.js";
 import { toggleJobFeatured } from "../services/adminService.js";
@@ -607,6 +609,64 @@ const JobDetails = () => {
                 Explore Active Openings →
               </Link>
             </div>
+          ) : !user ? (
+            /* ── AUTH GATE: MANDATORY LOGIN TO APPLY (ANY JOB TYPE) ── */
+            <div className="p-6 text-center space-y-4 bg-emerald-50/40 rounded-2xl border border-emerald-200/80">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-brand-green flex items-center justify-center mx-auto shadow-xs">
+                <Lock size={22} className="text-emerald-800" />
+              </div>
+              <div>
+                <h3 className="font-display font-bold text-lg text-brand-black">
+                  Log in to Apply
+                </h3>
+                <p className="text-xs text-brand-grey mt-1.5 leading-relaxed">
+                  {job.applyType === "email"
+                    ? "You must be logged in to view the verified HR contact email and submit your application."
+                    : job.applyType === "external_link"
+                    ? "You must be logged in to access the verified company portal link and apply."
+                    : "You must be logged in as a candidate to submit your resume for this position."}
+                </p>
+              </div>
+
+              <div className="space-y-2 pt-1">
+                <Link
+                  to={`/login?redirect=/jobs/${job._id}`}
+                  className="btn-primary w-full py-3 text-xs font-bold flex items-center justify-center gap-2 shadow-xs"
+                >
+                  <LogIn size={15} /> Log In to Apply
+                </Link>
+
+                <Link
+                  to={`/register?redirect=/jobs/${job._id}`}
+                  className="btn-secondary w-full py-2.5 text-xs font-semibold flex items-center justify-center gap-1.5 text-brand-black"
+                >
+                  Create Free Candidate Account →
+                </Link>
+              </div>
+
+              <div className="pt-3 border-t border-emerald-100 flex items-center justify-around text-[11px] text-emerald-800 font-medium">
+                <span>✓ 100% Free</span>
+                <span>•</span>
+                <span>✓ Verified Jobs</span>
+                <span>•</span>
+                <span>✓ Direct HR</span>
+              </div>
+            </div>
+          ) : user.role !== "seeker" ? (
+            /* ── ROLE CHECK: ONLY JOB SEEKERS CAN APPLY ── */
+            <div className="p-6 text-center space-y-3 bg-amber-50/40 rounded-2xl border border-amber-200/80">
+              <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center mx-auto shadow-xs">
+                <Info size={22} />
+              </div>
+              <div>
+                <h3 className="font-display font-bold text-base text-brand-black">
+                  Job Seeker Account Required
+                </h3>
+                <p className="text-xs text-brand-grey mt-1 leading-relaxed">
+                  You are currently logged in with an employer or admin account. Only registered Job Seekers can apply to active vacancies.
+                </p>
+              </div>
+            </div>
           ) : /* ── CASE 1: DIRECT HR EMAIL APPLICATION ── */
           job.applyType === "email" ? (
             <div className="space-y-4 min-w-0 w-full">
@@ -779,20 +839,7 @@ const JobDetails = () => {
             <div>
               <h2 className="font-display font-semibold mb-4">Apply for this role</h2>
 
-              {!user ? (
-                <div className="text-sm text-brand-grey">
-                  <Link to="/login" className="text-brand-green-dark font-semibold">
-                    Log in
-                  </Link>{" "}
-                  or{" "}
-                  <Link to="/register" className="text-brand-green-dark font-semibold">
-                    create an account
-                  </Link>{" "}
-                  to apply.
-                </div>
-              ) : user.role !== "seeker" ? (
-                <p className="text-sm text-brand-grey">Only job seeker accounts can apply to jobs.</p>
-              ) : applied ? (
+              {applied ? (
                 <div className="p-5 bg-emerald-50/80 border border-emerald-200 rounded-2xl space-y-4">
                   <div className="flex items-start gap-3">
                     <div className="h-10 w-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm">

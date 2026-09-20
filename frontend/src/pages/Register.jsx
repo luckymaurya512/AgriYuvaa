@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { resendOtp } from "../services/authService.js";
 import logo from "../assets/logo.png";
@@ -11,6 +11,8 @@ const RESEND_COOLDOWN = 60; // seconds
 const Register = () => {
   const { register, verifyOtp } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirect = searchParams.get("redirect");
 
   // ── Registration form state ──
   const [role, setRole] = useState("seeker");
@@ -129,7 +131,11 @@ const Register = () => {
         otp,
         companyName: pendingCompanyName,
       });
-      navigate(user.role === "employer" ? "/employer" : "/seeker");
+      if (redirect && redirect.startsWith("/") && !redirect.startsWith("//") && user.role === "seeker") {
+        navigate(redirect);
+      } else {
+        navigate(user.role === "employer" ? "/employer" : "/seeker");
+      }
     } catch (err) {
       setOtpError(err.response?.data?.message || "Verification failed. Please try again.");
       // Clear inputs on error so user can re-enter
@@ -302,7 +308,12 @@ const Register = () => {
 
       <p className="text-sm text-brand-grey text-center mt-6">
         Already have an account?{" "}
-        <Link to="/login" className="text-brand-green-dark font-semibold">Log in</Link>
+        <Link
+          to={redirect ? `/login?redirect=${encodeURIComponent(redirect)}` : "/login"}
+          className="text-brand-green-dark font-semibold"
+        >
+          Log in
+        </Link>
       </p>
     </div>
   );

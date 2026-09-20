@@ -20,6 +20,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import api from "../services/api.js";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import SEO from "../components/SEO.jsx";
 
@@ -60,6 +61,7 @@ const initialGovtForm = {
 
 const GovtJobs = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const isAdmin = user?.role === "admin" || user?.role === "superadmin";
 
   const [jobs, setJobs] = useState([]);
@@ -364,14 +366,19 @@ const GovtJobs = () => {
                     </a>
                   )}
 
-                  <a
-                    href={job.applyUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn-primary text-xs py-2 px-4 flex items-center gap-1.5 shadow-sm"
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!user) {
+                        navigate("/login?redirect=/govt-jobs");
+                      } else {
+                        window.open(job.applyUrl, "_blank", "noopener,noreferrer");
+                      }
+                    }}
+                    className="btn-primary text-xs py-2 px-4 flex items-center gap-1.5 shadow-sm cursor-pointer"
                   >
                     Apply on Govt Portal <ExternalLink size={12} />
-                  </a>
+                  </button>
 
                   {/* Admin Delete Action */}
                   {isAdmin && (
