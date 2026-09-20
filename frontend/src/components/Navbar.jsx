@@ -256,9 +256,39 @@ const Navbar = () => {
           )}
         </div>
 
-        <button className="md:hidden" onClick={() => setOpen(!open)} aria-label="Toggle menu">
-          {open ? <X size={24} /> : <Menu size={24} />}
-        </button>
+        {/* Mobile Header Right: Action Button + Hamburger Toggle */}
+        <div className="flex md:hidden items-center gap-2">
+          {!user ? (
+            <Link
+              to="/login"
+              className="btn-primary text-xs py-1.5 px-3 font-semibold shadow-xs whitespace-nowrap"
+            >
+              Login
+            </Link>
+          ) : ["superadmin", "admin", "employer"].includes(user.role) ? (
+            <Link
+              to="/employer/post-job"
+              className="btn-primary text-xs py-1.5 px-3 font-semibold shadow-xs whitespace-nowrap"
+            >
+              Post a Job
+            </Link>
+          ) : (
+            <Link
+              to="/jobs"
+              className="btn-primary text-xs py-1.5 px-3 font-semibold shadow-xs whitespace-nowrap"
+            >
+              Jobs
+            </Link>
+          )}
+
+          <button
+            className="p-1.5 rounded-lg text-brand-black hover:text-brand-green-dark transition-colors cursor-pointer"
+            onClick={() => setOpen(!open)}
+            aria-label="Toggle menu"
+          >
+            {open ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
       </div>
 
       {open && (
