@@ -63,12 +63,12 @@ const JobCard = ({ job, isSavedInitial = false, onBookmarkChange }) => {
       <div className="flex items-start justify-between gap-2">
         <div className="flex flex-wrap items-center gap-1.5">
           {job.isFeatured && (
-            <span className="inline-flex items-center gap-1 bg-amber-500 text-white text-[11px] font-bold px-2.5 py-0.5 rounded-md shadow-xs">
+            <span className="inline-flex items-center gap-1 bg-amber-500 text-white text-xs font-semibold px-2.5 py-1 rounded-lg shadow-xs">
               <Star size={11} fill="currentColor" /> Featured
             </span>
           )}
           {job.isUrgent && (
-            <span className="inline-flex items-center gap-1 bg-orange-600 text-white text-[11px] font-bold px-2.5 py-0.5 rounded-md animate-pulse">
+            <span className="inline-flex items-center gap-1 bg-orange-600 text-white text-xs font-semibold px-2.5 py-1 rounded-lg animate-pulse">
               <Zap size={11} fill="currentColor" /> Urgent
             </span>
           )}
@@ -85,12 +85,11 @@ const JobCard = ({ job, isSavedInitial = false, onBookmarkChange }) => {
               const text = `🌾 *Agriculture Hiring Alert on AgriYuvaa*:\n\n📌 *${job.title}*\n🏢 *Company:* ${company}\n📍 *Location:* ${job.location || "India"}\n💼 *Type:* ${job.employmentType || "Full-time"}${salaryInfo}\n\n👉 *View & Apply:* https://job.agriyuvaa.com/jobs/${job._id}`;
               window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
             }}
-            className="px-2 py-1 rounded-lg border border-emerald-200 bg-emerald-50/70 hover:bg-[#25D366]/15 text-[#25D366] hover:border-[#25D366]/40 transition-colors flex items-center gap-1 text-[11px] font-semibold cursor-pointer"
+            className="p-1.5 rounded-lg border border-brand-border/60 bg-white text-brand-grey hover:text-[#25D366] hover:border-emerald-300 hover:bg-emerald-50/50 transition-colors flex items-center justify-center cursor-pointer"
             aria-label={`Share ${job.title} on WhatsApp`}
-            title="Share job opening on WhatsApp"
+            title="Share on WhatsApp"
           >
-            <WhatsAppIcon size={13} className="text-[#25D366]" />
-            <span>Share</span>
+            <WhatsAppIcon size={14} className="text-current" />
           </button>
 
           {user?.role === "seeker" && (
@@ -136,13 +135,13 @@ const JobCard = ({ job, isSavedInitial = false, onBookmarkChange }) => {
       {/* Clean Footer Row: Category Tag + Application Deadline */}
       <div className="flex items-center justify-between gap-2 mt-auto pt-2 border-t border-brand-border/50 text-xs">
         {job.category?.name && (
-          <span className="text-[11px] font-medium text-brand-green-dark bg-brand-green-light px-2.5 py-0.5 rounded-md truncate max-w-[150px]">
+          <span className="text-xs font-medium text-brand-green-dark bg-brand-green-light px-3 py-1 rounded-md truncate max-w-[160px]">
             {job.category.name}
           </span>
         )}
         {deadlineDate && (
-          <span className="text-[11px] text-brand-grey flex items-center gap-1 ml-auto">
-            <Calendar size={11} className="text-brand-grey shrink-0" />
+          <span className="text-xs text-brand-grey flex items-center gap-1 ml-auto">
+            <Calendar size={12} className="text-brand-grey shrink-0" />
             <span>Closes {new Date(deadlineDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</span>
           </span>
         )}

@@ -116,18 +116,9 @@ const Navbar = () => {
             <Link
               key={link.to}
               to={link.to}
-              className={`text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                link.isGovt
-                  ? "text-emerald-800 font-semibold hover:text-emerald-950"
-                  : "text-brand-black/80 hover:text-brand-green-dark"
-              }`}
+              className="text-sm font-medium transition-colors text-brand-black/80 hover:text-brand-green-dark"
             >
               <span>{link.label}</span>
-              {link.isGovt && (
-                <span className="bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-bold px-1.5 py-0.5 rounded-full tracking-wide uppercase shadow-2xs">
-                  Govt
-                </span>
-              )}
             </Link>
           ))}
         </nav>
@@ -230,19 +221,22 @@ const Navbar = () => {
 
               <Link
                 to="/profile"
-                className="px-3 py-2 rounded-xl border border-brand-border hover:border-emerald-600/60 bg-gray-50 hover:bg-emerald-50/60 text-brand-black text-xs font-bold flex items-center gap-1.5 transition-colors shadow-2xs"
+                className="px-3 py-2 rounded-xl border border-brand-border hover:border-brand-black/30 bg-white hover:bg-brand-surface text-brand-black text-xs font-semibold flex items-center gap-1.5 transition-colors"
                 title="My Profile & Account Settings"
               >
-                <User size={15} className="text-emerald-700" />
+                <User size={14} className="text-brand-grey" />
                 <span>Profile</span>
               </Link>
 
-              <Link to={dashboardPathForRole(user.role)} className="btn-secondary text-xs py-2 px-3 flex items-center gap-1.5">
+              <Link
+                to={dashboardPathForRole(user.role)}
+                className="px-3 py-2 rounded-xl border border-brand-border hover:border-brand-black/30 bg-white hover:bg-brand-surface text-brand-black text-xs font-semibold flex items-center gap-1.5 transition-colors"
+              >
                 <span>Dashboard</span>
               </Link>
               <button
                 onClick={handleLogout}
-                className="text-xs font-semibold text-brand-grey hover:text-red-600 hover:bg-red-50 border border-brand-border py-2 px-3 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
+                className="px-3 py-2 rounded-xl border border-brand-border text-brand-grey hover:text-red-600 hover:bg-red-50 hover:border-red-200 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
                 aria-label="Log out of account"
                 title="Log out"
               >

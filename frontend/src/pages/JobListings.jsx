@@ -141,11 +141,11 @@ const JobListings = () => {
 
       <div className="grid md:grid-cols-4 gap-8">
         {/* Filters Sidebar */}
-        <aside className="card p-5 h-fit space-y-6">
+        <aside className="card p-5 h-fit space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-brand-border">
-            <div className="flex items-center gap-2 font-semibold text-sm">
+            <h2 className="flex items-center gap-2 font-semibold text-sm text-brand-black">
               <SlidersHorizontal size={16} className="text-brand-green" /> Filters
-            </div>
+            </h2>
           </div>
 
           <form onSubmit={applyTextFilters} className="space-y-4">
@@ -213,7 +213,7 @@ const JobListings = () => {
           </form>
 
           {/* Category Dropdown */}
-          <div className="pt-2 border-t border-brand-border">
+          <div className="pt-4 border-t border-brand-border">
             <label className="text-xs font-semibold text-brand-grey uppercase tracking-wide">Category</label>
             <select
               className="input-field mt-1 text-sm"
@@ -266,6 +266,7 @@ const JobListings = () => {
 
         {/* Results */}
         <div className="md:col-span-3">
+          <h2 className="sr-only">Available Job Openings</h2>
           {loading ? (
             <div className="py-24 text-center text-brand-grey flex flex-col items-center justify-center gap-3">
               <div className="w-8 h-8 border-3 border-brand-green border-t-transparent rounded-full animate-spin"></div>
