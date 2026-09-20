@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Menu, X, User, LogOut, Bell, Check, ExternalLink, Sparkles } from "lucide-react";
+import { Menu, X, User, LogOut, Bell, Check, ExternalLink, Sparkles, LayoutDashboard } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
 import {
   fetchNotifications,
@@ -111,12 +111,12 @@ const Navbar = () => {
           </span>
         </Link>
 
-        <nav className="hidden md:flex items-center gap-7">
+        <nav className="hidden md:flex items-center h-full gap-7">
           {navLinks.map((link) => (
             <Link
               key={link.to}
               to={link.to}
-              className="text-sm font-medium transition-colors text-brand-black/80 hover:text-brand-green-dark"
+              className="text-sm font-medium transition-colors text-brand-black/80 hover:text-brand-green-dark flex items-center h-full"
             >
               <span>{link.label}</span>
             </Link>
@@ -232,6 +232,7 @@ const Navbar = () => {
                 to={dashboardPathForRole(user.role)}
                 className="px-3 py-2 rounded-xl border border-brand-border hover:border-brand-black/30 bg-white hover:bg-brand-surface text-brand-black text-xs font-semibold flex items-center gap-1.5 transition-colors"
               >
+                <LayoutDashboard size={14} className="text-brand-grey" />
                 <span>Dashboard</span>
               </Link>
               <button

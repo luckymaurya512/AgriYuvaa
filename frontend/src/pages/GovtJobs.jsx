@@ -139,7 +139,7 @@ const GovtJobs = () => {
       />
       {/* Header Banner */}
       <div className="rounded-3xl bg-gradient-to-r from-emerald-900 via-emerald-850 to-emerald-950 text-white p-8 sm:p-12 mb-10 shadow-lg relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="relative z-10 max-w-2xl space-y-3">
+        <div className="relative z-10 max-w-2xl space-y-4">
           <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-3.5 py-1.5 rounded-full text-xs font-semibold text-emerald-200 border border-white/15">
             <Landmark size={14} /> Official Government & ICAR Vacancies
           </div>
@@ -149,22 +149,20 @@ const GovtJobs = () => {
           <p className="text-sm sm:text-base text-emerald-100/90 leading-relaxed">
             Direct recruitment notices for IBPS AFO, State ADO / Agriculture Officers, NABARD, ICAR & IARI Scientists, KVK SMS, and National Seeds Corporation.
           </p>
+          {isAdmin && (
+            <div className="pt-1">
+              <button
+                onClick={() => {
+                  setShowModal(true);
+                  setModalError("");
+                }}
+                className="bg-amber-400 text-black font-bold text-sm px-6 py-3 rounded-xl hover:bg-amber-300 transition-all inline-flex items-center gap-2 shadow-md cursor-pointer"
+              >
+                <PlusCircle size={18} /> Post Govt Vacancy
+              </button>
+            </div>
+          )}
         </div>
-
-        {/* Admin Post Button */}
-        {isAdmin && (
-          <div className="relative z-10 shrink-0">
-            <button
-              onClick={() => {
-                setShowModal(true);
-                setModalError("");
-              }}
-              className="bg-amber-400 text-black font-bold text-sm px-6 py-3.5 rounded-2xl hover:bg-amber-300 transition-all flex items-center gap-2 shadow-lg shadow-amber-950/30"
-            >
-              <PlusCircle size={18} /> + Post Govt Vacancy
-            </button>
-          </div>
-        )}
 
         {/* Decorative background badge */}
         <div className="absolute right-0 bottom-0 opacity-10 translate-x-12 translate-y-12 pointer-events-none">
@@ -213,16 +211,16 @@ const GovtJobs = () => {
 
         {/* Category Pills */}
         <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-brand-border">
-          <span className="text-xs font-bold uppercase text-brand-grey mr-2 flex items-center gap-1">
+          <span className="text-xs font-bold uppercase text-brand-grey mr-4 flex items-center gap-1.5 shrink-0">
             <Filter size={13} /> Category:
           </span>
           {categories.map((cat) => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`text-xs px-3 py-1.5 rounded-xl font-medium transition-all ${
+              className={`text-xs px-3 py-1.5 rounded-xl font-medium transition-all cursor-pointer ${
                 selectedCategory === cat
-                  ? "bg-emerald-800 text-white font-bold shadow-xs"
+                  ? "bg-brand-black text-white font-bold shadow-xs"
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
             >
@@ -233,14 +231,14 @@ const GovtJobs = () => {
 
         {/* Qualification Pills */}
         <div className="flex flex-wrap items-center gap-2 pt-2">
-          <span className="text-xs font-bold uppercase text-brand-grey mr-2 flex items-center gap-1">
+          <span className="text-xs font-bold uppercase text-brand-grey mr-4 flex items-center gap-1.5 shrink-0">
             <GraduationCap size={13} /> Eligibility:
           </span>
           {qualifications.map((q) => (
             <button
               key={q}
               onClick={() => setSelectedQual(q)}
-              className={`text-xs px-3 py-1.5 rounded-xl font-medium transition-all ${
+              className={`text-xs px-3 py-1.5 rounded-xl font-medium transition-all cursor-pointer ${
                 selectedQual === q
                   ? "bg-brand-black text-white font-bold shadow-xs"
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -279,19 +277,13 @@ const GovtJobs = () => {
               className="card p-6 sm:p-7 hover:shadow-md transition-shadow space-y-4 border border-brand-border relative"
             >
               {/* Top Row: Organization & Status Badge */}
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <span className="text-xs font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-md">
+              <div className="space-y-1.5">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-md">
                     {job.organization}
                   </span>
-                  <h2 className="text-lg sm:text-xl font-display font-bold text-brand-black mt-1.5">
-                    {job.title}
-                  </h2>
-                </div>
-
-                <div className="flex items-center gap-2">
                   <span
-                    className={`text-xs font-bold px-3 py-1 rounded-full border ${
+                    className={`text-xs font-bold px-2.5 py-0.5 rounded-full border ${
                       job.status === "Active"
                         ? "bg-emerald-50 text-emerald-800 border-emerald-200"
                         : job.status === "Closing Soon"
@@ -302,12 +294,15 @@ const GovtJobs = () => {
                     ● {job.status}
                   </span>
                 </div>
+                <h2 className="text-lg sm:text-xl font-display font-bold text-brand-black">
+                  {job.title}
+                </h2>
               </div>
 
               {/* Key Specs Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-gray-50/70 rounded-2xl text-xs border border-gray-100">
                 <div className="flex items-center gap-2">
-                  <Users size={16} className="text-emerald-700 shrink-0" />
+                  <Users size={16} className="text-brand-green-dark shrink-0" />
                   <div>
                     <p className="text-brand-grey font-medium">Total Vacancies</p>
                     <p className="font-bold text-brand-black">{job.vacancies || "Not Specified"}</p>
@@ -315,7 +310,7 @@ const GovtJobs = () => {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <IndianRupee size={16} className="text-emerald-700 shrink-0" />
+                  <IndianRupee size={16} className="text-brand-green-dark shrink-0" />
                   <div>
                     <p className="text-brand-grey font-medium">Pay Scale / Salary</p>
                     <p className="font-bold text-brand-black truncate">{job.salary}</p>
@@ -323,7 +318,7 @@ const GovtJobs = () => {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <GraduationCap size={16} className="text-emerald-700 shrink-0" />
+                  <GraduationCap size={16} className="text-brand-green-dark shrink-0" />
                   <div>
                     <p className="text-brand-grey font-medium">Eligibility</p>
                     <p className="font-bold text-brand-black">{job.qualification}</p>
@@ -331,7 +326,7 @@ const GovtJobs = () => {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <MapPin size={16} className="text-emerald-700 shrink-0" />
+                  <MapPin size={16} className="text-brand-green-dark shrink-0" />
                   <div>
                     <p className="text-brand-grey font-medium">Location / State</p>
                     <p className="font-bold text-brand-black">{job.state}</p>
@@ -340,18 +335,18 @@ const GovtJobs = () => {
               </div>
 
               {/* Description & Details */}
-              <p className="text-xs text-gray-700 leading-relaxed">{job.description}</p>
+              <p className="text-xs text-brand-grey leading-relaxed">{job.description}</p>
 
               {/* Footer Meta & Action Links */}
               <div className="flex flex-wrap items-center justify-between gap-4 pt-3 border-t border-brand-border">
                 <div className="flex flex-wrap items-center gap-4 text-xs text-brand-grey">
                   <span className="flex items-center gap-1.5">
-                    <Calendar size={14} className="text-emerald-700" />
+                    <Calendar size={14} className="text-brand-green-dark" />
                     <strong>Last Date:</strong> {job.applicationDeadline}
                   </span>
                   {job.examDate && (
                     <span className="flex items-center gap-1.5">
-                      <Clock size={14} className="text-emerald-700" />
+                      <Clock size={14} className="text-brand-green-dark" />
                       <strong>Exam:</strong> {job.examDate}
                     </span>
                   )}
