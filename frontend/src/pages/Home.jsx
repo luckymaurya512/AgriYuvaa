@@ -1,6 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Search, MapPin, ArrowRight, UserPlus, SearchCheck, Handshake, Calendar } from "lucide-react";
+import {
+  Search,
+  MapPin,
+  ArrowRight,
+  UserPlus,
+  SearchCheck,
+  Handshake,
+  Calendar,
+  Landmark,
+  BookOpen,
+  Star,
+  Sprout,
+} from "lucide-react";
 import { fetchJobs, fetchCategories, fetchGovtJobs } from "../services/jobService.js";
 import { fetchBlogs, fetchTestimonials } from "../services/landingService.js";
 import JobCard from "../components/JobCard.jsx";
@@ -200,8 +212,11 @@ const Home = () => {
               <div className={featuredJobs.length > 0 ? "pt-10 border-t border-brand-border" : ""}>
                 <div className="flex items-center justify-between mb-6">
                   <div>
-                    <h2 className="text-2xl font-display font-bold flex items-center gap-2">
-                      <span>🏛️</span> Government Agriculture Vacancies
+                    <h2 className="text-2xl font-display font-bold flex items-center gap-2.5">
+                      <span className="p-1.5 rounded-xl bg-emerald-100/70 text-emerald-800 shrink-0">
+                        <Landmark size={20} />
+                      </span>
+                      <span>Government Agriculture Vacancies</span>
                     </h2>
                     <p className="text-xs sm:text-sm text-brand-grey mt-0.5">
                       Live recruitment notifications from ICAR, NABARD, State PSC & PSUs
@@ -243,8 +258,11 @@ const Home = () => {
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 border-t border-brand-border">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h2 className="text-2xl font-display font-bold flex items-center gap-2">
-                <span>📰</span> Career Advice & Industry Insights
+              <h2 className="text-2xl font-display font-bold flex items-center gap-2.5">
+                <span className="p-1.5 rounded-xl bg-emerald-100/70 text-emerald-800 shrink-0">
+                  <BookOpen size={20} />
+                </span>
+                <span>Career Advice & Industry Insights</span>
               </h2>
               <p className="text-xs sm:text-sm text-brand-grey mt-0.5">
                 Expert tips, agri-business updates, and ICAR exam strategies
@@ -274,10 +292,11 @@ const Home = () => {
                     />
                   ) : null}
                   <div
-                    className="w-full h-full flex items-center justify-center text-3xl bg-emerald-50"
+                    className="w-full h-full flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-stone-50 to-emerald-50/60 text-emerald-800/40"
                     style={{ display: blog.coverImage ? "none" : "flex" }}
                   >
-                    🌾
+                    <Sprout size={32} />
+                    <span className="text-[10px] font-bold tracking-wider text-emerald-900/50 uppercase">AgriYuvaa Insights</span>
                   </div>
                 </div>
                 <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
@@ -291,7 +310,7 @@ const Home = () => {
                       {blog.title}
                     </h3>
                     <p className="text-xs text-brand-grey line-clamp-2 mt-1.5 leading-relaxed">
-                      {blog.excerpt || "Read more about this topic..."}
+                      {blog.excerpt || (blog.content ? blog.content.substring(0, 120).replace(/<[^>]+>/g, "").trim() + "..." : "Explore this article for career insights and sector updates.")}
                     </p>
                   </div>
                   <div className="pt-3 border-t border-brand-border flex items-center justify-between text-xs text-brand-grey">
@@ -316,8 +335,11 @@ const Home = () => {
       {testimonials.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 border-t border-brand-border">
           <div className="text-center max-w-2xl mx-auto mb-10">
-            <h2 className="text-2xl font-display font-bold flex items-center justify-center gap-2">
-              <span>⭐</span> Trusted by Candidates & Agri Recruiters
+            <h2 className="text-2xl font-display font-bold flex items-center justify-center gap-2.5">
+              <span className="p-1.5 rounded-xl bg-amber-100/80 text-amber-700 shrink-0">
+                <Star size={20} className="fill-amber-400 text-amber-500" />
+              </span>
+              <span>Trusted by Candidates & Agri Recruiters</span>
             </h2>
             <p className="text-xs sm:text-sm text-brand-grey mt-1">
               Read how AgriYuvaa helps youth find agriculture jobs and employers hire skilled talent.
@@ -330,8 +352,10 @@ const Home = () => {
                 className="card p-6 flex flex-col justify-between space-y-4 hover:shadow-md transition-shadow"
               >
                 <div className="space-y-3">
-                  <div className="flex items-center gap-1 text-amber-400 text-sm">
-                    {"⭐".repeat(t.rating || 5)}
+                  <div className="flex items-center gap-1">
+                    {[...Array(t.rating || 5)].map((_, i) => (
+                      <Star key={i} size={14} className="fill-amber-400 text-amber-400" />
+                    ))}
                   </div>
                   <p className="text-sm text-brand-grey italic leading-relaxed">
                     "{t.content}"

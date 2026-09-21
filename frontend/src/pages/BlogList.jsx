@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Search, Calendar, User, BookOpen, Tag } from "lucide-react";
+import { ArrowRight, Search, Calendar, User, BookOpen, Tag, Sprout } from "lucide-react";
 import { fetchBlogs } from "../services/landingService.js";
 import SEO from "../components/SEO.jsx";
 
@@ -114,13 +114,15 @@ const BlogList = () => {
             ))}
           </div>
         ) : blogs.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-2xl border border-gray-100 p-8">
-            <div className="text-5xl mb-3">📰</div>
-            <h3 className="text-lg font-bold text-gray-800 mb-1">No blog posts found</h3>
-            <p className="text-sm text-gray-500 mb-4">
+          <div className="text-center py-20 bg-white rounded-2xl border border-gray-100 p-8 max-w-md mx-auto">
+            <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-800">
+              <BookOpen size={24} />
+            </div>
+            <h3 className="text-base font-bold text-gray-900 mb-1">No articles found</h3>
+            <p className="text-xs text-gray-500 mb-5 leading-relaxed">
               {search || activeTag
-                ? "Try adjusting your search criteria or tags."
-                : "Check back soon for latest career updates and agricultural insights."}
+                ? "No published articles matched your search filters. Try clearing tags or searching broader keywords."
+                : "Check back soon for new agricultural career guides and recruitment updates."}
             </p>
             {(search || activeTag) && (
               <button
@@ -129,7 +131,7 @@ const BlogList = () => {
                   setSearchInput("");
                   setActiveTag("");
                 }}
-                className="text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-4 py-2 rounded-lg transition-colors"
+                className="text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-4 py-2 rounded-xl transition-colors shadow-2xs"
               >
                 Clear all filters
               </button>
@@ -156,10 +158,11 @@ const BlogList = () => {
                       />
                     ) : null}
                     <div
-                      className="w-full h-full bg-gradient-to-br from-emerald-100 to-lime-50 items-center justify-center text-4xl"
+                      className="w-full h-full flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-stone-50 to-emerald-50/60 text-emerald-800/40"
                       style={{ display: blog.coverImage ? "none" : "flex" }}
                     >
-                      🌱
+                      <Sprout size={32} />
+                      <span className="text-[10px] font-bold tracking-wider text-emerald-900/50 uppercase">AgriYuvaa Insights</span>
                     </div>
                   </Link>
 
@@ -188,7 +191,7 @@ const BlogList = () => {
                       </h2>
 
                       <p className="text-xs text-gray-600 line-clamp-3 leading-relaxed">
-                        {blog.excerpt || "Read this article for valuable insights, tips, and practical information."}
+                        {blog.excerpt || (blog.content ? blog.content.substring(0, 130).replace(/<[^>]+>/g, "").trim() + "..." : "Explore this article for career insights, industry hiring patterns, and preparation tips.")}
                       </p>
                     </div>
 

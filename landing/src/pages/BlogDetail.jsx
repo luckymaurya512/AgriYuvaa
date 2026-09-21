@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Calendar, User, Tag } from "lucide-react";
+import { ArrowLeft, Calendar, User, Tag, BookOpen } from "lucide-react";
 import { fetchBlogBySlug } from "../services/landingService.js";
 import RichTextRenderer from "../components/RichTextRenderer.jsx";
 import SEO from "../components/SEO.jsx";
@@ -33,12 +33,14 @@ const BlogDetail = () => {
 
   if (error || !blog) {
     return (
-      <div className="pt-32 pb-20 text-center">
-        <span className="text-5xl block mb-4">😕</span>
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">Blog Not Found</h2>
-        <p className="text-gray-500 mb-6">This article may have been removed or the URL is incorrect.</p>
-        <Link to="/blog" className="inline-flex items-center gap-2 text-emerald-600 font-semibold text-sm">
-          <ArrowLeft size={16} /> Back to Blogs
+      <div className="pt-36 pb-24 text-center max-w-md mx-auto px-4">
+        <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-gray-100 flex items-center justify-center text-gray-600">
+          <BookOpen size={24} />
+        </div>
+        <h2 className="text-xl font-bold text-gray-900 mb-2">Article Not Found</h2>
+        <p className="text-xs text-gray-500 mb-6">This article may have been removed or the link is invalid.</p>
+        <Link to="/blog" className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs px-5 py-2.5 rounded-xl transition-all shadow-sm">
+          <ArrowLeft size={14} /> Back to Articles
         </Link>
       </div>
     );

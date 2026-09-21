@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Search, Calendar } from "lucide-react";
+import { ArrowRight, Search, Calendar, BookOpen } from "lucide-react";
 import { fetchBlogs } from "../services/landingService.js";
 import SEO from "../components/SEO.jsx";
 
@@ -98,8 +98,13 @@ const BlogList = () => {
                           e.target.nextSibling.style.display = "flex";
                         }}
                       />
-                    ) : null}
-                    <span className="text-5xl" style={{ display: blog.coverImage ? "none" : "block" }}>📰</span>
+                    <div
+                      className="w-full h-full flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-stone-50 to-emerald-50 text-emerald-800/40"
+                      style={{ display: blog.coverImage ? "none" : "flex" }}
+                    >
+                      <BookOpen size={28} />
+                      <span className="text-[10px] font-bold tracking-wider text-emerald-900/50 uppercase">AgriYuvaa Insights</span>
+                    </div>
                   </div>
                   <div className="p-6 flex-1 flex flex-col justify-between">
                     <div>

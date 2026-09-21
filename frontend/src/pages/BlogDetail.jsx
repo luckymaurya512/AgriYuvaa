@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Calendar, User, Tag, Share2, Briefcase, Check, Sparkles } from "lucide-react";
+import { ArrowLeft, Calendar, User, Tag, Share2, Briefcase, Check, Sparkles, Clock, BookOpen } from "lucide-react";
 import { fetchBlogBySlug } from "../services/landingService.js";
 import RichTextRenderer from "../components/common/RichTextRenderer.jsx";
 import SEO from "../components/SEO.jsx";
@@ -20,6 +20,12 @@ const BlogDetail = () => {
       .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, [slug]);
+
+  const readTime = useMemo(() => {
+    if (!blog?.content) return 3;
+    const wordCount = blog.content.replace(/<[^>]+>/g, "").trim().split(/\s+/).length;
+    return Math.max(2, Math.ceil(wordCount / 180));
+  }, [blog?.content]);
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -51,14 +57,16 @@ const BlogDetail = () => {
     return (
       <div className="min-h-screen bg-gray-50/50 flex items-center justify-center px-4 py-20">
         <div className="card max-w-md w-full p-8 text-center space-y-4">
-          <div className="text-5xl">🌾</div>
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-stone-100 flex items-center justify-center text-stone-600">
+            <BookOpen size={24} />
+          </div>
           <h2 className="text-xl font-bold text-gray-900">Article Not Found</h2>
           <p className="text-sm text-gray-500">
             This article may have been moved, updated, or unpublished.
           </p>
           <Link
             to="/blog"
-            className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-5 py-2.5 rounded-xl transition-all shadow-2xs"
+            className="inline-flex items-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold px-5 py-2.5 rounded-xl transition-all shadow-2xs"
           >
             <ArrowLeft size={14} /> Back to Blogs
           </Link>
@@ -131,6 +139,10 @@ const BlogDetail = () => {
                     month: "long",
                     year: "numeric",
                   })}
+            </span>
+            <span className="flex items-center gap-1.5 text-emerald-300/90 font-medium">
+              <Clock size={13} className="text-emerald-400" />
+              {readTime} min read
             </span>
             <button
               onClick={handleCopyLink}
