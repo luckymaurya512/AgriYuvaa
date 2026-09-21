@@ -21,7 +21,8 @@ const GovtJobCard = ({ job }) => {
   const handleShareClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    const text = `🏛️ *Government Agriculture Vacancy Alert on AgriYuvaa*:\n\n📌 *${job.title}*\n🏢 *Organization:* ${job.organization}\n📍 *State:* ${job.state || "All India"}\n👥 *Vacancies:* ${job.vacancies || "Multiple"}\n💰 *Pay Scale:* ${job.salary || "As per rules"}\n📅 *Deadline:* ${job.applicationDeadline || "Check notification"}\n\n👉 *View & Apply:* https://job.agriyuvaa.com/govt-jobs`;
+    const shareUrl = `${window.location.origin}/govt-jobs?id=${job._id}`;
+    const text = `🏛️ *Government Agriculture Vacancy Alert on AgriYuvaa*:\n\n📌 *${job.title}*\n🏢 *Organization:* ${job.organization}\n📍 *State:* ${job.state || "All India"}\n👥 *Vacancies:* ${job.vacancies || "Multiple"}\n💰 *Pay Scale:* ${job.salary || "As per rules"}\n📅 *Deadline:* ${job.applicationDeadline || "Check notification"}\n\n👉 *View & Apply:* ${shareUrl}`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
   };
 

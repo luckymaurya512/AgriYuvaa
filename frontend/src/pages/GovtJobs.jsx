@@ -18,11 +18,14 @@ import {
   X,
   Loader2,
   CheckCircle2,
+  Share2,
+  Check,
 } from "lucide-react";
 import api from "../services/api.js";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import SEO from "../components/SEO.jsx";
+import WhatsAppIcon from "../components/WhatsAppIcon.jsx";
 
 const categories = [
   "All",
@@ -92,9 +95,38 @@ const GovtJobs = () => {
       .finally(() => setLoading(false));
   };
 
+  const [searchParams] = useSearchParams();
+  const targetJobId = searchParams.get("id");
+  const [copiedId, setCopiedId] = useState(null);
+
   useEffect(() => {
     loadGovtJobs();
   }, [selectedCategory, selectedQual]);
+
+  useEffect(() => {
+    if (targetJobId && !loading && jobs.length > 0) {
+      const timer = setTimeout(() => {
+        const el = document.getElementById(`govt-job-${targetJobId}`);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [targetJobId, loading, jobs]);
+
+  const handleShareWhatsApp = (job) => {
+    const shareUrl = `${window.location.origin}/govt-jobs?id=${job._id}`;
+    const text = `🏛️ *Government Agriculture Vacancy Alert on AgriYuvaa*:\n\n📌 *${job.title}*\n🏢 *Organization:* ${job.organization}\n📍 *State:* ${job.state || "All India"}\n👥 *Vacancies:* ${job.vacancies || "Multiple"}\n💰 *Pay Scale:* ${job.salary || "As per rules"}\n📅 *Deadline:* ${job.applicationDeadline || "Check notification"}\n\n👉 *View & Apply Details:* ${shareUrl}`;
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
+  };
+
+  const handleCopyLink = (job) => {
+    const shareUrl = `${window.location.origin}/govt-jobs?id=${job._id}`;
+    navigator.clipboard.writeText(shareUrl);
+    setCopiedId(job._id);
+    setTimeout(() => setCopiedId(null), 2500);
+  };
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -276,29 +308,72 @@ const GovtJobs = () => {
           {jobs.map((job) => (
             <div
               key={job._id}
-              className="card p-6 sm:p-7 hover:shadow-md transition-shadow space-y-4 border border-brand-border relative"
+              id={`govt-job-${job._id}`}
+              className={`card p-6 sm:p-7 hover:shadow-md transition-all space-y-4 border relative ${
+                targetJobId === job._id
+                  ? "border-emerald-500 ring-4 ring-emerald-500/20 shadow-lg bg-emerald-50/10"
+                  : "border-brand-border"
+              }`}
             >
-              {/* Top Row: Organization & Status Badge */}
-              <div className="space-y-1.5">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-md">
-                    {job.organization}
-                  </span>
-                  <span
-                    className={`text-xs font-bold px-2.5 py-0.5 rounded-full border ${
-                      job.status === "Active"
-                        ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-                        : job.status === "Closing Soon"
-                        ? "bg-amber-50 text-amber-800 border-amber-300 animate-pulse"
-                        : "bg-blue-50 text-blue-800 border-blue-200"
-                    }`}
-                  >
-                    ● {job.status}
-                  </span>
+              {/* Top Row: Organization, Badges & Direct Share Buttons */}
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                <div className="space-y-1.5 flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-md">
+                      {job.organization}
+                    </span>
+                    <span
+                      className={`text-xs font-bold px-2.5 py-0.5 rounded-full border ${
+                        job.status === "Active"
+                          ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                          : job.status === "Closing Soon"
+                          ? "bg-amber-50 text-amber-800 border-amber-300 animate-pulse"
+                          : "bg-blue-50 text-blue-800 border-blue-200"
+                      }`}
+                    >
+                      ● {job.status}
+                    </span>
+                    {targetJobId === job._id && (
+                      <span className="text-xs font-bold bg-emerald-600 text-white px-2.5 py-0.5 rounded-full shadow-xs">
+                        🎯 Selected Vacancy
+                      </span>
+                    )}
+                  </div>
+                  <h2 className="text-lg sm:text-xl font-display font-bold text-brand-black">
+                    {job.title}
+                  </h2>
                 </div>
-                <h2 className="text-lg sm:text-xl font-display font-bold text-brand-black">
-                  {job.title}
-                </h2>
+
+                {/* Direct Share Options */}
+                <div className="flex items-center gap-2 shrink-0 self-start">
+                  <button
+                    type="button"
+                    onClick={() => handleShareWhatsApp(job)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-200 bg-emerald-50/80 text-emerald-800 hover:bg-emerald-100 text-xs font-bold transition-all shadow-2xs cursor-pointer"
+                    title="Share this government vacancy on WhatsApp"
+                  >
+                    <WhatsAppIcon size={14} />
+                    <span>WhatsApp</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleCopyLink(job)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold transition-all shadow-2xs cursor-pointer"
+                    title="Copy direct share link to this job"
+                  >
+                    {copiedId === job._id ? (
+                      <>
+                        <Check size={14} className="text-emerald-600" />
+                        <span className="text-emerald-700 font-bold">Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Share2 size={13} />
+                        <span>Copy Link</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
 
               {/* Key Specs Grid */}
