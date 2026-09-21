@@ -1998,28 +1998,33 @@ const AdminDashboard = () => {
                   />
                 </div>
 
-                <div className="sm:col-span-2">
+                <div className="sm:col-span-2 bg-purple-50/60 p-3.5 rounded-2xl border border-purple-200/80 space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <label className="font-bold text-brand-grey uppercase">
-                      URL Slug / Permanent Handle
+                    <label className="font-bold text-purple-950 uppercase text-[11px] flex items-center gap-1.5">
+                      <span>🔗 Permanent URL Slug (SEO & Social Sharing Link)</span>
                     </label>
-                    <span className="text-[11px] text-brand-grey font-mono truncate max-w-[280px]">
-                      /govt-jobs/{govtForm.slug || "job-handle"}
+                    <span className="text-[10px] font-bold text-purple-800 bg-purple-100/80 px-2 py-0.5 rounded-full">
+                      Custom URL
                     </span>
                   </div>
-                  <input
-                    placeholder="e.g. ibps-afo-scale-1-2026"
-                    className="input-field mt-1 text-sm font-mono text-emerald-900 bg-emerald-50/40"
-                    value={govtForm.slug || ""}
-                    onChange={(e) =>
-                      setGovtForm((prev) => ({
-                        ...prev,
-                        slug: slugify(e.target.value),
-                        slugModified: true,
-                      }))
-                    }
-                  />
-                  <p className="text-[11px] text-brand-grey mt-1">
+                  <div className="flex items-center rounded-xl bg-white border border-purple-300 focus-within:ring-2 focus-within:ring-purple-600 focus-within:border-transparent overflow-hidden shadow-2xs">
+                    <span className="bg-gray-50 border-r border-gray-200 px-3 py-2 text-xs font-mono text-gray-500 select-none whitespace-nowrap">
+                      /govt-jobs/
+                    </span>
+                    <input
+                      placeholder="ibps-afo-scale-1-2026"
+                      className="w-full px-3 py-2 text-xs font-mono font-semibold text-purple-950 focus:outline-none bg-transparent"
+                      value={govtForm.slug || ""}
+                      onChange={(e) =>
+                        setGovtForm((prev) => ({
+                          ...prev,
+                          slug: slugify(e.target.value),
+                          slugModified: true,
+                        }))
+                      }
+                    />
+                  </div>
+                  <p className="text-[11px] text-purple-800/80 leading-tight">
                     Auto-generated from title. Creates a clean permalink for WhatsApp sharing and search engine indexing.
                   </p>
                 </div>

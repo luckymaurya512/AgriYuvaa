@@ -18,23 +18,99 @@ import {
   Briefcase,
   ChevronRight,
   Sparkles,
+  Edit3,
+  Trash2,
+  X,
+  Save,
+  Loader2,
+  CheckCircle2,
 } from "lucide-react";
-import { fetchGovtJobById, fetchGovtJobs } from "../services/jobService.js";
+import { fetchGovtJobById, fetchGovtJobs, updateGovtJob, deleteGovtJob } from "../services/jobService.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import WhatsAppIcon from "../components/WhatsAppIcon.jsx";
 import GovtJobCard from "../components/GovtJobCard.jsx";
 import SEO from "../components/SEO.jsx";
 
+const slugify = (text) =>
+  (text || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .trim();
+
 const GovtJobDetail = () => {
   const { id } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const isAdmin = user?.role === "admin" || user?.role === "superadmin";
 
   const [job, setJob] = useState(null);
   const [relatedJobs, setRelatedJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  // Admin Edit State
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({});
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [editError, setEditError] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
+
+  const handleOpenEdit = () => {
+    if (!job) return;
+    setEditForm({
+      title: job.title || "",
+      organization: job.organization || "",
+      category: job.category || "Central Govt",
+      state: job.state || "All India",
+      qualification: job.qualification || "B.Sc Agriculture",
+      vacancies: job.vacancies || "",
+      salary: job.salary || "",
+      applicationDeadline: job.applicationDeadline || "",
+      examDate: job.examDate || "",
+      notificationUrl: job.notificationUrl || "",
+      applyUrl: job.applyUrl || "",
+      status: job.status || "Active",
+      ageLimit: job.ageLimit || "18 - 30 Years",
+      description: job.description || "",
+      slug: job.slug || "",
+      slugModified: true,
+    });
+    setEditError("");
+    setEditModalOpen(true);
+  };
+
+  const handleSaveEdit = async (e) => {
+    e.preventDefault();
+    setSavingEdit(true);
+    setEditError("");
+    try {
+      const updated = await updateGovtJob(job._id, editForm);
+      setJob(updated);
+      setEditModalOpen(false);
+      setSuccessMsg("Government Vacancy updated successfully!");
+      setTimeout(() => setSuccessMsg(""), 4000);
+      if (updated.slug && updated.slug !== id) {
+        navigate(`/govt-jobs/${updated.slug}`, { replace: true });
+      }
+    } catch (err) {
+      setEditError(err.response?.data?.message || "Failed to update government vacancy");
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm(`Are you sure you want to permanently delete "${job.title}"?`)) return;
+    try {
+      await deleteGovtJob(job._id);
+      navigate("/govt-jobs", { replace: true });
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to delete vacancy");
+    }
+  };
 
   useEffect(() => {
     setLoading(true);
@@ -178,17 +254,45 @@ const GovtJobDetail = () => {
             <span className="font-semibold text-brand-black truncate">{job.organization}</span>
           </div>
 
-          <Link
-            to="/govt-jobs"
-            className="shrink-0 inline-flex items-center gap-1 text-emerald-800 hover:text-emerald-950 font-semibold transition-colors"
-          >
-            <ArrowLeft size={14} /> Back to all vacancies
-          </Link>
+          <div className="flex items-center gap-3 shrink-0">
+            {isAdmin && (
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={handleOpenEdit}
+                  className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-200 bg-white hover:bg-emerald-50 hover:text-emerald-700 text-gray-700 transition-colors shadow-2xs cursor-pointer"
+                  title="Edit this government vacancy notice"
+                >
+                  <Edit3 size={13} /> Edit Notice
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg border border-red-200 bg-white hover:bg-red-50 text-red-600 transition-colors shadow-2xs cursor-pointer"
+                  title="Delete this government vacancy notice"
+                >
+                  <Trash2 size={13} /> Delete
+                </button>
+              </div>
+            )}
+            <Link
+              to="/govt-jobs"
+              className="shrink-0 inline-flex items-center gap-1 text-emerald-800 hover:text-emerald-950 font-semibold transition-colors"
+            >
+              <ArrowLeft size={14} /> Back to all vacancies
+            </Link>
+          </div>
         </div>
       </div>
 
       {/* Main Content Area */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+        {successMsg && (
+          <div className="p-4 mb-6 bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-2xl text-xs font-semibold flex items-center gap-2 shadow-xs">
+            <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
+            <span>{successMsg}</span>
+          </div>
+        )}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Left Column: Job Details Card (8 cols) */}
           <div className="lg:col-span-8 space-y-6">
@@ -437,6 +541,255 @@ const GovtJobDetail = () => {
               {relatedJobs.map((rj) => (
                 <GovtJobCard key={rj._id} job={rj} />
               ))}
+            </div>
+        {/* ── EDIT GOVT VACANCY MODAL (ADMIN) ── */}
+        {editModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs overflow-y-auto">
+            <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-brand-border my-8 space-y-6 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between pb-3 border-b border-brand-border">
+                <div>
+                  <h2 className="font-display font-bold text-xl text-brand-black flex items-center gap-2">
+                    <Landmark size={20} className="text-emerald-700" /> Edit Government Vacancy Notice
+                  </h2>
+                  <p className="text-xs text-brand-grey mt-0.5">
+                    Modifications will reflect immediately on this notice page and in search results.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setEditModalOpen(false)}
+                  className="p-1.5 rounded-full text-gray-400 hover:text-black hover:bg-gray-100 transition-colors cursor-pointer"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {editError && (
+                <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs flex items-center gap-2">
+                  <AlertCircle size={15} className="shrink-0" />
+                  <span>{editError}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleSaveEdit} className="space-y-4 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="sm:col-span-2">
+                    <label className="font-bold text-brand-grey uppercase">Job Title / Designation *</label>
+                    <input
+                      required
+                      placeholder="e.g. Agriculture Field Officer (AFO Scale-I) 2026"
+                      className="input-field mt-1 text-sm"
+                      value={editForm.title || ""}
+                      onChange={(e) => {
+                        const newTitle = e.target.value;
+                        setEditForm((prev) => ({
+                          ...prev,
+                          title: newTitle,
+                          slug: prev.slugModified ? prev.slug : slugify(newTitle),
+                        }));
+                      }}
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2 bg-emerald-50/50 p-3.5 rounded-2xl border border-emerald-200/80 space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="font-bold text-emerald-950 uppercase text-[11px] flex items-center gap-1.5">
+                        <span>🔗 Permanent URL Slug (SEO & Social Sharing Link)</span>
+                      </label>
+                      <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded-full">
+                        Custom URL
+                      </span>
+                    </div>
+                    <div className="flex items-center rounded-xl bg-white border border-emerald-300 focus-within:ring-2 focus-within:ring-emerald-600 focus-within:border-transparent overflow-hidden shadow-2xs">
+                      <span className="bg-gray-50 border-r border-gray-200 px-3 py-2 text-xs font-mono text-gray-500 select-none whitespace-nowrap">
+                        /govt-jobs/
+                      </span>
+                      <input
+                        placeholder="ibps-afo-scale-1-2026"
+                        className="w-full px-3 py-2 text-xs font-mono font-semibold text-emerald-950 focus:outline-none bg-transparent"
+                        value={editForm.slug || ""}
+                        onChange={(e) =>
+                          setEditForm((prev) => ({
+                            ...prev,
+                            slug: slugify(e.target.value),
+                            slugModified: true,
+                          }))
+                        }
+                      />
+                    </div>
+                    <p className="text-[11px] text-emerald-800/80 leading-tight">
+                      Custom handle for direct sharing. Changing this updates your page URL automatically.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="font-bold text-brand-grey uppercase">Department / Organization *</label>
+                    <input
+                      required
+                      placeholder="e.g. IBPS / NABARD / ICAR / UPPSC"
+                      className="input-field mt-1 text-sm"
+                      value={editForm.organization || ""}
+                      onChange={(e) => setEditForm({ ...editForm, organization: e.target.value })}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="font-bold text-brand-grey uppercase">Category *</label>
+                    <select
+                      className="input-field mt-1 text-sm bg-white"
+                      value={editForm.category || "Central Govt"}
+                      onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+                    >
+                      <option value="Central Govt">Central Govt</option>
+                      <option value="State Govt">State Govt</option>
+                      <option value="Banking & NABARD">Banking & NABARD</option>
+                      <option value="Research & ICAR">Research & ICAR</option>
+                      <option value="PSU & Corporations">PSU & Corporations</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="font-bold text-brand-grey uppercase">Eligibility / Qualification *</label>
+                    <select
+                      className="input-field mt-1 text-sm bg-white"
+                      value={editForm.qualification || "B.Sc Agriculture"}
+                      onChange={(e) => setEditForm({ ...editForm, qualification: e.target.value })}
+                    >
+                      <option value="B.Sc Agriculture">B.Sc Agriculture</option>
+                      <option value="M.Sc / Ph.D">M.Sc / Ph.D</option>
+                      <option value="Diploma in Agriculture">Diploma in Agriculture</option>
+                      <option value="B.Tech Agri Engg">B.Tech Agri Engg</option>
+                      <option value="Any Graduate">Any Graduate</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="font-bold text-brand-grey uppercase">State / Location *</label>
+                    <input
+                      required
+                      placeholder="e.g. All India or Uttar Pradesh"
+                      className="input-field mt-1 text-sm"
+                      value={editForm.state || ""}
+                      onChange={(e) => setEditForm({ ...editForm, state: e.target.value })}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="font-bold text-brand-grey uppercase">Total Vacancies (Optional)</label>
+                    <input
+                      placeholder="e.g. 896 Posts"
+                      className="input-field mt-1 text-sm"
+                      value={editForm.vacancies || ""}
+                      onChange={(e) => setEditForm({ ...editForm, vacancies: e.target.value })}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="font-bold text-brand-grey uppercase">Salary / Pay Scale *</label>
+                    <input
+                      required
+                      placeholder="e.g. ₹48,480 - ₹85,920 / month"
+                      className="input-field mt-1 text-sm"
+                      value={editForm.salary || ""}
+                      onChange={(e) => setEditForm({ ...editForm, salary: e.target.value })}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="font-bold text-brand-grey uppercase">Application Deadline *</label>
+                    <input
+                      required
+                      placeholder="e.g. 31 Oct 2026"
+                      className="input-field mt-1 text-sm"
+                      value={editForm.applicationDeadline || ""}
+                      onChange={(e) => setEditForm({ ...editForm, applicationDeadline: e.target.value })}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="font-bold text-brand-grey uppercase">Exam Date / Selection Process</label>
+                    <input
+                      placeholder="e.g. Prelims: Dec 2026 | Mains: Jan 2027"
+                      className="input-field mt-1 text-sm"
+                      value={editForm.examDate || ""}
+                      onChange={(e) => setEditForm({ ...editForm, examDate: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="font-bold text-brand-grey uppercase">Official Notification PDF Link (URL)</label>
+                    <input
+                      type="url"
+                      placeholder="https://official-dept.gov.in/notification.pdf"
+                      className="input-field mt-1 text-sm"
+                      value={editForm.notificationUrl || ""}
+                      onChange={(e) => setEditForm({ ...editForm, notificationUrl: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="font-bold text-brand-grey uppercase">Online Application Portal Link (URL) *</label>
+                    <input
+                      required
+                      type="url"
+                      placeholder="https://ibpsonline.ibps.in/..."
+                      className="input-field mt-1 text-sm"
+                      value={editForm.applyUrl || ""}
+                      onChange={(e) => setEditForm({ ...editForm, applyUrl: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="font-bold text-brand-grey uppercase">Status</label>
+                    <select
+                      className="input-field mt-1 text-sm bg-white"
+                      value={editForm.status || "Active"}
+                      onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
+                    >
+                      <option value="Active">Active (Accepting Applications)</option>
+                      <option value="Closing Soon">Closing Soon</option>
+                      <option value="Upcoming">Upcoming Notification</option>
+                    </select>
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="font-bold text-brand-grey uppercase">Short Summary & Details *</label>
+                    <textarea
+                      required
+                      rows={3}
+                      placeholder="Summary of post, age criteria, key eligibility and selection stages..."
+                      className="input-field mt-1 text-sm"
+                      value={editForm.description || ""}
+                      onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-4 border-t border-brand-border">
+                  <button
+                    type="button"
+                    onClick={() => setEditModalOpen(false)}
+                    className="px-4 py-2.5 rounded-xl border border-brand-border text-brand-grey hover:text-black font-semibold text-xs cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    disabled={savingEdit}
+                    type="submit"
+                    className="btn-primary text-xs py-2.5 px-6 flex items-center gap-2 cursor-pointer shadow-sm"
+                  >
+                    {savingEdit ? (
+                      <>
+                        <Loader2 size={15} className="animate-spin" /> Updating...
+                      </>
+                    ) : (
+                      <>
+                        <Save size={15} /> Update Vacancy Notice
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}

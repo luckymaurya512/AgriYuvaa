@@ -15,6 +15,8 @@ import {
   Bell,
   PlusCircle,
   Trash2,
+  Edit3,
+  Save,
   X,
   Loader2,
   CheckCircle2,
@@ -85,6 +87,7 @@ const GovtJobs = () => {
 
   // Admin Modal & State
   const [showModal, setShowModal] = useState(false);
+  const [editingJob, setEditingJob] = useState(null);
   const [form, setForm] = useState(initialGovtForm);
   const [submitting, setSubmitting] = useState(false);
   const [modalError, setModalError] = useState("");
@@ -145,20 +148,57 @@ const GovtJobs = () => {
     loadGovtJobs();
   };
 
-  const handleCreateJob = async (e) => {
+  const handleOpenCreateJob = () => {
+    setEditingJob(null);
+    setForm(initialGovtForm);
+    setModalError("");
+    setShowModal(true);
+  };
+
+  const handleOpenEditJob = (job) => {
+    setEditingJob(job);
+    setForm({
+      title: job.title || "",
+      organization: job.organization || "",
+      category: job.category || "Central Govt",
+      state: job.state || "All India",
+      qualification: job.qualification || "B.Sc Agriculture",
+      vacancies: job.vacancies || "",
+      salary: job.salary || "",
+      applicationDeadline: job.applicationDeadline || "",
+      examDate: job.examDate || "",
+      notificationUrl: job.notificationUrl || "",
+      applyUrl: job.applyUrl || "",
+      status: job.status || "Active",
+      ageLimit: job.ageLimit || "18 - 30 Years",
+      description: job.description || "",
+      slug: job.slug || "",
+      slugModified: true,
+    });
+    setModalError("");
+    setShowModal(true);
+  };
+
+  const handleSaveJob = async (e) => {
     e.preventDefault();
     setModalError("");
     setSubmitting(true);
 
     try {
-      await api.post("/govt-jobs", form);
+      if (editingJob?._id) {
+        await api.put(`/govt-jobs/${editingJob._id}`, form);
+        setSuccessMsg("Government Vacancy updated successfully!");
+      } else {
+        await api.post("/govt-jobs", form);
+        setSuccessMsg("Government Vacancy posted successfully!");
+      }
       setShowModal(false);
+      setEditingJob(null);
       setForm(initialGovtForm);
-      setSuccessMsg("Government Vacancy posted successfully!");
       setTimeout(() => setSuccessMsg(""), 4000);
       loadGovtJobs();
     } catch (err) {
-      setModalError(err.response?.data?.message || "Failed to create government job");
+      setModalError(err.response?.data?.message || "Failed to save government job");
     } finally {
       setSubmitting(false);
     }
@@ -198,10 +238,8 @@ const GovtJobs = () => {
           {isAdmin && (
             <div className="pt-1">
               <button
-                onClick={() => {
-                  setShowModal(true);
-                  setModalError("");
-                }}
+                type="button"
+                onClick={handleOpenCreateJob}
                 className="bg-amber-400 text-black font-bold text-sm px-6 py-3 rounded-xl hover:bg-amber-300 transition-all inline-flex items-center gap-2 shadow-md cursor-pointer"
               >
                 <PlusCircle size={18} /> Post Govt Vacancy
@@ -480,15 +518,26 @@ const GovtJobs = () => {
                     Apply on Govt Portal <ExternalLink size={12} />
                   </button>
 
-                  {/* Admin Delete Action */}
+                  {/* Admin Edit & Delete Actions */}
                   {isAdmin && (
-                    <button
-                      onClick={() => handleDeleteJob(job._id, job.title)}
-                      className="px-3 py-2 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 text-xs font-semibold flex items-center gap-1 transition-colors"
-                      title="Delete this government vacancy notice"
-                    >
-                      <Trash2 size={13} /> Delete
-                    </button>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEditJob(job)}
+                        className="px-3 py-2 rounded-xl border border-gray-200 text-gray-700 hover:text-emerald-700 hover:bg-emerald-50 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                        title="Edit this government vacancy notice"
+                      >
+                        <Edit3 size={13} /> Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteJob(job._id, job.title)}
+                        className="px-3 py-2 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                        title="Delete this government vacancy notice"
+                      >
+                        <Trash2 size={13} /> Delete
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -497,17 +546,20 @@ const GovtJobs = () => {
         </div>
       )}
 
-      {/* ── CREATE GOVT VACANCY MODAL (ADMIN ONLY) ── */}
+      {/* ── CREATE / EDIT GOVT VACANCY MODAL (ADMIN ONLY) ── */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs overflow-y-auto">
           <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-brand-border my-8 space-y-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-brand-border">
               <div>
                 <h2 className="font-display font-bold text-xl text-brand-black flex items-center gap-2">
-                  <Landmark size={20} className="text-brand-green" /> Post Government Vacancy
+                  <Landmark size={20} className="text-brand-green" />
+                  {editingJob ? "Edit Government Vacancy Notice" : "Post Government Vacancy"}
                 </h2>
                 <p className="text-xs text-brand-grey mt-0.5">
-                  This notice will appear in real time under the Govt Vacancies portal for all users.
+                  {editingJob
+                    ? `Updating notice details for "${editingJob.title}"`
+                    : "This notice will appear in real time under the Govt Vacancies portal for all users."}
                 </p>
               </div>
               <button
@@ -526,7 +578,7 @@ const GovtJobs = () => {
               </div>
             )}
 
-            <form onSubmit={handleCreateJob} className="space-y-4 text-xs">
+            <form onSubmit={handleSaveJob} className="space-y-4 text-xs">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="sm:col-span-2">
                   <label className="font-bold text-brand-grey uppercase">Job Title / Designation *</label>
@@ -546,29 +598,34 @@ const GovtJobs = () => {
                   />
                 </div>
 
-                <div className="sm:col-span-2">
+                <div className="sm:col-span-2 bg-emerald-50/50 p-3.5 rounded-2xl border border-emerald-200/80 space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <label className="font-bold text-brand-grey uppercase">
-                      URL Slug / Permanent Handle
+                    <label className="font-bold text-emerald-950 uppercase text-[11px] flex items-center gap-1.5">
+                      <span>🔗 Permanent URL Slug (SEO & Social Sharing Link)</span>
                     </label>
-                    <span className="text-[11px] text-brand-grey font-mono">
-                      /govt-jobs/{form.slug || "job-slug"}
+                    <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded-full">
+                      Custom URL
                     </span>
                   </div>
-                  <input
-                    placeholder="e.g. ibps-afo-scale-1-2026"
-                    className="input-field mt-1 text-sm font-mono text-emerald-900 bg-emerald-50/40"
-                    value={form.slug || ""}
-                    onChange={(e) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        slug: slugify(e.target.value),
-                        slugModified: true,
-                      }))
-                    }
-                  />
-                  <p className="text-[11px] text-brand-grey mt-1">
-                    Auto-generated from title. Customize if you want a cleaner permalink for social sharing.
+                  <div className="flex items-center rounded-xl bg-white border border-emerald-300 focus-within:ring-2 focus-within:ring-emerald-600 focus-within:border-transparent overflow-hidden shadow-2xs">
+                    <span className="bg-gray-50 border-r border-gray-200 px-3 py-2 text-xs font-mono text-gray-500 select-none whitespace-nowrap">
+                      /govt-jobs/
+                    </span>
+                    <input
+                      placeholder="ibps-afo-scale-1-2026"
+                      className="w-full px-3 py-2 text-xs font-mono font-semibold text-emerald-950 focus:outline-none bg-transparent"
+                      value={form.slug || ""}
+                      onChange={(e) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          slug: slugify(e.target.value),
+                          slugModified: true,
+                        }))
+                      }
+                    />
+                  </div>
+                  <p className="text-[11px] text-emerald-800/80 leading-tight">
+                    Automatically fills as you type the Job Title. You can customize this anytime to keep URLs short and readable.
                   </p>
                 </div>
 
@@ -726,14 +783,16 @@ const GovtJobs = () => {
                 <button
                   disabled={submitting}
                   type="submit"
-                  className="btn-primary text-xs py-2.5 px-6 flex items-center gap-2"
+                  className="btn-primary text-xs py-2.5 px-6 flex items-center gap-2 cursor-pointer shadow-sm"
                 >
                   {submitting ? (
                     <>
-                      <Loader2 size={15} className="animate-spin" /> Publishing...
+                      <Loader2 size={15} className="animate-spin" /> Saving...
                     </>
                   ) : (
-                    "Publish Govt Vacancy"
+                    <>
+                      <Save size={15} /> {editingJob ? "Update Notice" : "Publish Govt Vacancy"}
+                    </>
                   )}
                 </button>
               </div>
