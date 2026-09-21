@@ -22,6 +22,12 @@ const testimonialSchema = new mongoose.Schema(
       min: 1,
       max: 5,
     },
+    targetSite: {
+      type: String,
+      enum: ["both", "landing", "jobs"],
+      default: "both",
+      index: true,
+    },
     avatarUrl: {
       type: String,
       default: "",

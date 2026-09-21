@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Search, MapPin, ArrowRight, UserPlus, SearchCheck, Handshake, Calendar } from "lucide-react";
 import { fetchJobs, fetchCategories, fetchGovtJobs } from "../services/jobService.js";
-import { fetchBlogs } from "../services/landingService.js";
+import { fetchBlogs, fetchTestimonials } from "../services/landingService.js";
 import JobCard from "../components/JobCard.jsx";
 import GovtJobCard from "../components/GovtJobCard.jsx";
 import CategoryCard from "../components/CategoryCard.jsx";
@@ -28,6 +28,7 @@ const Home = () => {
   const [govtJobs, setGovtJobs] = useState([]);
   const [categories, setCategories] = useState([]);
   const [blogs, setBlogs] = useState([]);
+  const [testimonials, setTestimonials] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -43,6 +44,9 @@ const Home = () => {
     fetchBlogs({ limit: 3, targetSite: "jobs" })
       .then((data) => setBlogs(data.blogs || []))
       .catch(() => setBlogs([]));
+    fetchTestimonials({ targetSite: "jobs" })
+      .then((data) => setTestimonials(Array.isArray(data) ? data : []))
+      .catch(() => setTestimonials([]));
   }, []);
 
   const handleSearch = (e) => {
@@ -303,6 +307,55 @@ const Home = () => {
                   </div>
                 </div>
               </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Testimonials / Community Feedback */}
+      {testimonials.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 border-t border-brand-border">
+          <div className="text-center max-w-2xl mx-auto mb-10">
+            <h2 className="text-2xl font-display font-bold flex items-center justify-center gap-2">
+              <span>⭐</span> Trusted by Candidates & Agri Recruiters
+            </h2>
+            <p className="text-xs sm:text-sm text-brand-grey mt-1">
+              Read how AgriYuvaa helps youth find agriculture jobs and employers hire skilled talent.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {testimonials.slice(0, 3).map((t) => (
+              <div
+                key={t._id}
+                className="card p-6 flex flex-col justify-between space-y-4 hover:shadow-md transition-shadow"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-center gap-1 text-amber-400 text-sm">
+                    {"⭐".repeat(t.rating || 5)}
+                  </div>
+                  <p className="text-sm text-brand-grey italic leading-relaxed">
+                    "{t.content}"
+                  </p>
+                </div>
+                <div className="flex items-center gap-3 pt-3 border-t border-brand-border">
+                  {t.avatarUrl ? (
+                    <img
+                      src={t.avatarUrl}
+                      alt={t.name}
+                      className="w-10 h-10 rounded-full object-cover border border-brand-border"
+                      onError={(e) => { e.target.style.display = "none"; }}
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center text-sm">
+                      {t.name?.charAt(0) || "U"}
+                    </div>
+                  )}
+                  <div>
+                    <h4 className="text-sm font-bold text-brand-black">{t.name}</h4>
+                    <p className="text-xs text-brand-grey">{t.role || "Agriculture Professional"}</p>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         </section>

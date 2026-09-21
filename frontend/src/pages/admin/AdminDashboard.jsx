@@ -1445,13 +1445,24 @@ const AdminDashboard = () => {
           fields={[
             { key: "name", label: "Name", type: "text", required: true },
             { key: "role", label: "Role / Title", type: "text" },
+            {
+              key: "targetSite",
+              label: "Display Destination",
+              type: "select",
+              options: [
+                { label: "🌐 Both (Main Website & Job Portal)", value: "both" },
+                { label: "🏠 Main Website Only (Landing Page)", value: "landing" },
+                { label: "💼 Job Portal Only", value: "jobs" },
+              ],
+              defaultValue: "both",
+            },
             { key: "content", label: "Testimonial Text", type: "textarea", required: true },
             { key: "rating", label: "Rating (1-5)", type: "number" },
-            { key: "avatarUrl", label: "Avatar URL", type: "text" },
+            { key: "avatarUrl", label: "Avatar / Photo", type: "image" },
             { key: "order", label: "Display Order", type: "number" },
             { key: "isActive", label: "Active", type: "toggle" },
           ]}
-          columns={["name", "role", "rating", "isActive"]}
+          columns={["name", "targetSite", "role", "rating", "isActive"]}
         />
       )}
 

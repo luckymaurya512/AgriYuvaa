@@ -6,10 +6,27 @@ const router = express.Router();
 
 // ─── Public Routes ────────────────────────────────────────
 
-// GET /api/testimonials — list active testimonials
+// GET /api/testimonials — list active testimonials (with optional targetSite filter)
 router.get("/", async (req, res) => {
   try {
-    const testimonials = await Testimonial.find({ isActive: true }).sort({ order: 1, createdAt: -1 });
+    const targetSite = req.query.targetSite || "";
+    const filter = { isActive: true };
+
+    if (targetSite === "landing") {
+      filter.$or = [
+        { targetSite: { $in: ["landing", "both"] } },
+        { targetSite: { $exists: false } },
+        { targetSite: null },
+      ];
+    } else if (targetSite === "jobs") {
+      filter.$or = [
+        { targetSite: { $in: ["jobs", "both"] } },
+        { targetSite: { $exists: false } },
+        { targetSite: null },
+      ];
+    }
+
+    const testimonials = await Testimonial.find(filter).sort({ order: 1, createdAt: -1 });
     res.json(testimonials);
   } catch (err) {
     res.status(500).json({ message: "Failed to fetch testimonials", error: err.message });

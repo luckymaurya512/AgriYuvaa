@@ -18,7 +18,7 @@ export const fetchWorkshops = async (params = {}) => {
 };
 
 // Testimonials
-export const fetchTestimonials = async () => {
-  const { data } = await api.get("/testimonials");
+export const fetchTestimonials = async (params = {}) => {
+  const { data } = await api.get("/testimonials", { params });
   return data;
 };
