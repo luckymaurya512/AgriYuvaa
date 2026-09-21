@@ -23,6 +23,7 @@ import {
   LayoutDashboard,
   Clock,
   ArrowRight,
+  MapPin,
   ShieldCheck,
   FileSpreadsheet,
   Eye,
@@ -44,7 +45,13 @@ import {
   reviewJob,
   toggleJobFeatured,
 } from "../../services/adminService.js";
-import { deleteJob } from "../../services/jobService.js";
+import {
+  deleteJob,
+  fetchGovtJobs,
+  createGovtJob,
+  updateGovtJob,
+  deleteGovtJob,
+} from "../../services/jobService.js";
 import {
   fetchAllBlogs, createBlog, updateBlog, deleteBlog, uploadBlogImage,
   fetchAllWorkshops, createWorkshop, updateWorkshop, deleteWorkshop,
@@ -52,6 +59,33 @@ import {
 } from "../../services/landingService.js";
 import RichTextEditor from "../../components/common/RichTextEditor.jsx";
 import SEO from "../../components/SEO.jsx";
+
+const initialGovtForm = {
+  title: "",
+  organization: "",
+  category: "Central Govt",
+  state: "All India",
+  qualification: "B.Sc Agriculture",
+  vacancies: "",
+  salary: "",
+  applicationDeadline: "",
+  examDate: "",
+  notificationUrl: "",
+  applyUrl: "",
+  status: "Active",
+  ageLimit: "18 - 30 Years",
+  description: "",
+  slug: "",
+  slugModified: false,
+};
+
+const slugify = (text) =>
+  (text || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .trim();
 
 const AdminDashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -91,6 +125,18 @@ const AdminDashboard = () => {
   const [cmsEditType, setCmsEditType] = useState("");
   const [cmsForm, setCmsForm] = useState({});
   const [cmsLoading, setCmsLoading] = useState(false);
+
+  // ── Govt Vacancies State ──
+  const [govtJobs, setGovtJobs] = useState([]);
+  const [loadingGovtJobs, setLoadingGovtJobs] = useState(false);
+  const [govtSearch, setGovtSearch] = useState("");
+  const [govtCategoryFilter, setGovtCategoryFilter] = useState("All");
+  const [govtModalOpen, setGovtModalOpen] = useState(false);
+  const [editingGovtJob, setEditingGovtJob] = useState(null);
+  const [govtForm, setGovtForm] = useState(initialGovtForm);
+  const [savingGovt, setSavingGovt] = useState(false);
+  const [govtError, setGovtError] = useState("");
+  const [copiedGovtId, setCopiedGovtId] = useState(null);
 
   const handleExportCSV = (customList = null, filenamePrefix = "all_applications") => {
     const listToExport = customList || applications;
@@ -240,6 +286,7 @@ const AdminDashboard = () => {
     fetchPendingJobs().then(setPendingJobs).catch(() => {});
     loadPlatformJobs();
     loadPlatformApplications();
+    loadGovtJobsData();
   };
 
   const loadPlatformJobs = () => {
@@ -264,6 +311,17 @@ const AdminDashboard = () => {
       .finally(() => setLoadingApps(false));
   };
 
+  const loadGovtJobsData = () => {
+    setLoadingGovtJobs(true);
+    fetchGovtJobs({
+      category: govtCategoryFilter !== "All" ? govtCategoryFilter : undefined,
+      search: govtSearch.trim() || undefined,
+    })
+      .then((data) => setGovtJobs(Array.isArray(data) ? data : []))
+      .catch(() => setGovtJobs([]))
+      .finally(() => setLoadingGovtJobs(false));
+  };
+
   useEffect(() => {
     loadAll();
   }, []);
@@ -275,6 +333,89 @@ const AdminDashboard = () => {
   useEffect(() => {
     loadPlatformApplications();
   }, [appStatusFilter]);
+
+  useEffect(() => {
+    loadGovtJobsData();
+  }, [govtCategoryFilter]);
+
+  const handleSearchGovtSubmit = (e) => {
+    e.preventDefault();
+    loadGovtJobsData();
+  };
+
+  const handleOpenCreateGovtJob = () => {
+    setEditingGovtJob(null);
+    setGovtForm(initialGovtForm);
+    setGovtError("");
+    setGovtModalOpen(true);
+  };
+
+  const handleOpenEditGovtJob = (job) => {
+    setEditingGovtJob(job);
+    setGovtForm({
+      title: job.title || "",
+      organization: job.organization || "",
+      category: job.category || "Central Govt",
+      state: job.state || "All India",
+      qualification: job.qualification || "B.Sc Agriculture",
+      vacancies: job.vacancies || "",
+      salary: job.salary || "",
+      applicationDeadline: job.applicationDeadline || "",
+      examDate: job.examDate || "",
+      notificationUrl: job.notificationUrl || "",
+      applyUrl: job.applyUrl || "",
+      status: job.status || "Active",
+      ageLimit: job.ageLimit || "18 - 30 Years",
+      description: job.description || "",
+      slug: job.slug || "",
+      slugModified: true,
+    });
+    setGovtError("");
+    setGovtModalOpen(true);
+  };
+
+  const handleSaveGovtJob = async (e) => {
+    e.preventDefault();
+    setSavingGovt(true);
+    setGovtError("");
+    try {
+      if (editingGovtJob?._id) {
+        await updateGovtJob(editingGovtJob._id, govtForm);
+        setActionSuccess(`Government vacancy "${govtForm.title}" updated successfully!`);
+      } else {
+        await createGovtJob(govtForm);
+        setActionSuccess(`Government vacancy "${govtForm.title}" posted successfully!`);
+      }
+      setGovtModalOpen(false);
+      setEditingGovtJob(null);
+      setGovtForm(initialGovtForm);
+      setTimeout(() => setActionSuccess(""), 4000);
+      loadGovtJobsData();
+    } catch (err) {
+      setGovtError(err.response?.data?.message || "Failed to save government vacancy");
+    } finally {
+      setSavingGovt(false);
+    }
+  };
+
+  const handleDeleteGovtJob = async (job) => {
+    if (!window.confirm(`Are you sure you want to delete the notice for "${job.title}"?`)) return;
+    try {
+      await deleteGovtJob(job._id);
+      setActionSuccess(`Vacancy notice "${job.title}" removed.`);
+      setTimeout(() => setActionSuccess(""), 4000);
+      loadGovtJobsData();
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to delete vacancy");
+    }
+  };
+
+  const handleCopyGovtLink = (job) => {
+    const permalink = `${window.location.origin}/govt-jobs/${job.slug || job._id}`;
+    navigator.clipboard.writeText(permalink);
+    setCopiedGovtId(job._id);
+    setTimeout(() => setCopiedGovtId(null), 2500);
+  };
 
   const handleJobDecision = async (id, decision, isFeatured = false) => {
     await reviewJob(
@@ -326,12 +467,16 @@ const AdminDashboard = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          <Link
-            to="/govt-jobs"
-            className="btn-secondary text-sm flex items-center gap-2 py-2.5 px-4 shadow-2xs"
+          <button
+            type="button"
+            onClick={() => {
+              setTab("govt-jobs");
+              handleOpenCreateGovtJob();
+            }}
+            className="btn-secondary text-sm flex items-center gap-2 py-2.5 px-4 shadow-2xs cursor-pointer"
           >
-            <Landmark size={16} /> Manage Govt Vacancies
-          </Link>
+            <Landmark size={16} /> + Post Govt Vacancy
+          </button>
           <Link
             to="/employer/post-job"
             className="btn-primary text-sm flex items-center gap-2 py-2.5 px-4 shadow-sm"
@@ -422,6 +567,27 @@ const AdminDashboard = () => {
               }`}
             >
               {pendingJobs.length}
+            </span>
+          )}
+        <button
+          type="button"
+          onClick={() => setTab("govt-jobs")}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl transition-all whitespace-nowrap ${
+            activeTab === "govt-jobs"
+              ? "bg-purple-950 text-white shadow-2xs"
+              : "text-gray-600 hover:text-black hover:bg-gray-100"
+          }`}
+        >
+          <Landmark size={15} /> Govt Vacancies
+          {govtJobs.length > 0 && (
+            <span
+              className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                activeTab === "govt-jobs"
+                  ? "bg-purple-800 text-white"
+                  : "bg-purple-100 text-purple-900 border border-purple-200"
+              }`}
+            >
+              {govtJobs.length}
             </span>
           )}
         </button>
@@ -583,9 +749,9 @@ const AdminDashboard = () => {
               </div>
 
               {/* Card 4: Govt Jobs Portal */}
-              <Link
-                to="/govt-jobs"
-                className="card p-6 hover:border-purple-300 hover:shadow-md transition-all group flex flex-col justify-between"
+              <div
+                onClick={() => setTab("govt-jobs")}
+                className="card p-6 hover:border-purple-300 hover:shadow-md transition-all group flex flex-col justify-between cursor-pointer"
               >
                 <div>
                   <div className="flex items-center justify-between mb-4">
@@ -593,21 +759,21 @@ const AdminDashboard = () => {
                       <Landmark size={22} />
                     </div>
                     <span className="text-xs font-bold text-purple-800 bg-purple-100/60 border border-purple-200 px-2.5 py-1 rounded-full">
-                      Govt Portal
+                      {govtJobs.length} Vacancies
                     </span>
                   </div>
                   <h3 className="font-display font-bold text-base text-brand-black group-hover:text-purple-800 transition-colors">
                     Government Vacancies
                   </h3>
                   <p className="text-xs text-brand-grey mt-1 leading-relaxed">
-                    Create, update, and manage official state & central agriculture government vacancy notifications.
+                    Create, update, and manage official state & central agriculture government vacancy notifications with slugs.
                   </p>
                 </div>
                 <div className="mt-5 pt-4 border-t border-brand-border flex items-center justify-between text-xs font-bold text-purple-900 group-hover:translate-x-0.5 transition-transform">
-                  <span>Open Govt Jobs Portal</span>
-                  <ExternalLink size={14} />
+                  <span>Manage Govt Vacancies</span>
+                  <ArrowRight size={14} />
                 </div>
-              </Link>
+              </div>
 
               {/* Card 5: Post Direct Job */}
               <Link
@@ -1357,6 +1523,312 @@ const AdminDashboard = () => {
       )}
 
       {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/* ── TAB: GOVERNMENT AGRICULTURE VACANCIES ─────────────────────── */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {activeTab === "govt-jobs" && (
+        <div className="space-y-6">
+          {/* Top Bar */}
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-display font-bold text-brand-black flex items-center gap-2">
+                <Landmark size={22} className="text-purple-700" />
+                Government Agriculture Vacancies
+              </h2>
+              <p className="text-xs text-brand-grey mt-0.5">
+                Publish, manage, and edit central & state government recruitment notices with SEO-friendly slugs and official links.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Link
+                to="/govt-jobs"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-secondary text-xs py-2.5 px-3.5 flex items-center gap-1.5"
+                title="View live government jobs portal"
+              >
+                View Public Portal <ExternalLink size={13} />
+              </Link>
+              <button
+                type="button"
+                onClick={handleOpenCreateGovtJob}
+                className="btn-primary text-xs py-2.5 px-4 flex items-center gap-1.5 shadow-sm cursor-pointer"
+              >
+                <PlusCircle size={15} /> Post New Vacancy
+              </button>
+            </div>
+          </div>
+
+          {/* Quick Metrics Bar */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="card p-4 bg-white border border-gray-100 flex items-center justify-between">
+              <div>
+                <p className="text-[11px] font-bold text-brand-grey uppercase tracking-wider">Total Notices</p>
+                <p className="text-2xl font-bold font-display text-brand-black mt-1">{govtJobs.length}</p>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center">
+                <Landmark size={18} />
+              </div>
+            </div>
+
+            <div className="card p-4 bg-white border border-gray-100 flex items-center justify-between">
+              <div>
+                <p className="text-[11px] font-bold text-brand-grey uppercase tracking-wider">Active Openings</p>
+                <p className="text-2xl font-bold font-display text-emerald-700 mt-1">
+                  {govtJobs.filter((j) => j.status === "Active").length}
+                </p>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
+                <CheckCircle size={18} />
+              </div>
+            </div>
+
+            <div className="card p-4 bg-white border border-gray-100 flex items-center justify-between">
+              <div>
+                <p className="text-[11px] font-bold text-brand-grey uppercase tracking-wider">Closing Soon</p>
+                <p className="text-2xl font-bold font-display text-amber-700 mt-1">
+                  {govtJobs.filter((j) => j.status === "Closing Soon").length}
+                </p>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center">
+                <Clock size={18} />
+              </div>
+            </div>
+
+            <div className="card p-4 bg-white border border-gray-100 flex items-center justify-between">
+              <div>
+                <p className="text-[11px] font-bold text-brand-grey uppercase tracking-wider">Upcoming</p>
+                <p className="text-2xl font-bold font-display text-blue-700 mt-1">
+                  {govtJobs.filter((j) => j.status === "Upcoming").length}
+                </p>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center">
+                <Sparkles size={18} />
+              </div>
+            </div>
+          </div>
+
+          {/* Search & Filter Controls */}
+          <div className="card p-4 bg-white border border-gray-200">
+            <form onSubmit={handleSearchGovtSubmit} className="flex flex-wrap items-center justify-between gap-3">
+              <div className="relative flex-1 min-w-[240px]">
+                <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search by vacancy title, organization, or state..."
+                  value={govtSearch}
+                  onChange={(e) => setGovtSearch(e.target.value)}
+                  className="input-field pl-10 text-xs py-2.5 w-full bg-gray-50/50 focus:bg-white"
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <select
+                  value={govtCategoryFilter}
+                  onChange={(e) => setGovtCategoryFilter(e.target.value)}
+                  className="input-field text-xs py-2.5 px-3 bg-white border-gray-200"
+                >
+                  <option value="All">All Categories</option>
+                  <option value="Central Govt">Central Govt</option>
+                  <option value="State Govt">State Govt</option>
+                  <option value="Banking & NABARD">Banking & NABARD</option>
+                  <option value="Research & ICAR">Research & ICAR</option>
+                  <option value="PSU & Corporations">PSU & Corporations</option>
+                </select>
+
+                <button
+                  type="submit"
+                  className="btn-secondary text-xs py-2.5 px-4 font-semibold shrink-0 cursor-pointer"
+                >
+                  Search
+                </button>
+
+                {(govtSearch || govtCategoryFilter !== "All") && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setGovtSearch("");
+                      setGovtCategoryFilter("All");
+                      fetchGovtJobs({}).then((data) => setGovtJobs(Array.isArray(data) ? data : []));
+                    }}
+                    className="text-xs text-brand-grey hover:text-black underline px-2 shrink-0 cursor-pointer"
+                  >
+                    Reset
+                  </button>
+                )}
+              </div>
+            </form>
+          </div>
+
+          {/* Vacancies Table */}
+          <div className="card overflow-hidden bg-white border border-gray-200">
+            {loadingGovtJobs ? (
+              <div className="py-20 text-center text-xs text-brand-grey flex flex-col items-center gap-2">
+                <Loader2 size={24} className="animate-spin text-purple-700" />
+                <span>Loading government vacancies...</span>
+              </div>
+            ) : govtJobs.length === 0 ? (
+              <div className="py-16 text-center text-brand-grey space-y-3">
+                <Landmark size={36} className="mx-auto text-gray-300" />
+                <p className="font-semibold text-brand-black">No government vacancies found.</p>
+                <p className="text-xs max-w-sm mx-auto text-gray-500">
+                  {govtSearch || govtCategoryFilter !== "All"
+                    ? "Try adjusting your search filters or keyword criteria."
+                    : "Get started by publishing the first official government agriculture recruitment notice."}
+                </p>
+                <button
+                  type="button"
+                  onClick={handleOpenCreateGovtJob}
+                  className="btn-primary text-xs py-2 px-4 inline-flex items-center gap-1.5 mt-2"
+                >
+                  <PlusCircle size={14} /> Post Govt Vacancy
+                </button>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-gray-50 border-b border-gray-200 text-gray-700 uppercase tracking-wider font-bold">
+                    <tr>
+                      <th className="px-5 py-3.5">Vacancy & Permalink</th>
+                      <th className="px-5 py-3.5">Department</th>
+                      <th className="px-5 py-3.5">Category & State</th>
+                      <th className="px-5 py-3.5">Vacancies / Pay</th>
+                      <th className="px-5 py-3.5">Deadline</th>
+                      <th className="px-5 py-3.5">Status</th>
+                      <th className="px-5 py-3.5 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {govtJobs.map((job) => {
+                      const identifier = job.slug || job._id;
+                      const detailUrl = `/govt-jobs/${identifier}`;
+                      return (
+                        <tr key={job._id} className="hover:bg-gray-50/70 transition-colors">
+                          <td className="px-5 py-4 max-w-xs">
+                            <div className="space-y-1">
+                              <Link
+                                to={detailUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="font-bold text-brand-black hover:text-purple-800 transition-colors line-clamp-1 block text-sm"
+                                title={job.title}
+                              >
+                                {job.title}
+                              </Link>
+                              <div className="flex items-center gap-1.5 font-mono text-[11px] text-gray-500">
+                                <span className="truncate max-w-[170px] text-purple-900 bg-purple-50 px-1.5 py-0.5 rounded">
+                                  /govt-jobs/{job.slug || job._id.slice(-6)}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleCopyGovtLink(job)}
+                                  className="text-gray-400 hover:text-emerald-700 transition-colors p-0.5"
+                                  title="Copy permalink"
+                                >
+                                  {copiedGovtId === job._id ? (
+                                    <span className="text-emerald-600 font-bold text-[10px]">Copied!</span>
+                                  ) : (
+                                    <FileText size={12} />
+                                  )}
+                                </button>
+                              </div>
+                            </div>
+                          </td>
+
+                          <td className="px-5 py-4 text-brand-grey font-medium whitespace-nowrap">
+                            <div className="flex items-center gap-1.5">
+                              <Landmark size={14} className="text-purple-700 shrink-0" />
+                              <span className="max-w-[160px] truncate" title={job.organization}>
+                                {job.organization}
+                              </span>
+                            </div>
+                          </td>
+
+                          <td className="px-5 py-4 whitespace-nowrap">
+                            <div className="space-y-1">
+                              <span className="inline-block text-[11px] font-semibold bg-gray-100 text-gray-700 px-2 py-0.5 rounded">
+                                {job.category}
+                              </span>
+                              <p className="text-[11px] text-brand-grey flex items-center gap-1">
+                                <MapPin size={11} className="text-gray-400 shrink-0" />
+                                <span className="truncate max-w-[120px]">{job.state || "All India"}</span>
+                              </p>
+                            </div>
+                          </td>
+
+                          <td className="px-5 py-4 whitespace-nowrap">
+                            <div className="space-y-0.5">
+                              <p className="font-bold text-brand-black">{job.vacancies || "Not Specified"}</p>
+                              <p className="text-[11px] text-brand-grey truncate max-w-[140px]">{job.salary}</p>
+                            </div>
+                          </td>
+
+                          <td className="px-5 py-4 whitespace-nowrap">
+                            <div className="space-y-0.5">
+                              <p className="font-semibold text-brand-black">{job.applicationDeadline}</p>
+                              {job.examDate && (
+                                <p className="text-[11px] text-brand-grey truncate max-w-[130px]">
+                                  Exam: {job.examDate}
+                                </p>
+                              )}
+                            </div>
+                          </td>
+
+                          <td className="px-5 py-4 whitespace-nowrap">
+                            <span
+                              className={`text-[11px] font-bold px-2.5 py-1 rounded-full border ${
+                                job.status === "Closing Soon"
+                                  ? "bg-amber-50 text-amber-800 border-amber-300 animate-pulse"
+                                  : job.status === "Upcoming"
+                                  ? "bg-blue-50 text-blue-800 border-blue-200"
+                                  : "bg-emerald-50 text-emerald-800 border-emerald-200"
+                              }`}
+                            >
+                              ● {job.status || "Active"}
+                            </span>
+                          </td>
+
+                          <td className="px-5 py-4 text-right whitespace-nowrap">
+                            <div className="inline-flex items-center gap-1.5">
+                              <Link
+                                to={detailUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-1.5 rounded-lg border border-gray-200 text-gray-600 hover:text-purple-700 hover:bg-purple-50 transition-colors"
+                                title="View public detail page"
+                              >
+                                <ExternalLink size={13} />
+                              </Link>
+                              <button
+                                type="button"
+                                onClick={() => handleOpenEditGovtJob(job)}
+                                className="p-1.5 rounded-lg border border-gray-200 text-gray-700 hover:text-emerald-700 hover:bg-emerald-50 transition-colors"
+                                title="Edit vacancy notice"
+                              >
+                                <Edit3 size={13} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteGovtJob(job)}
+                                className="p-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors"
+                                title="Delete vacancy notice"
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════════ */}
       {/* ── TAB: BLOGS CMS ──────────────────────────────────────────────── */}
       {/* ═══════════════════════════════════════════════════════════════════ */}
       {activeTab === "blogs" && (
@@ -1472,6 +1944,256 @@ const AdminDashboard = () => {
           application={previewApp}
           onClose={() => setPreviewApp(null)}
         />
+      )}
+
+      {/* ── GOVT VACANCY CREATE / EDIT MODAL (ADMIN) ── */}
+      {govtModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-brand-border my-8 space-y-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-brand-border">
+              <div>
+                <h2 className="font-display font-bold text-xl text-brand-black flex items-center gap-2">
+                  <Landmark size={20} className="text-purple-700" />
+                  {editingGovtJob ? "Edit Government Vacancy Notice" : "Post Official Government Vacancy"}
+                </h2>
+                <p className="text-xs text-brand-grey mt-0.5">
+                  {editingGovtJob
+                    ? `Updating notice for "${editingGovtJob.title}"`
+                    : "This notice will appear in real time on the job portal with an SEO-optimized detail page."}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setGovtModalOpen(false)}
+                className="p-1.5 rounded-full text-gray-400 hover:text-black hover:bg-gray-100 transition-colors cursor-pointer"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {govtError && (
+              <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs flex items-center gap-2">
+                <XCircle size={15} className="shrink-0" />
+                <span>{govtError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSaveGovtJob} className="space-y-4 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="sm:col-span-2">
+                  <label className="font-bold text-brand-grey uppercase">Job Title / Designation *</label>
+                  <input
+                    required
+                    placeholder="e.g. Agriculture Field Officer (AFO Scale-I) 2026"
+                    className="input-field mt-1 text-sm"
+                    value={govtForm.title}
+                    onChange={(e) => {
+                      const newTitle = e.target.value;
+                      setGovtForm((prev) => ({
+                        ...prev,
+                        title: newTitle,
+                        slug: prev.slugModified ? prev.slug : slugify(newTitle),
+                      }));
+                    }}
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <div className="flex items-center justify-between">
+                    <label className="font-bold text-brand-grey uppercase">
+                      URL Slug / Permanent Handle
+                    </label>
+                    <span className="text-[11px] text-brand-grey font-mono truncate max-w-[280px]">
+                      /govt-jobs/{govtForm.slug || "job-handle"}
+                    </span>
+                  </div>
+                  <input
+                    placeholder="e.g. ibps-afo-scale-1-2026"
+                    className="input-field mt-1 text-sm font-mono text-emerald-900 bg-emerald-50/40"
+                    value={govtForm.slug || ""}
+                    onChange={(e) =>
+                      setGovtForm((prev) => ({
+                        ...prev,
+                        slug: slugify(e.target.value),
+                        slugModified: true,
+                      }))
+                    }
+                  />
+                  <p className="text-[11px] text-brand-grey mt-1">
+                    Auto-generated from title. Creates a clean permalink for WhatsApp sharing and search engine indexing.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="font-bold text-brand-grey uppercase">Department / Organization *</label>
+                  <input
+                    required
+                    placeholder="e.g. IBPS / NABARD / ICAR / UPPSC"
+                    className="input-field mt-1 text-sm"
+                    value={govtForm.organization}
+                    onChange={(e) => setGovtForm({ ...govtForm, organization: e.target.value })}
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-brand-grey uppercase">Category *</label>
+                  <select
+                    className="input-field mt-1 text-sm bg-white"
+                    value={govtForm.category}
+                    onChange={(e) => setGovtForm({ ...govtForm, category: e.target.value })}
+                  >
+                    <option value="Central Govt">Central Govt</option>
+                    <option value="State Govt">State Govt</option>
+                    <option value="Banking & NABARD">Banking & NABARD</option>
+                    <option value="Research & ICAR">Research & ICAR</option>
+                    <option value="PSU & Corporations">PSU & Corporations</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="font-bold text-brand-grey uppercase">Eligibility / Qualification *</label>
+                  <select
+                    className="input-field mt-1 text-sm bg-white"
+                    value={govtForm.qualification}
+                    onChange={(e) => setGovtForm({ ...govtForm, qualification: e.target.value })}
+                  >
+                    <option value="B.Sc Agriculture">B.Sc Agriculture</option>
+                    <option value="M.Sc / Ph.D">M.Sc / Ph.D</option>
+                    <option value="Diploma in Agriculture">Diploma in Agriculture</option>
+                    <option value="B.Tech Agri Engg">B.Tech Agri Engg</option>
+                    <option value="Any Graduate">Any Graduate</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="font-bold text-brand-grey uppercase">State / Location *</label>
+                  <input
+                    required
+                    placeholder="e.g. All India or Uttar Pradesh"
+                    className="input-field mt-1 text-sm"
+                    value={govtForm.state}
+                    onChange={(e) => setGovtForm({ ...govtForm, state: e.target.value })}
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-brand-grey uppercase">Total Vacancies (Optional)</label>
+                  <input
+                    placeholder="e.g. 896 Posts"
+                    className="input-field mt-1 text-sm"
+                    value={govtForm.vacancies}
+                    onChange={(e) => setGovtForm({ ...govtForm, vacancies: e.target.value })}
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-brand-grey uppercase">Salary / Pay Scale *</label>
+                  <input
+                    required
+                    placeholder="e.g. ₹48,480 - ₹85,920 / month"
+                    className="input-field mt-1 text-sm"
+                    value={govtForm.salary}
+                    onChange={(e) => setGovtForm({ ...govtForm, salary: e.target.value })}
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-brand-grey uppercase">Application Deadline *</label>
+                  <input
+                    required
+                    placeholder="e.g. 31 Oct 2026"
+                    className="input-field mt-1 text-sm"
+                    value={govtForm.applicationDeadline}
+                    onChange={(e) => setGovtForm({ ...govtForm, applicationDeadline: e.target.value })}
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-brand-grey uppercase">Exam Date / Selection Process</label>
+                  <input
+                    placeholder="e.g. Prelims: Dec 2026 | Mains: Jan 2027"
+                    className="input-field mt-1 text-sm"
+                    value={govtForm.examDate}
+                    onChange={(e) => setGovtForm({ ...govtForm, examDate: e.target.value })}
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="font-bold text-brand-grey uppercase">Official Notification PDF Link (URL)</label>
+                  <input
+                    type="url"
+                    placeholder="https://official-dept.gov.in/notification.pdf"
+                    className="input-field mt-1 text-sm"
+                    value={govtForm.notificationUrl}
+                    onChange={(e) => setGovtForm({ ...govtForm, notificationUrl: e.target.value })}
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="font-bold text-brand-grey uppercase">Online Application Portal Link (URL) *</label>
+                  <input
+                    required
+                    type="url"
+                    placeholder="https://ibpsonline.ibps.in/..."
+                    className="input-field mt-1 text-sm"
+                    value={govtForm.applyUrl}
+                    onChange={(e) => setGovtForm({ ...govtForm, applyUrl: e.target.value })}
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="font-bold text-brand-grey uppercase">Status</label>
+                  <select
+                    className="input-field mt-1 text-sm bg-white"
+                    value={govtForm.status}
+                    onChange={(e) => setGovtForm({ ...govtForm, status: e.target.value })}
+                  >
+                    <option value="Active">Active (Accepting Applications)</option>
+                    <option value="Closing Soon">Closing Soon</option>
+                    <option value="Upcoming">Upcoming Notification</option>
+                  </select>
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="font-bold text-brand-grey uppercase">Short Summary & Details *</label>
+                  <textarea
+                    required
+                    rows={3}
+                    placeholder="Summary of post, age criteria, key eligibility, and selection stages..."
+                    className="input-field mt-1 text-sm"
+                    value={govtForm.description}
+                    onChange={(e) => setGovtForm({ ...govtForm, description: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-brand-border">
+                <button
+                  type="button"
+                  onClick={() => setGovtModalOpen(false)}
+                  className="px-4 py-2.5 rounded-xl border border-brand-border text-brand-grey hover:text-black font-semibold text-xs cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  disabled={savingGovt}
+                  type="submit"
+                  className="btn-primary text-xs py-2.5 px-6 flex items-center gap-2 cursor-pointer shadow-sm"
+                >
+                  {savingGovt ? (
+                    <>
+                      <Loader2 size={15} className="animate-spin" /> Saving Notice...
+                    </>
+                  ) : (
+                    <>
+                      <Save size={15} /> {editingGovtJob ? "Update Vacancy Notice" : "Publish Vacancy Notice"}
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

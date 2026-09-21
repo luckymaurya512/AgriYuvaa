@@ -48,7 +48,7 @@ const GovtJobDetail = () => {
         fetchGovtJobs({ category: data.category !== "All" ? data.category : undefined })
           .then((all) => {
             const others = (Array.isArray(all) ? all : [])
-              .filter((j) => j._id !== id)
+              .filter((j) => j._id !== data._id && j.slug !== data.slug)
               .slice(0, 3);
             setRelatedJobs(others);
           })
@@ -60,7 +60,7 @@ const GovtJobDetail = () => {
 
   const handleApplyClick = () => {
     if (!user) {
-      navigate(`/login?redirect=/govt-jobs/${id}`);
+      navigate(`/login?redirect=/govt-jobs/${job?.slug || job?._id || id}`);
     } else if (job?.applyUrl) {
       window.open(job.applyUrl, "_blank", "noopener,noreferrer");
     }
@@ -68,13 +68,15 @@ const GovtJobDetail = () => {
 
   const handleShareWhatsApp = () => {
     if (!job) return;
-    const shareUrl = window.location.href;
+    const shareUrl = `${window.location.origin}/govt-jobs/${job.slug || job._id}`;
     const text = `🏛️ *Government Agriculture Vacancy Alert on AgriYuvaa*:\n\n📌 *${job.title}*\n🏢 *Organization:* ${job.organization}\n📍 *State:* ${job.state || "All India"}\n👥 *Vacancies:* ${job.vacancies || "Multiple"}\n💰 *Pay Scale:* ${job.salary || "As per rules"}\n📅 *Deadline:* ${job.applicationDeadline || "Check notification"}\n\n👉 *View & Apply Details:* ${shareUrl}`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
   };
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(window.location.href);
+    if (!job) return;
+    const shareUrl = `${window.location.origin}/govt-jobs/${job.slug || job._id}`;
+    navigator.clipboard.writeText(shareUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
   };
@@ -157,7 +159,7 @@ const GovtJobDetail = () => {
       <SEO
         title={`${job.title} - ${job.organization} Recruitment | AgriYuvaa`}
         description={`${job.title} at ${job.organization}. Total Vacancies: ${job.vacancies}. Salary: ${job.salary}. Last Date to apply: ${job.applicationDeadline}.`}
-        canonical={`/govt-jobs/${job._id}`}
+        canonical={`/govt-jobs/${job.slug || job._id}`}
         jsonLd={jobSchema}
       />
 

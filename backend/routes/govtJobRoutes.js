@@ -1,13 +1,23 @@
 import express from "express";
+import mongoose from "mongoose";
 import asyncHandler from "express-async-handler";
 import GovtJob from "../models/GovtJob.js";
 import { authenticate, authorize } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
+const slugify = (text) =>
+  (text || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .trim();
+
 const initialGovtJobsSeed = [
   {
     title: "Agriculture Field Officer (AFO Scale-I) - CRP SPL XIV",
+    slug: "ibps-afo-scale-1-crp-spl-xiv",
     organization: "Institute of Banking Personnel Selection (IBPS)",
     category: "Banking & NABARD",
     state: "All India",
@@ -25,6 +35,7 @@ const initialGovtJobsSeed = [
   },
   {
     title: "Assistant Agriculture Officer (AAO) & ADO Examination",
+    slug: "uppsc-aao-ado-agriculture-officer",
     organization: "State Public Service Commission / Dept of Agriculture",
     category: "State Govt",
     state: "Uttar Pradesh & MP",
@@ -42,6 +53,7 @@ const initialGovtJobsSeed = [
   },
   {
     title: "NABARD Grade 'A' Assistant Manager (RDBS - Agriculture)",
+    slug: "nabard-grade-a-assistant-manager-rdbs",
     organization: "National Bank for Agriculture and Rural Development",
     category: "Banking & NABARD",
     state: "All India",
@@ -59,6 +71,7 @@ const initialGovtJobsSeed = [
   },
   {
     title: "Senior Research Fellow (SRF) & Young Professional-II",
+    slug: "icar-iari-srf-young-professional",
     organization: "ICAR - Indian Agricultural Research Institute (IARI), New Delhi",
     category: "Research & ICAR",
     state: "New Delhi",
@@ -76,6 +89,7 @@ const initialGovtJobsSeed = [
   },
   {
     title: "Subject Matter Specialist (Agronomy / Horticulture / Plant Protection)",
+    slug: "kvk-icar-subject-matter-specialist",
     organization: "Krishi Vigyan Kendra (KVK) / State Agri University",
     category: "Central Govt",
     state: "Punjab & Haryana",
@@ -93,6 +107,7 @@ const initialGovtJobsSeed = [
   },
   {
     title: "Management Trainee (Technical) & Assistant Grade-III (Agri)",
+    slug: "fci-management-trainee-technical-agri",
     organization: "Food Corporation of India (FCI)",
     category: "PSU & Corporations",
     state: "All India",
@@ -118,6 +133,22 @@ router.get(
     const count = await GovtJob.countDocuments();
     if (count === 0) {
       await GovtJob.insertMany(initialGovtJobsSeed);
+    } else {
+      // Backfill missing slugs for existing records if any
+      const unslugged = await GovtJob.find({
+        $or: [{ slug: { $exists: false } }, { slug: null }, { slug: "" }],
+      });
+      for (const item of unslugged) {
+        let baseSlug = slugify(item.title);
+        let candidateSlug = baseSlug;
+        let counter = 1;
+        while (await GovtJob.findOne({ slug: candidateSlug, _id: { $ne: item._id } })) {
+          candidateSlug = `${baseSlug}-${counter}`;
+          counter++;
+        }
+        item.slug = candidateSlug;
+        await item.save();
+      }
     }
 
     const { category, qualification, status, search } = req.query;
@@ -136,11 +167,21 @@ router.get(
   })
 );
 
-// @route GET /api/govt-jobs/:id
+// @route GET /api/govt-jobs/:idOrSlug
 router.get(
-  "/:id",
+  "/:idOrSlug",
   asyncHandler(async (req, res) => {
-    const job = await GovtJob.findById(req.params.id);
+    const { idOrSlug } = req.params;
+    let job = null;
+
+    // First try lookup by slug
+    job = await GovtJob.findOne({ slug: idOrSlug.toLowerCase() });
+
+    // Fallback lookup by ObjectId
+    if (!job && mongoose.Types.ObjectId.isValid(idOrSlug)) {
+      job = await GovtJob.findById(idOrSlug);
+    }
+
     if (!job) {
       res.status(404);
       throw new Error("Government job vacancy not found");
@@ -155,8 +196,81 @@ router.post(
   authenticate,
   authorize("admin", "superadmin"),
   asyncHandler(async (req, res) => {
-    const job = await GovtJob.create(req.body);
+    let { slug, title, ...rest } = req.body;
+    let baseSlug = slugify(slug || title);
+    if (!baseSlug) baseSlug = "govt-vacancy";
+
+    // Ensure unique slug
+    let candidateSlug = baseSlug;
+    let counter = 1;
+    while (await GovtJob.findOne({ slug: candidateSlug })) {
+      candidateSlug = `${baseSlug}-${counter}`;
+      counter++;
+    }
+
+    const job = await GovtJob.create({
+      ...rest,
+      title,
+      slug: candidateSlug,
+    });
     res.status(201).json(job);
+  })
+);
+
+// @route PUT /api/govt-jobs/:id (Admin / Super Admin)
+router.put(
+  "/:id",
+  authenticate,
+  authorize("admin", "superadmin"),
+  asyncHandler(async (req, res) => {
+    const job = await GovtJob.findById(req.params.id);
+    if (!job) {
+      res.status(404);
+      throw new Error("Government job vacancy not found");
+    }
+
+    let { slug, title } = req.body;
+    if (slug) {
+      const formattedSlug = slugify(slug);
+      const existing = await GovtJob.findOne({
+        slug: formattedSlug,
+        _id: { $ne: job._id },
+      });
+      if (existing) {
+        res.status(400);
+        throw new Error("Slug is already in use by another government vacancy");
+      }
+      job.slug = formattedSlug;
+    } else if (title && !job.slug) {
+      job.slug = slugify(title);
+    }
+
+    // Assign all fields
+    const allowedFields = [
+      "title",
+      "organization",
+      "category",
+      "state",
+      "qualification",
+      "vacancies",
+      "salary",
+      "applicationDeadline",
+      "notificationUrl",
+      "applyUrl",
+      "status",
+      "ageLimit",
+      "description",
+      "examDate",
+    ];
+
+    allowedFields.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        job[field] = req.body[field];
+      }
+    });
+
+    const updatedJob = await job.save();
+    res.json(updatedJob);
   })
 );
 

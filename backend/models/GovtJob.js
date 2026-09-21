@@ -28,9 +28,37 @@ const govtJobSchema = new mongoose.Schema(
     ageLimit: { type: String, default: "18 - 30 Years (Relaxation as per norms)" },
     description: { type: String, required: true },
     examDate: { type: String },
+    slug: {
+      type: String,
+      unique: true,
+      sparse: true,
+      lowercase: true,
+      trim: true,
+      index: true,
+    },
   },
   { timestamps: true }
 );
+
+// Auto-generate / normalize slug before validation
+govtJobSchema.pre("validate", function (next) {
+  if (!this.slug && this.title) {
+    this.slug = this.title
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
+      .trim();
+  } else if (this.slug) {
+    this.slug = this.slug
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
+      .trim();
+  }
+  next();
+});
 
 const GovtJob = mongoose.model("GovtJob", govtJobSchema);
 export default GovtJob;

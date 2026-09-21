@@ -8,11 +8,13 @@ const GovtJobCard = ({ job }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  const jobIdentifier = job.slug || job._id;
+
   const handleApplyClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
     if (!user) {
-      navigate(`/login?redirect=/govt-jobs/${job._id}`);
+      navigate(`/login?redirect=/govt-jobs/${jobIdentifier}`);
     } else {
       window.open(job.applyUrl, "_blank", "noopener,noreferrer");
     }
@@ -21,14 +23,14 @@ const GovtJobCard = ({ job }) => {
   const handleShareClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    const shareUrl = `${window.location.origin}/govt-jobs/${job._id}`;
+    const shareUrl = `${window.location.origin}/govt-jobs/${jobIdentifier}`;
     const text = `🏛️ *Government Agriculture Vacancy Alert on AgriYuvaa*:\n\n📌 *${job.title}*\n🏢 *Organization:* ${job.organization}\n📍 *State:* ${job.state || "All India"}\n👥 *Vacancies:* ${job.vacancies || "Multiple"}\n💰 *Pay Scale:* ${job.salary || "As per rules"}\n📅 *Deadline:* ${job.applicationDeadline || "Check notification"}\n\n👉 *View & Apply Details:* ${shareUrl}`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
   };
 
   return (
     <Link
-      to={`/govt-jobs/${job._id}`}
+      to={`/govt-jobs/${jobIdentifier}`}
       className="card p-5 flex flex-col gap-3 h-full relative group border border-emerald-100 hover:border-emerald-300 hover:shadow-md transition-all duration-200 bg-white"
     >
       {/* Top row: Organization tag, Status badge, Share */}

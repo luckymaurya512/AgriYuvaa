@@ -60,7 +60,17 @@ const initialGovtForm = {
   status: "Active",
   ageLimit: "18 - 30 Years",
   description: "",
+  slug: "",
+  slugModified: false,
 };
+
+const slugify = (text) =>
+  (text || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .trim();
 
 const GovtJobs = () => {
   const { user } = useAuth();
@@ -116,13 +126,15 @@ const GovtJobs = () => {
   }, [targetJobId, loading, jobs]);
 
   const handleShareWhatsApp = (job) => {
-    const shareUrl = `${window.location.origin}/govt-jobs/${job._id}`;
+    const identifier = job.slug || job._id;
+    const shareUrl = `${window.location.origin}/govt-jobs/${identifier}`;
     const text = `🏛️ *Government Agriculture Vacancy Alert on AgriYuvaa*:\n\n📌 *${job.title}*\n🏢 *Organization:* ${job.organization}\n📍 *State:* ${job.state || "All India"}\n👥 *Vacancies:* ${job.vacancies || "Multiple"}\n💰 *Pay Scale:* ${job.salary || "As per rules"}\n📅 *Deadline:* ${job.applicationDeadline || "Check notification"}\n\n👉 *View & Apply Details:* ${shareUrl}`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
   };
 
   const handleCopyLink = (job) => {
-    const shareUrl = `${window.location.origin}/govt-jobs/${job._id}`;
+    const identifier = job.slug || job._id;
+    const shareUrl = `${window.location.origin}/govt-jobs/${identifier}`;
     navigator.clipboard.writeText(shareUrl);
     setCopiedId(job._id);
     setTimeout(() => setCopiedId(null), 2500);
@@ -341,7 +353,7 @@ const GovtJobs = () => {
                   </div>
                   <h2 className="text-lg sm:text-xl font-display font-bold text-brand-black">
                     <Link
-                      to={`/govt-jobs/${job._id}`}
+                      to={`/govt-jobs/${job.slug || job._id}`}
                       className="hover:text-emerald-700 transition-colors"
                       title="View complete job notification and eligibility details"
                     >
@@ -437,7 +449,7 @@ const GovtJobs = () => {
 
                 <div className="flex flex-wrap items-center gap-2.5">
                   <Link
-                    to={`/govt-jobs/${job._id}`}
+                    to={`/govt-jobs/${job.slug || job._id}`}
                     className="btn-secondary text-xs py-2 px-3.5 flex items-center gap-1.5 font-semibold"
                   >
                     View Details & Eligibility →
@@ -458,7 +470,7 @@ const GovtJobs = () => {
                     type="button"
                     onClick={() => {
                       if (!user) {
-                        navigate(`/login?redirect=/govt-jobs/${job._id}`);
+                        navigate(`/login?redirect=/govt-jobs/${job.slug || job._id}`);
                       } else {
                         window.open(job.applyUrl, "_blank", "noopener,noreferrer");
                       }
@@ -523,8 +535,41 @@ const GovtJobs = () => {
                     placeholder="e.g. Agriculture Field Officer (AFO Scale-I) 2026"
                     className="input-field mt-1 text-sm"
                     value={form.title}
-                    onChange={(e) => setForm({ ...form, title: e.target.value })}
+                    onChange={(e) => {
+                      const newTitle = e.target.value;
+                      setForm((prev) => ({
+                        ...prev,
+                        title: newTitle,
+                        slug: prev.slugModified ? prev.slug : slugify(newTitle),
+                      }));
+                    }}
                   />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <div className="flex items-center justify-between">
+                    <label className="font-bold text-brand-grey uppercase">
+                      URL Slug / Permanent Handle
+                    </label>
+                    <span className="text-[11px] text-brand-grey font-mono">
+                      /govt-jobs/{form.slug || "job-slug"}
+                    </span>
+                  </div>
+                  <input
+                    placeholder="e.g. ibps-afo-scale-1-2026"
+                    className="input-field mt-1 text-sm font-mono text-emerald-900 bg-emerald-50/40"
+                    value={form.slug || ""}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        slug: slugify(e.target.value),
+                        slugModified: true,
+                      }))
+                    }
+                  />
+                  <p className="text-[11px] text-brand-grey mt-1">
+                    Auto-generated from title. Customize if you want a cleaner permalink for social sharing.
+                  </p>
                 </div>
 
                 <div>
