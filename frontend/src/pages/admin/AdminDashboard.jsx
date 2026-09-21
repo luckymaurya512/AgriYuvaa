@@ -1599,12 +1599,14 @@ const CmsPanel = ({ type, items, loading, onLoad, onDelete, onSave, fields, colu
                 <div className="space-y-2">
                   {form[f.key] ? (
                     <div className="relative inline-block border border-gray-200 rounded-xl overflow-hidden group bg-gray-50 p-2">
-                      <img
-                        src={form[f.key]}
-                        alt="Preview"
-                        className="h-32 w-auto max-w-xs object-cover rounded-lg border border-gray-100"
-                        onError={(e) => { e.target.style.display = "none"; }}
-                      />
+                      <div className="aspect-[16/9] w-56 sm:w-64 rounded-lg overflow-hidden border border-gray-100 bg-gray-100">
+                        <img
+                          src={form[f.key]}
+                          alt="Preview"
+                          className="w-full h-full object-cover"
+                          onError={(e) => { e.target.style.display = "none"; }}
+                        />
+                      </div>
                       <div className="mt-1 flex items-center justify-between gap-3 px-1 text-xs text-gray-500">
                         <span className="truncate max-w-[200px] font-mono text-[11px]">{form[f.key]}</span>
                         <button
@@ -1651,6 +1653,9 @@ const CmsPanel = ({ type, items, loading, onLoad, onDelete, onSave, fields, colu
                       className="flex-1 min-w-[200px] px-3 py-1.5 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500"
                     />
                   </div>
+                  <p className="text-[11px] text-gray-500">
+                    💡 Uniform 16:9 widescreen ratio (e.g., 1280×720 or 1920×1080) is recommended for best presentation.
+                  </p>
                 </div>
               ) : f.type === "toggle" ? (
                 <button

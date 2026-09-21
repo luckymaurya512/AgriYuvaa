@@ -659,7 +659,7 @@ const LandingPage = () => {
                       to={`/blog/${featuredBlog.slug || featuredBlog._id}`}
                       className="group block"
                     >
-                      <div className="relative h-64 sm:h-80 md:h-[360px] w-full rounded-3xl overflow-hidden bg-gray-100 mb-5 shadow-xs group-hover:shadow-xl transition-all duration-300">
+                      <div className="relative aspect-[16/9] w-full rounded-3xl overflow-hidden bg-gray-100 mb-5 shadow-xs group-hover:shadow-xl transition-all duration-300">
                         <img
                           src={getBlogImg(featuredBlog, 0)}
                           alt={featuredBlog.title}
@@ -703,8 +703,8 @@ const LandingPage = () => {
                       to={`/blog/${b.slug || b._id}`}
                       className="bg-white p-4 sm:p-4.5 rounded-2xl border border-gray-200/80 shadow-2xs hover:shadow-md hover:border-emerald-200 transition-all duration-200 flex items-center gap-4 group cursor-pointer"
                     >
-                      {/* Square Thumbnail */}
-                      <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-gray-100 shrink-0">
+                      {/* 16:9 Thumbnail */}
+                      <div className="w-28 sm:w-32 aspect-[16/9] rounded-xl overflow-hidden bg-gray-100 shrink-0">
                         <img
                           src={getBlogImg(b, idx + 1)}
                           alt={b.title}

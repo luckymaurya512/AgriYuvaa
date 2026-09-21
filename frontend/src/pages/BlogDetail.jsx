@@ -168,11 +168,11 @@ const BlogDetail = () => {
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6">
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-10 space-y-8">
           {blog.coverImage && (
-            <div className="rounded-xl overflow-hidden border border-gray-100 shadow-2xs">
+            <div className="relative w-full aspect-[16/9] rounded-2xl overflow-hidden border border-gray-100 shadow-2xs bg-gray-100">
               <img
                 src={blog.coverImage}
                 alt={blog.title}
-                className="w-full max-h-[460px] object-cover"
+                className="w-full h-full object-cover"
                 onError={(e) => {
                   e.target.style.display = "none";
                 }}

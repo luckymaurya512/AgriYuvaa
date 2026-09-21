@@ -87,7 +87,7 @@ const BlogList = () => {
                   to={`/blog/${blog.slug}`}
                   className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group flex flex-col"
                 >
-                  <div className="h-48 bg-gradient-to-br from-emerald-100 to-lime-50 flex items-center justify-center overflow-hidden">
+                  <div className="relative aspect-[16/9] w-full bg-gradient-to-br from-emerald-100 to-lime-50 flex items-center justify-center overflow-hidden">
                     {blog.coverImage ? (
                       <img
                         src={blog.coverImage}
