@@ -22,7 +22,7 @@ import {
   Check,
 } from "lucide-react";
 import api from "../services/api.js";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import SEO from "../components/SEO.jsx";
 import WhatsAppIcon from "../components/WhatsAppIcon.jsx";
@@ -116,13 +116,13 @@ const GovtJobs = () => {
   }, [targetJobId, loading, jobs]);
 
   const handleShareWhatsApp = (job) => {
-    const shareUrl = `${window.location.origin}/govt-jobs?id=${job._id}`;
+    const shareUrl = `${window.location.origin}/govt-jobs/${job._id}`;
     const text = `🏛️ *Government Agriculture Vacancy Alert on AgriYuvaa*:\n\n📌 *${job.title}*\n🏢 *Organization:* ${job.organization}\n📍 *State:* ${job.state || "All India"}\n👥 *Vacancies:* ${job.vacancies || "Multiple"}\n💰 *Pay Scale:* ${job.salary || "As per rules"}\n📅 *Deadline:* ${job.applicationDeadline || "Check notification"}\n\n👉 *View & Apply Details:* ${shareUrl}`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
   };
 
   const handleCopyLink = (job) => {
-    const shareUrl = `${window.location.origin}/govt-jobs?id=${job._id}`;
+    const shareUrl = `${window.location.origin}/govt-jobs/${job._id}`;
     navigator.clipboard.writeText(shareUrl);
     setCopiedId(job._id);
     setTimeout(() => setCopiedId(null), 2500);
@@ -340,7 +340,13 @@ const GovtJobs = () => {
                     )}
                   </div>
                   <h2 className="text-lg sm:text-xl font-display font-bold text-brand-black">
-                    {job.title}
+                    <Link
+                      to={`/govt-jobs/${job._id}`}
+                      className="hover:text-emerald-700 transition-colors"
+                      title="View complete job notification and eligibility details"
+                    >
+                      {job.title}
+                    </Link>
                   </h2>
                 </div>
 
@@ -429,15 +435,22 @@ const GovtJobs = () => {
                   )}
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <Link
+                    to={`/govt-jobs/${job._id}`}
+                    className="btn-secondary text-xs py-2 px-3.5 flex items-center gap-1.5 font-semibold"
+                  >
+                    View Details & Eligibility →
+                  </Link>
+
                   {job.notificationUrl && (
                     <a
                       href={job.notificationUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="btn-secondary text-xs py-2 px-4 flex items-center gap-1.5"
+                      className="btn-secondary text-xs py-2 px-3.5 flex items-center gap-1.5"
                     >
-                      <FileText size={14} /> Official Notification PDF <ExternalLink size={11} />
+                      <FileText size={13} /> Official PDF <ExternalLink size={11} />
                     </a>
                   )}
 
@@ -445,12 +458,12 @@ const GovtJobs = () => {
                     type="button"
                     onClick={() => {
                       if (!user) {
-                        navigate("/login?redirect=/govt-jobs");
+                        navigate(`/login?redirect=/govt-jobs/${job._id}`);
                       } else {
                         window.open(job.applyUrl, "_blank", "noopener,noreferrer");
                       }
                     }}
-                    className="btn-primary text-xs py-2 px-4 flex items-center gap-1.5 shadow-sm cursor-pointer"
+                    className="btn-primary text-xs py-2 px-3.5 flex items-center gap-1.5 shadow-sm cursor-pointer"
                   >
                     Apply on Govt Portal <ExternalLink size={12} />
                   </button>

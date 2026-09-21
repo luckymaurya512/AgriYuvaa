@@ -136,6 +136,19 @@ router.get(
   })
 );
 
+// @route GET /api/govt-jobs/:id
+router.get(
+  "/:id",
+  asyncHandler(async (req, res) => {
+    const job = await GovtJob.findById(req.params.id);
+    if (!job) {
+      res.status(404);
+      throw new Error("Government job vacancy not found");
+    }
+    res.json(job);
+  })
+);
+
 // @route POST /api/govt-jobs (Admin / Super Admin)
 router.post(
   "/",
