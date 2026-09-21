@@ -1,12 +1,13 @@
 import express from "express";
 import Blog from "../models/Blog.js";
 import { authenticate, authorize } from "../middleware/authMiddleware.js";
+import { upload, uploadFileToCloud } from "../middleware/uploadMiddleware.js";
 
 const router = express.Router();
 
 // ─── Public Routes ────────────────────────────────────────
 
-// GET /api/blogs — list published blogs (paginated)
+// GET /api/blogs — list published blogs (paginated, with targetSite filter)
 router.get("/", async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -14,18 +15,42 @@ router.get("/", async (req, res) => {
     const skip = (page - 1) * limit;
     const search = req.query.search || "";
     const tag = req.query.tag || "";
+    const targetSite = req.query.targetSite || "";
 
-    const filter = { isPublished: true };
+    const andConditions = [{ isPublished: true }];
+
+    if (targetSite === "landing") {
+      andConditions.push({
+        $or: [
+          { targetSite: { $in: ["landing", "both"] } },
+          { targetSite: { $exists: false } },
+          { targetSite: null },
+        ],
+      });
+    } else if (targetSite === "jobs") {
+      andConditions.push({
+        $or: [
+          { targetSite: { $in: ["jobs", "both"] } },
+          { targetSite: { $exists: false } },
+          { targetSite: null },
+        ],
+      });
+    }
+
     if (search) {
-      filter.$or = [
-        { title: { $regex: search, $options: "i" } },
-        { excerpt: { $regex: search, $options: "i" } },
-        { tags: { $regex: search, $options: "i" } },
-      ];
+      andConditions.push({
+        $or: [
+          { title: { $regex: search, $options: "i" } },
+          { excerpt: { $regex: search, $options: "i" } },
+          { tags: { $regex: search, $options: "i" } },
+        ],
+      });
     }
     if (tag) {
-      filter.tags = { $regex: tag, $options: "i" };
+      andConditions.push({ tags: { $regex: tag, $options: "i" } });
     }
+
+    const filter = andConditions.length > 1 ? { $and: andConditions } : andConditions[0];
 
     const [blogs, total] = await Promise.all([
       Blog.find(filter)
@@ -104,5 +129,32 @@ router.delete("/:id", authenticate, authorize("admin", "superadmin"), async (req
     res.status(500).json({ message: "Failed to delete blog", error: err.message });
   }
 });
+
+// POST /api/blogs/upload-image — upload a blog cover image
+router.post(
+  "/upload-image",
+  authenticate,
+  authorize("admin", "superadmin"),
+  upload.single("image"),
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No image file provided" });
+      }
+      const fileUrl = await uploadFileToCloud(
+        req.file.buffer,
+        req.file.originalname,
+        "agriyuvaa/blogs"
+      );
+      res.json({
+        url: fileUrl,
+        originalName: req.file.originalname,
+        size: req.file.size,
+      });
+    } catch (err) {
+      res.status(500).json({ message: "Failed to upload image", error: err.message });
+    }
+  }
+);
 
 export default router;

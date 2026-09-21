@@ -37,6 +37,20 @@ const blogSchema = new mongoose.Schema(
         trim: true,
       },
     ],
+    targetSite: {
+      type: String,
+      enum: ["both", "landing", "jobs"],
+      default: "both",
+      index: true,
+    },
+    coverImageData: {
+      type: String, // Base64 backup
+      default: "",
+    },
+    coverImageMimeType: {
+      type: String,
+      default: "",
+    },
     isPublished: {
       type: Boolean,
       default: false,

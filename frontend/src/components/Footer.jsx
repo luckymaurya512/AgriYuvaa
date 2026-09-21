@@ -39,6 +39,7 @@ const Footer = () => {
           <h3 className="font-semibold mb-3 text-sm uppercase tracking-wide text-white/80">Company</h3>
           <ul className="space-y-2 text-sm text-white/60 mb-4">
             <li><Link to="/about" className="hover:text-brand-green">About Us</Link></li>
+            <li><Link to="/blog" className="hover:text-brand-green">Blog & Insights</Link></li>
             <li><Link to="/contact" className="hover:text-brand-green">Contact</Link></li>
           </ul>
           <div className="flex items-center gap-3">

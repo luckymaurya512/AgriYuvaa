@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Search, MapPin, ArrowRight, UserPlus, SearchCheck, Handshake } from "lucide-react";
+import { Search, MapPin, ArrowRight, UserPlus, SearchCheck, Handshake, Calendar } from "lucide-react";
 import { fetchJobs, fetchCategories, fetchGovtJobs } from "../services/jobService.js";
+import { fetchBlogs } from "../services/landingService.js";
 import JobCard from "../components/JobCard.jsx";
 import GovtJobCard from "../components/GovtJobCard.jsx";
 import CategoryCard from "../components/CategoryCard.jsx";
@@ -26,6 +27,7 @@ const Home = () => {
   const [featuredJobs, setFeaturedJobs] = useState([]);
   const [govtJobs, setGovtJobs] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [blogs, setBlogs] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -38,6 +40,9 @@ const Home = () => {
     fetchCategories()
       .then((data) => setCategories(data || []))
       .catch(() => setCategories([]));
+    fetchBlogs({ limit: 3, targetSite: "jobs" })
+      .then((data) => setBlogs(data.blogs || []))
+      .catch(() => setBlogs([]));
   }, []);
 
   const handleSearch = (e) => {
@@ -228,6 +233,80 @@ const Home = () => {
           ))}
         </div>
       </section>
+
+      {/* Latest Blog & Career Insights */}
+      {blogs.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 border-t border-brand-border">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h2 className="text-2xl font-display font-bold flex items-center gap-2">
+                <span>📰</span> Career Advice & Industry Insights
+              </h2>
+              <p className="text-xs sm:text-sm text-brand-grey mt-0.5">
+                Expert tips, agri-business updates, and ICAR exam strategies
+              </p>
+            </div>
+            <Link to="/blog" className="text-sm font-semibold text-brand-green-dark inline-flex items-center gap-1 shrink-0">
+              View all articles <ArrowRight size={16} />
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {blogs.map((blog) => (
+              <Link
+                key={blog._id}
+                to={`/blog/${blog.slug}`}
+                className="card overflow-hidden group hover:shadow-md hover:-translate-y-1 transition-all duration-200 flex flex-col"
+              >
+                <div className="aspect-[16/9] bg-emerald-50 overflow-hidden relative">
+                  {blog.coverImage ? (
+                    <img
+                      src={blog.coverImage}
+                      alt={blog.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                        if (e.target.nextSibling) e.target.nextSibling.style.display = "flex";
+                      }}
+                    />
+                  ) : null}
+                  <div
+                    className="w-full h-full flex items-center justify-center text-3xl bg-emerald-50"
+                    style={{ display: blog.coverImage ? "none" : "flex" }}
+                  >
+                    🌾
+                  </div>
+                </div>
+                <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
+                  <div>
+                    {blog.tags?.[0] && (
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded mb-2 inline-block">
+                        {blog.tags[0]}
+                      </span>
+                    )}
+                    <h3 className="font-display font-bold text-base text-brand-black group-hover:text-brand-green-dark transition-colors line-clamp-2">
+                      {blog.title}
+                    </h3>
+                    <p className="text-xs text-brand-grey line-clamp-2 mt-1.5 leading-relaxed">
+                      {blog.excerpt || "Read more about this topic..."}
+                    </p>
+                  </div>
+                  <div className="pt-3 border-t border-brand-border flex items-center justify-between text-xs text-brand-grey">
+                    <span className="flex items-center gap-1">
+                      <Calendar size={12} />
+                      {blog.publishedAt
+                        ? new Date(blog.publishedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
+                        : ""}
+                    </span>
+                    <span className="font-semibold text-brand-green-dark inline-flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform">
+                      Read <ArrowRight size={12} />
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* CTA banner */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">

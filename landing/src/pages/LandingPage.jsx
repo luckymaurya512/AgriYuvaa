@@ -158,7 +158,7 @@ const LandingPage = () => {
     fetchTestimonials()
       .then((data) => setTestimonials(data || []))
       .catch(() => setTestimonials([]));
-    fetchBlogs({ limit: 4 })
+    fetchBlogs({ limit: 4, targetSite: "landing" })
       .then((data) => setBlogs(data.blogs || []))
       .catch(() => setBlogs([]));
   }, []);

@@ -26,6 +26,7 @@ import fs from "fs";
 import path from "path";
 import Application from "./models/Application.js";
 import SeekerProfile from "./models/SeekerProfile.js";
+import Blog from "./models/Blog.js";
 
 dotenv.config();
 connectDB();
@@ -85,6 +86,18 @@ app.get("/uploads/:filename", async (req, res, next) => {
         ],
         resumeFileData: { $exists: true, $ne: null },
       });
+    }
+
+    if (!doc) {
+      const blogDoc = await Blog.findOne({
+        coverImage: filenameRegex,
+        coverImageData: { $exists: true, $ne: null },
+      });
+      if (blogDoc && blogDoc.coverImageData) {
+        const fileBuffer = Buffer.from(blogDoc.coverImageData, "base64");
+        res.setHeader("Content-Type", blogDoc.coverImageMimeType || "image/jpeg");
+        return res.send(fileBuffer);
+      }
     }
 
     if (doc && doc.resumeFileData) {

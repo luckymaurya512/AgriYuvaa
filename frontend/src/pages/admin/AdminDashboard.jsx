@@ -31,6 +31,9 @@ import {
   MessageSquare,
   Save,
   X,
+  Upload,
+  Image as ImageIcon,
+  Loader2,
 } from "lucide-react";
 import ResumePreviewModal from "../../components/ResumePreviewModal.jsx";
 import {
@@ -43,7 +46,7 @@ import {
 } from "../../services/adminService.js";
 import { deleteJob } from "../../services/jobService.js";
 import {
-  fetchAllBlogs, createBlog, updateBlog, deleteBlog,
+  fetchAllBlogs, createBlog, updateBlog, deleteBlog, uploadBlogImage,
   fetchAllWorkshops, createWorkshop, updateWorkshop, deleteWorkshop,
   fetchAllTestimonials, createTestimonial, updateTestimonial, deleteTestimonial,
 } from "../../services/landingService.js";
@@ -1370,15 +1373,26 @@ const AdminDashboard = () => {
           }}
           fields={[
             { key: "title", label: "Title", type: "text", required: true },
-            { key: "slug", label: "Slug", type: "text" },
-            { key: "excerpt", label: "Excerpt", type: "text" },
+            { key: "slug", label: "Slug (Auto-generated if blank)", type: "text" },
+            {
+              key: "targetSite",
+              label: "Display Destination",
+              type: "select",
+              options: [
+                { label: "🌐 Both (Main Website & Job Portal)", value: "both" },
+                { label: "🏠 Main Website Only (Landing Page)", value: "landing" },
+                { label: "💼 Job Portal Only", value: "jobs" },
+              ],
+              defaultValue: "both",
+            },
+            { key: "coverImage", label: "Cover Image", type: "image" },
+            { key: "excerpt", label: "Excerpt / Short Description", type: "textarea" },
             { key: "content", label: "Content", type: "richtext", required: true },
-            { key: "coverImage", label: "Cover Image URL", type: "text" },
             { key: "author", label: "Author", type: "text" },
             { key: "tags", label: "Tags (comma-separated)", type: "tags" },
             { key: "isPublished", label: "Published", type: "toggle" },
           ]}
-          columns={["title", "author", "isPublished", "createdAt"]}
+          columns={["title", "targetSite", "author", "isPublished", "createdAt"]}
         />
       )}
 
@@ -1464,8 +1478,24 @@ const CmsPanel = ({ type, items, loading, onLoad, onDelete, onSave, fields, colu
   const [editing, setEditing] = useState(null); // null = list view, {} = new, {...} = editing
   const [form, setForm] = useState({});
   const [saving, setSaving] = useState(false);
+  const [uploadingField, setUploadingField] = useState(null);
 
   useEffect(() => { onLoad(); }, []);
+
+  const handleFileUpload = async (fieldKey, file) => {
+    if (!file) return;
+    setUploadingField(fieldKey);
+    try {
+      const res = await uploadBlogImage(file);
+      if (res?.imageUrl) {
+        setForm(prev => ({ ...prev, [fieldKey]: res.imageUrl }));
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to upload image");
+    } finally {
+      setUploadingField(null);
+    }
+  };
 
   const startNew = () => {
     const defaults = {};
@@ -1473,6 +1503,7 @@ const CmsPanel = ({ type, items, loading, onLoad, onDelete, onSave, fields, colu
       if (f.type === "toggle") defaults[f.key] = true;
       else if (f.type === "number") defaults[f.key] = 0;
       else if (f.type === "tags") defaults[f.key] = [];
+      else if (f.type === "select") defaults[f.key] = f.defaultValue || f.options?.[0]?.value || "";
       else defaults[f.key] = "";
     });
     setForm(defaults);
@@ -1516,6 +1547,11 @@ const CmsPanel = ({ type, items, loading, onLoad, onDelete, onSave, fields, colu
   const formatCell = (item, col) => {
     const val = item[col];
     if (col === "isPublished" || col === "isActive") return val ? "✅ Yes" : "❌ No";
+    if (col === "targetSite") {
+      if (val === "landing") return "🏠 Main Site";
+      if (val === "jobs") return "💼 Job Portal";
+      return "🌐 Both Sites";
+    }
     if (col === "createdAt") return new Date(val).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
     if (col === "rating") return "⭐".repeat(val || 0);
     if (typeof val === "string" && val.length > 50) return val.substring(0, 50) + "...";
@@ -1544,9 +1580,78 @@ const CmsPanel = ({ type, items, loading, onLoad, onDelete, onSave, fields, colu
                 <textarea
                   value={form[f.key] || ""}
                   onChange={e => setForm({ ...form, [f.key]: e.target.value })}
-                  rows={6}
+                  rows={4}
                   className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500"
                 />
+              ) : f.type === "select" ? (
+                <select
+                  value={form[f.key] || f.defaultValue || (f.options?.[0]?.value ?? "")}
+                  onChange={e => setForm({ ...form, [f.key]: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 bg-white"
+                >
+                  {f.options?.map(opt => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              ) : f.type === "image" ? (
+                <div className="space-y-2">
+                  {form[f.key] ? (
+                    <div className="relative inline-block border border-gray-200 rounded-xl overflow-hidden group bg-gray-50 p-2">
+                      <img
+                        src={form[f.key]}
+                        alt="Preview"
+                        className="h-32 w-auto max-w-xs object-cover rounded-lg border border-gray-100"
+                        onError={(e) => { e.target.style.display = "none"; }}
+                      />
+                      <div className="mt-1 flex items-center justify-between gap-3 px-1 text-xs text-gray-500">
+                        <span className="truncate max-w-[200px] font-mono text-[11px]">{form[f.key]}</span>
+                        <button
+                          type="button"
+                          onClick={() => setForm({ ...form, [f.key]: "" })}
+                          className="text-red-500 hover:text-red-700 font-bold"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+                  <div className="flex flex-wrap items-center gap-3">
+                    <label className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100 rounded-xl text-xs font-semibold cursor-pointer transition-colors shadow-2xs">
+                      {uploadingField === f.key ? (
+                        <>
+                          <Loader2 size={14} className="animate-spin text-emerald-600" />
+                          <span>Uploading image...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Upload size={14} className="text-emerald-700" />
+                          <span>Upload direct image (PNG, JPG, WebP)</span>
+                        </>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        disabled={uploadingField === f.key}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleFileUpload(f.key, file);
+                          e.target.value = "";
+                        }}
+                      />
+                    </label>
+                    <span className="text-xs text-gray-400">or paste URL:</span>
+                    <input
+                      type="text"
+                      placeholder="https://..."
+                      value={form[f.key] || ""}
+                      onChange={e => setForm({ ...form, [f.key]: e.target.value })}
+                      className="flex-1 min-w-[200px] px-3 py-1.5 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500"
+                    />
+                  </div>
+                </div>
               ) : f.type === "toggle" ? (
                 <button
                   type="button"

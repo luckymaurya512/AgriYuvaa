@@ -97,6 +97,7 @@ const Navbar = () => {
     { label: "Find Jobs", to: "/jobs" },
     { label: "Govt Vacancies", to: "/govt-jobs", isGovt: true },
     { label: "Resume Builder", to: "/resume-builder" },
+    { label: "Blog", to: "/blog" },
     { label: "Employers", to: "/employers" },
     { label: "About", to: "/about" },
   ];

@@ -14,7 +14,7 @@ const BlogList = () => {
 
   useEffect(() => {
     setLoading(true);
-    fetchBlogs({ page, limit: 9, search })
+    fetchBlogs({ page, limit: 9, search, targetSite: "landing" })
       .then((data) => {
         setBlogs(data.blogs || []);
         setTotalPages(data.pages || 1);

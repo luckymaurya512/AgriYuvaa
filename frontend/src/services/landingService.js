@@ -48,6 +48,15 @@ export const deleteBlog = async (id) => {
   return data;
 };
 
+export const uploadBlogImage = async (file) => {
+  const formData = new FormData();
+  formData.append("image", file);
+  const { data } = await api.post("/blogs/upload-image", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return data;
+};
+
 // Workshops Admin
 export const fetchAllWorkshops = async () => {
   const { data } = await api.get("/workshops/admin/all");
