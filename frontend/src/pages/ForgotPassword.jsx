@@ -140,8 +140,8 @@ const ForgotPassword = () => {
                 type="text"
                 maxLength={6}
                 required
-                placeholder="123456"
-                className="input-field mt-1 text-center font-mono text-xl tracking-widest font-bold"
+                placeholder="Enter verification code"
+                className="input-field mt-1 text-sm text-gray-800 placeholder:text-gray-400"
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
               />
