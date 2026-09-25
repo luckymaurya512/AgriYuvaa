@@ -17,11 +17,10 @@ import {
   Sparkles,
   CheckCircle2,
 } from "lucide-react";
-import { fetchJobs, fetchCategories, fetchGovtJobs } from "../services/jobService.js";
+import { fetchJobs, fetchGovtJobs } from "../services/jobService.js";
 import { fetchBlogs, fetchTestimonials } from "../services/landingService.js";
 import JobCard from "../components/JobCard.jsx";
 import GovtJobCard from "../components/GovtJobCard.jsx";
-import CategoryCard from "../components/CategoryCard.jsx";
 import CommunityBanner from "../components/CommunityBanner.jsx";
 import SEO from "../components/SEO.jsx";
 
@@ -43,7 +42,6 @@ const Home = () => {
   const [location, setLocation] = useState("");
   const [featuredJobs, setFeaturedJobs] = useState([]);
   const [govtJobs, setGovtJobs] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [blogs, setBlogs] = useState([]);
   const [testimonials, setTestimonials] = useState([]);
   const navigate = useNavigate();
@@ -55,9 +53,6 @@ const Home = () => {
     fetchGovtJobs()
       .then((data) => setGovtJobs(Array.isArray(data) ? data.slice(0, 3) : []))
       .catch(() => setGovtJobs([]));
-    fetchCategories()
-      .then((data) => setCategories(data || []))
-      .catch(() => setCategories([]));
     fetchBlogs({ limit: 3, targetSite: "jobs" })
       .then((data) => setBlogs(data.blogs || []))
       .catch(() => setBlogs([]));
@@ -146,23 +141,8 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Categories */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl sm:text-2xl font-display font-bold">Browse by Category</h2>
-          <Link to="/jobs" className="text-xs sm:text-sm font-semibold text-brand-green-dark inline-flex items-center gap-1">
-            View all jobs <ArrowRight size={16} />
-          </Link>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-          {categories.map((c) => (
-            <CategoryCard key={c._id} category={c} />
-          ))}
-        </div>
-      </section>
-
       {/* Government Agriculture Vacancies Spotlight */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10 sm:pb-16">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
         <div className="bg-gradient-to-r from-emerald-900 via-emerald-800 to-green-900 text-white rounded-2xl sm:rounded-3xl p-5 sm:p-10 shadow-lg border border-emerald-700/50 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 lg:gap-10">
           <div className="space-y-3 max-w-2xl">
             <div className="inline-flex items-center gap-2 bg-amber-400/20 text-amber-300 border border-amber-400/30 px-3 py-1 rounded-full text-xs font-semibold">
