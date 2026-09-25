@@ -4,9 +4,10 @@ import asyncHandler from "express-async-handler";
 import Application from "../models/Application.js";
 import Job from "../models/Job.js";
 import SeekerProfile from "../models/SeekerProfile.js";
+import EmployerProfile from "../models/EmployerProfile.js";
 import sendEmail from "../utils/sendEmail.js";
 
-// @desc  Apply to a job (job seeker only)
+// @desc  Apply to a job
 // @route POST /api/applications/jobs/:jobId
 export const applyToJob = asyncHandler(async (req, res) => {
   const job = await Job.findById(req.params.jobId);
@@ -22,15 +23,18 @@ export const applyToJob = asyncHandler(async (req, res) => {
   }
 
   // Lookup profile to get stored resume file data if available
-  const seekerProfile = await SeekerProfile.findOne({ user: req.user._id });
+  let candidateProfile = await SeekerProfile.findOne({ user: req.user._id });
+  if (!candidateProfile) {
+    candidateProfile = await EmployerProfile.findOne({ user: req.user._id });
+  }
 
   const application = await Application.create({
     job: job._id,
     seeker: req.user._id,
-    resumeUrl: req.body.resumeUrl || seekerProfile?.resumeUrl,
-    resumeOriginalName: seekerProfile?.resumeOriginalName,
-    resumeMimeType: seekerProfile?.resumeMimeType,
-    resumeFileData: seekerProfile?.resumeFileData,
+    resumeUrl: req.body.resumeUrl || candidateProfile?.resumeUrl || `${process.env.FRONTEND_URL || "https://jobs.agriyuvaa.com"}/resume-builder`,
+    resumeOriginalName: candidateProfile?.resumeOriginalName,
+    resumeMimeType: candidateProfile?.resumeMimeType,
+    resumeFileData: candidateProfile?.resumeFileData,
     coverNote: req.body.coverNote,
   });
 

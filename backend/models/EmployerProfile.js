@@ -18,6 +18,13 @@ const employerProfileSchema = new mongoose.Schema(
     documents: [{ type: String }],
     resumeData: { type: mongoose.Schema.Types.Mixed },
     resumeUrl: { type: String },
+    resumeOriginalName: { type: String },
+    resumeMimeType: { type: String },
+    resumeFileData: { type: String },
+    resumeUploadedAt: { type: Date },
+    resumeBuilderUpdatedAt: { type: Date },
+    resumeUpdatedAt: { type: Date },
+    activeResumeType: { type: String, enum: ["upload", "builder"] },
   },
   { timestamps: true }
 );

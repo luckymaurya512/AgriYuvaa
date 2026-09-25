@@ -238,18 +238,30 @@ router.post(
   ["/seeker/me/resume", "/me/resume"],
   authenticate,
   asyncHandler(async (req, res) => {
+    const now = new Date();
+    const resumeData = {
+      ...(req.body || {}),
+      updatedAt: req.body?.updatedAt || now.toISOString(),
+    };
+
     if (req.user.role === "employer") {
       let empProfile = await EmployerProfile.findOne({ user: req.user._id });
       if (!empProfile) {
         empProfile = await EmployerProfile.create({ user: req.user._id, companyName: req.user.name });
       }
-      empProfile.resumeData = req.body;
+      empProfile.resumeData = resumeData;
+      empProfile.resumeBuilderUpdatedAt = now;
+      empProfile.resumeUpdatedAt = now;
+      empProfile.activeResumeType = "builder";
       await empProfile.save();
       return res.json({ message: "Resume saved successfully", resumeData: empProfile.resumeData });
     }
 
     const profile = await getOrCreateProfile(req.user._id);
-    profile.resumeData = req.body;
+    profile.resumeData = resumeData;
+    profile.resumeBuilderUpdatedAt = now;
+    profile.resumeUpdatedAt = now;
+    profile.activeResumeType = "builder";
     await profile.save();
     res.json({ message: "Resume saved successfully", resumeData: profile.resumeData });
   })
@@ -329,11 +341,10 @@ router.post(
   })
 );
 
-// @route POST /api/users/seeker/upload-resume
+// @route POST /api/users/seeker/upload-resume and /api/users/upload-resume
 router.post(
-  "/seeker/upload-resume",
+  ["/seeker/upload-resume", "/upload-resume"],
   authenticate,
-  authorize("seeker"),
   upload.single("resume"),
   asyncHandler(async (req, res) => {
     if (!req.file) {
@@ -343,13 +354,32 @@ router.post(
 
     const base64Data = req.file.buffer.toString("base64");
     const fileUrl = await uploadFileToCloud(req.file.buffer, req.file.originalname, "agriyuvaa/resumes");
-    
-    const profile = await getOrCreateProfile(req.user._id);
-    profile.resumeUrl = fileUrl;
-    profile.resumeOriginalName = req.file.originalname;
-    profile.resumeMimeType = req.file.mimetype;
-    profile.resumeFileData = base64Data;
-    await profile.save();
+    const now = new Date();
+
+    if (req.user.role === "employer") {
+      let empProfile = await EmployerProfile.findOne({ user: req.user._id });
+      if (!empProfile) {
+        empProfile = await EmployerProfile.create({ user: req.user._id, companyName: req.user.name });
+      }
+      empProfile.resumeUrl = fileUrl;
+      empProfile.resumeOriginalName = req.file.originalname;
+      empProfile.resumeMimeType = req.file.mimetype;
+      empProfile.resumeFileData = base64Data;
+      empProfile.resumeUploadedAt = now;
+      empProfile.resumeUpdatedAt = now;
+      empProfile.activeResumeType = "upload";
+      await empProfile.save();
+    } else {
+      const profile = await getOrCreateProfile(req.user._id);
+      profile.resumeUrl = fileUrl;
+      profile.resumeOriginalName = req.file.originalname;
+      profile.resumeMimeType = req.file.mimetype;
+      profile.resumeFileData = base64Data;
+      profile.resumeUploadedAt = now;
+      profile.resumeUpdatedAt = now;
+      profile.activeResumeType = "upload";
+      await profile.save();
+    }
 
     res.json({
       url: fileUrl,

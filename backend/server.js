@@ -26,6 +26,7 @@ import fs from "fs";
 import path from "path";
 import Application from "./models/Application.js";
 import SeekerProfile from "./models/SeekerProfile.js";
+import EmployerProfile from "./models/EmployerProfile.js";
 import Blog from "./models/Blog.js";
 
 dotenv.config();
@@ -80,6 +81,16 @@ app.get("/uploads/:filename", async (req, res, next) => {
 
     if (!doc) {
       doc = await SeekerProfile.findOne({
+        $or: [
+          { resumeUrl: filenameRegex },
+          { resumeOriginalName: filenameRegex },
+        ],
+        resumeFileData: { $exists: true, $ne: null },
+      });
+    }
+
+    if (!doc) {
+      doc = await EmployerProfile.findOne({
         $or: [
           { resumeUrl: filenameRegex },
           { resumeOriginalName: filenameRegex },

@@ -28,6 +28,7 @@ import {
   changePassword,
   uploadSeekerResume,
 } from "../services/userService.js";
+import { getActiveResume } from "../utils/resumeUtils.js";
 import ResumePreviewModal from "../components/ResumePreviewModal.jsx";
 import SEO from "../components/SEO.jsx";
 
@@ -258,6 +259,8 @@ const Profile = () => {
   } else if (!resumeDownloadUrl.startsWith("http://") && !resumeDownloadUrl.startsWith("https://") && resumeDownloadUrl.length > 0) {
     resumeDownloadUrl = `https://${resumeDownloadUrl}`;
   }
+
+  const activeResume = getActiveResume(profile, user?.name);
 
   return (
     <div className="max-w-5xl mx-auto px-3.5 sm:px-6 lg:px-8 py-5 sm:py-10">
@@ -698,58 +701,89 @@ const Profile = () => {
               </Link>
             </div>
 
-            {/* Active Resume Display */}
-            {profile?.resumeUrl || profile?.resumeOriginalName ? (
+            {/* Active Resume Display (Single Active Resume: Last Edited or Uploaded) */}
+            {activeResume ? (
               <div className="p-5 bg-emerald-50/40 rounded-2xl border border-emerald-200 flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                 <div className="flex items-center gap-3.5 min-w-0">
                   <div className="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center justify-center shrink-0">
                     <FileText size={24} />
                   </div>
                   <div className="min-w-0">
-                    <p className="font-display font-bold text-sm text-brand-black truncate">
-                      {profile.resumeOriginalName || "Active_Resume.pdf"}
-                    </p>
-                    <p className="text-xs text-brand-grey mt-0.5">
-                      Uploaded on{" "}
-                      {new Date(profile.updatedAt || Date.now()).toLocaleDateString("en-IN", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                      })}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-display font-bold text-sm text-brand-black truncate">
+                        {activeResume.title}
+                      </p>
+                      <span className="text-[10px] font-bold text-emerald-900 bg-emerald-200/80 px-2 py-0.5 rounded-md">
+                        {activeResume.badge}
+                      </span>
+                    </div>
+                    <p className="text-xs text-brand-grey mt-0.5 truncate">
+                      {activeResume.subtitle}
+                      {activeResume.updatedAt && (
+                        <>
+                          {" "}• Updated{" "}
+                          {new Date(activeResume.updatedAt).toLocaleDateString("en-IN", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })}
+                        </>
+                      )}
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setPreviewResume({
-                        resumeUrl: profile.resumeUrl,
-                        seeker: { name: user?.name, email: user?.email, phone: user?.phone },
-                      })
-                    }
-                    className="btn-secondary text-xs py-2 px-3 flex items-center gap-1.5 bg-white shadow-2xs"
-                  >
-                    <Eye size={13} className="text-emerald-700" />
-                    <span>Quick Preview</span>
-                  </button>
+                  {activeResume.type === "builder" ? (
+                    <>
+                      <Link
+                        to="/resume-builder"
+                        className="btn-secondary text-xs py-2 px-3 flex items-center gap-1.5 bg-white shadow-2xs text-emerald-900 font-bold border-emerald-300"
+                      >
+                        <Sparkles size={13} className="text-emerald-700" />
+                        <span>Edit in Builder ↗</span>
+                      </Link>
+                      <Link
+                        to="/resume-builder"
+                        className="px-3.5 py-2 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-2xs"
+                      >
+                        <Download size={13} />
+                        <span>View / Download CV</span>
+                      </Link>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setPreviewResume({
+                            resumeUrl: activeResume.url,
+                            seeker: { name: user?.name, email: user?.email, phone: user?.phone },
+                          })
+                        }
+                        className="btn-secondary text-xs py-2 px-3 flex items-center gap-1.5 bg-white shadow-2xs"
+                      >
+                        <Eye size={13} className="text-emerald-700" />
+                        <span>Quick Preview</span>
+                      </button>
 
-                  <a
-                    href={resumeDownloadUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-3.5 py-2 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-2xs"
-                  >
-                    <Download size={13} />
-                    <span>Download</span>
-                  </a>
+                      <a
+                        href={resumeDownloadUrl || activeResume.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3.5 py-2 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-2xs"
+                      >
+                        <Download size={13} />
+                        <span>Download</span>
+                      </a>
+                    </>
+                  )}
                 </div>
               </div>
             ) : (
               <div className="p-6 bg-gray-50 rounded-2xl border border-dashed border-brand-border text-center space-y-2 mb-6">
                 <FileText size={32} className="mx-auto text-gray-400" />
-                <p className="text-sm font-bold text-brand-black">No Resume Uploaded Yet</p>
+                <p className="text-sm font-bold text-brand-black">No Resume on Profile Yet</p>
                 <p className="text-xs text-brand-grey max-w-sm mx-auto">
                   Upload a PDF resume below or use our free Agriculture Resume Builder to create one in minutes.
                 </p>

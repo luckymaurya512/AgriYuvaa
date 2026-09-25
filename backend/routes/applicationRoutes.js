@@ -10,8 +10,8 @@ import { authenticate, authorize } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-router.post("/jobs/:jobId", authenticate, authorize("seeker"), applyToJob);
-router.get("/mine", authenticate, authorize("seeker"), getMyApplications);
+router.post("/jobs/:jobId", authenticate, authorize("seeker", "employer"), applyToJob);
+router.get("/mine", authenticate, authorize("seeker", "employer"), getMyApplications);
 router.get("/jobs/:jobId", authenticate, authorize("employer", "admin", "superadmin"), getApplicationsForJob);
 router.get("/:id/resume", downloadApplicationResume);
 router.route("/:id/status").patch(authenticate, authorize("employer", "admin", "superadmin"), updateApplicationStatus).post(authenticate, authorize("employer", "admin", "superadmin"), updateApplicationStatus);

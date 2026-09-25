@@ -19,6 +19,7 @@ import {
 import { useAuth } from "../../context/AuthContext.jsx";
 import { fetchMyApplications } from "../../services/jobService.js";
 import { fetchSeekerProfile, toggleSaveJob, uploadSeekerResume } from "../../services/userService.js";
+import { getActiveResume } from "../../utils/resumeUtils.js";
 import { toggleFollowEmployer } from "../../services/notificationService.js";
 import JobCard from "../../components/JobCard.jsx";
 import SEO from "../../components/SEO.jsx";
@@ -37,6 +38,7 @@ const SeekerDashboard = () => {
   const [applications, setApplications] = useState([]);
   const [savedJobs, setSavedJobs] = useState([]);
   const [followedEmployers, setFollowedEmployers] = useState([]);
+  const [profile, setProfile] = useState(null);
   const [resumeUrl, setResumeUrl] = useState("");
   const [resumeData, setResumeData] = useState(null);
   const [uploadingResume, setUploadingResume] = useState(false);
@@ -45,15 +47,16 @@ const SeekerDashboard = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [apps, profile] = await Promise.all([
+      const [apps, prof] = await Promise.all([
         fetchMyApplications().catch(() => []),
         fetchSeekerProfile().catch(() => null),
       ]);
       setApplications(apps || []);
-      setSavedJobs(profile?.savedJobs || []);
-      setFollowedEmployers(profile?.followedEmployers || []);
-      setResumeUrl(profile?.resumeUrl || "");
-      setResumeData(profile?.resumeData || null);
+      setProfile(prof);
+      setSavedJobs(prof?.savedJobs || []);
+      setFollowedEmployers(prof?.followedEmployers || []);
+      setResumeUrl(prof?.resumeUrl || "");
+      setResumeData(prof?.resumeData || null);
     } finally {
       setLoading(false);
     }
@@ -64,6 +67,7 @@ const SeekerDashboard = () => {
   }, []);
 
   const [isDragging, setIsDragging] = useState(false);
+  const activeResume = getActiveResume(profile, user?.name);
 
   const processResumeFile = async (file) => {
     if (!file) return;
@@ -508,10 +512,10 @@ const SeekerDashboard = () => {
                 Active Resume on Profile
               </label>
 
-              {resumeData || resumeUrl ? (
+              {activeResume ? (
                 <div className="space-y-3 flex-1 flex flex-col justify-between w-full min-w-0">
-                  {/* Case 1: Created with Resume Builder */}
-                  {resumeData && (
+                  {/* Single Active Resume: Resume Builder CV */}
+                  {activeResume.type === "builder" ? (
                     <div className="p-4 sm:p-5 rounded-2xl bg-emerald-50/80 border border-emerald-300 space-y-4 flex-1 flex flex-col justify-between w-full min-w-0 overflow-hidden shadow-2xs">
                       <div className="flex items-start gap-3 min-w-0 w-full">
                         <div className="h-10 w-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
@@ -520,19 +524,19 @@ const SeekerDashboard = () => {
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
                             <p className="text-xs font-bold text-emerald-950 truncate">
-                              {resumeData.fullName || user?.name || "Agriculture Resume"}
+                              {activeResume.title}
                             </p>
                             <span className="text-[10px] font-bold bg-emerald-200/80 text-emerald-900 px-2 py-0.5 rounded-md">
-                              Builder Resume
+                              {activeResume.badge}
                             </span>
                           </div>
                           <p className="text-xs text-emerald-800/90 font-medium truncate mt-0.5">
-                            {resumeData.title || "Agriculture Professional"}
+                            {activeResume.subtitle}
                           </p>
-                          {resumeData.updatedAt && (
+                          {activeResume.updatedAt && (
                             <p className="text-[11px] text-emerald-700/70 mt-1">
-                              Last saved:{" "}
-                              {new Date(resumeData.updatedAt).toLocaleDateString("en-IN", {
+                              Last updated:{" "}
+                              {new Date(activeResume.updatedAt).toLocaleDateString("en-IN", {
                                 day: "numeric",
                                 month: "short",
                                 year: "numeric",
@@ -557,21 +561,31 @@ const SeekerDashboard = () => {
                         </Link>
                       </div>
                     </div>
-                  )}
-
-                  {/* Case 2: Uploaded Document */}
-                  {resumeUrl && (
-                    <div className="p-4 sm:p-5 rounded-2xl bg-emerald-50/70 border border-emerald-200 space-y-4 flex-1 flex flex-col justify-between w-full min-w-0 overflow-hidden">
+                  ) : (
+                    /* Single Active Resume: Uploaded Document */
+                    <div className="p-4 sm:p-5 rounded-2xl bg-emerald-50/70 border border-emerald-200 space-y-4 flex-1 flex flex-col justify-between w-full min-w-0 overflow-hidden shadow-2xs">
                       <div className="flex items-start gap-3 min-w-0 w-full">
                         <div className="h-10 w-10 rounded-xl bg-white border border-emerald-300 text-emerald-800 flex items-center justify-center shrink-0 shadow-2xs">
                           <FileText size={20} />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="text-xs font-bold text-emerald-950 flex items-center gap-1 truncate">
-                            <CheckCircle2 size={14} className="text-emerald-600 shrink-0" /> Uploaded Document
-                          </p>
-                          <p className="text-[11px] text-emerald-800/80 truncate mt-0.5 w-full block" title={resumeUrl}>
-                            {resumeUrl.split("/").pop() || "Active Resume.pdf"}
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-xs font-bold text-emerald-950 truncate">
+                              {activeResume.title}
+                            </p>
+                            <span className="text-[10px] font-bold bg-emerald-200/80 text-emerald-900 px-2 py-0.5 rounded-md">
+                              {activeResume.badge}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-emerald-800/80 truncate mt-0.5 w-full block">
+                            {activeResume.subtitle}
+                            {activeResume.updatedAt && (
+                              <> • Updated {new Date(activeResume.updatedAt).toLocaleDateString("en-IN", {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                              })}</>
+                            )}
                           </p>
                         </div>
                       </div>
@@ -582,7 +596,7 @@ const SeekerDashboard = () => {
                             const backendBase = (
                               import.meta.env.VITE_API_URL || "https://agriyuvaa.onrender.com"
                             ).replace(/\/api\/?$/, "");
-                            let target = (resumeUrl || "").trim().replace(/^https?:\/\/\/+/, "/");
+                            let target = (activeResume.url || "").trim().replace(/^https?:\/\/\/+/, "/");
                             if (target.startsWith("/uploads/")) return `${backendBase}${target}`;
                             if (target.startsWith("http://") || target.startsWith("https://")) return target;
                             return `https://${target}`;

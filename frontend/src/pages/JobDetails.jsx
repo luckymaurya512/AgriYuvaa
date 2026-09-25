@@ -30,7 +30,8 @@ import {
 } from "lucide-react";
 import { fetchJobById, applyToJob, fetchMyApplications, fetchJobs, deleteJob } from "../services/jobService.js";
 import { toggleJobFeatured } from "../services/adminService.js";
-import { fetchSeekerProfile, toggleSaveJob, uploadSeekerResume } from "../services/userService.js";
+import { fetchSeekerProfile, fetchUserProfile, toggleSaveJob, uploadSeekerResume } from "../services/userService.js";
+import { getActiveResume } from "../utils/resumeUtils.js";
 import { toggleFollowEmployer, enablePushNotifications } from "../services/notificationService.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import JobCard from "../components/JobCard.jsx";
@@ -66,6 +67,7 @@ const JobDetails = () => {
   const [resumeMode, setResumeMode] = useState("upload"); // "upload" | "link"
   const [uploadingResume, setUploadingResume] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState("");
+  const [activeResumeInfo, setActiveResumeInfo] = useState(null);
   const [coverNote, setCoverNote] = useState("");
   const [applied, setApplied] = useState(false);
   const [existingApplication, setExistingApplication] = useState(null);
@@ -90,8 +92,8 @@ const JobDetails = () => {
     fetchJobById(id)
       .then((fetchedJob) => {
         setJob(fetchedJob);
-        if (user?.role === "seeker") {
-          // 1. Check if seeker has already applied for this job
+        if (user) {
+          // 1. Check if user has already applied for this job
           fetchMyApplications()
             .then((apps) => {
               const matched = (apps || []).find((a) => (a.job?._id || a.job)?.toString() === id);
@@ -102,36 +104,48 @@ const JobDetails = () => {
             })
             .catch(() => {});
 
-          // 2. Fetch seeker profile for saved jobs, follow status & resume
-          if (fetchedJob?.employer) {
-            const empId = fetchedJob.employer._id || fetchedJob.employer;
-            fetchSeekerProfile()
-              .then((profile) => {
-                if (profile?.savedJobs) {
-                  const saved = profile.savedJobs.some((j) => (j._id || j).toString() === id);
-                  setIsSaved(saved);
-                }
-                if (profile?.followedEmployers) {
-                  const following = profile.followedEmployers.some((e) => {
-                    const eId = (e._id || e)?.toString();
-                    const eUserId = (e.user?._id || e.user)?.toString();
-                    const target = empId.toString();
-                    return eId === target || (eUserId && eUserId === target);
-                  });
-                  setIsFollowing(following);
-                }
-                if (profile?.resumeUrl) {
-                  setResumeUrl(profile.resumeUrl);
-                  setUploadedFileName("Profile Resume (Ready)");
-                } else if (profile?.resumeData) {
-                  setResumeUrl(`https://agriyuvaa.com/resume-builder`);
-                  setUploadedFileName(
-                    `${profile.resumeData.fullName || "AgriYuvaa"} Resume (Built via Builder)`
-                  );
-                }
-              })
-              .catch(() => {});
-          }
+          // 2. Fetch profile to get saved jobs, follow status & single active resume (last edited/uploaded)
+          fetchUserProfile()
+            .then((data) => {
+              const profile = data?.profile;
+              if (profile?.savedJobs) {
+                const saved = profile.savedJobs.some((j) => (j._id || j).toString() === id);
+                setIsSaved(saved);
+              }
+              if (fetchedJob?.employer && profile?.followedEmployers) {
+                const empId = fetchedJob.employer._id || fetchedJob.employer;
+                const following = profile.followedEmployers.some((e) => {
+                  const eId = (e._id || e)?.toString();
+                  const eUserId = (e.user?._id || e.user)?.toString();
+                  const target = empId.toString();
+                  return eId === target || (eUserId && eUserId === target);
+                });
+                setIsFollowing(following);
+              }
+
+              // Determine ONE single active resume (last edited or uploaded)
+              const active = getActiveResume(profile, user?.name);
+              if (active) {
+                setActiveResumeInfo(active);
+                setResumeUrl(active.url);
+                setUploadedFileName(active.title);
+              }
+            })
+            .catch(() => {
+              // Fallback for seeker profile
+              if (user?.role === "seeker") {
+                fetchSeekerProfile()
+                  .then((p) => {
+                    const active = getActiveResume(p, user?.name);
+                    if (active) {
+                      setActiveResumeInfo(active);
+                      setResumeUrl(active.url);
+                      setUploadedFileName(active.title);
+                    }
+                  })
+                  .catch(() => {});
+              }
+            });
         }
 
         // 3. Fetch similar agriculture jobs in the same category or location
@@ -163,8 +177,19 @@ const JobDetails = () => {
     setError("");
     try {
       const res = await uploadSeekerResume(file);
+      const newActive = {
+        type: "upload",
+        title: file.name,
+        subtitle: "Uploaded PDF / Document",
+        url: res.url,
+        originalName: file.name,
+        updatedAt: new Date().toISOString(),
+        badge: "Uploaded Document (Latest)",
+      };
+      setActiveResumeInfo(newActive);
       setResumeUrl(res.url);
       setUploadedFileName(file.name);
+      setResumeMode("upload");
     } catch (err) {
       setError(err.response?.data?.message || "Failed to upload resume file. Please select a valid PDF or DOCX file.");
     } finally {
@@ -652,18 +677,18 @@ const JobDetails = () => {
                 <span>✓ Direct HR</span>
               </div>
             </div>
-          ) : user.role !== "seeker" ? (
-            /* ── ROLE CHECK: ONLY JOB SEEKERS CAN APPLY ── */
+          ) : !["seeker", "employer"].includes(user?.role) ? (
+            /* ── ROLE CHECK: CANDIDATES OR EMPLOYERS CAN APPLY ── */
             <div className="p-6 text-center space-y-3 bg-amber-50/40 rounded-2xl border border-amber-200/80">
               <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center mx-auto shadow-xs">
                 <Info size={22} />
               </div>
               <div>
                 <h3 className="font-display font-bold text-base text-brand-black">
-                  Job Seeker Account Required
+                  Candidate Account Required
                 </h3>
                 <p className="text-xs text-brand-grey mt-1 leading-relaxed">
-                  You are currently logged in with an employer or admin account. Only registered Job Seekers can apply to active vacancies.
+                  You are currently logged in with an administrator account. Please log in with a candidate account to apply to vacancies.
                 </p>
               </div>
             </div>
@@ -916,99 +941,68 @@ const JobDetails = () => {
               ) : (
                 <form onSubmit={handleApply} className="space-y-4">
                   <div>
-                    <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center justify-between mb-2">
                       <label className="text-xs font-bold text-brand-black uppercase tracking-wide">
-                        Your Resume *
+                        Your Attached Resume *
                       </label>
                       <Link
                         to="/resume-builder"
                         target="_blank"
                         className="text-[11px] font-bold text-brand-green-dark hover:underline"
                       >
-                        Build CV here ↗
+                        Resume Builder ↗
                       </Link>
                     </div>
 
-                    {/* Dual Mode Switcher */}
-                    <div className="grid grid-cols-2 gap-1 bg-gray-100 p-1 rounded-xl mb-3 text-xs">
-                      <button
-                        type="button"
-                        onClick={() => setResumeMode("upload")}
-                        className={`py-1.5 font-semibold rounded-lg transition-all flex items-center justify-center gap-1 ${
-                          resumeMode === "upload"
-                            ? "bg-white text-emerald-800 shadow-xs"
-                            : "text-gray-600 hover:text-brand-black"
-                        }`}
-                      >
-                        <UploadCloud size={13} /> Upload File (PDF)
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setResumeMode("link")}
-                        className={`py-1.5 font-semibold rounded-lg transition-all flex items-center justify-center gap-1 ${
-                          resumeMode === "link"
-                            ? "bg-white text-emerald-800 shadow-xs"
-                            : "text-gray-600 hover:text-brand-black"
-                        }`}
-                      >
-                        <ExternalLink size={13} /> Paste Link
-                      </button>
-                    </div>
-
-                    {/* Mode 1: Direct File Upload */}
-                    {resumeMode === "upload" ? (
-                      <div>
-                        {resumeUrl && uploadedFileName ? (
-                          <div className="w-full min-w-0 p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between gap-2 overflow-hidden">
-                            <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                              <FileText size={18} className="text-emerald-700 shrink-0" />
-                              <div className="min-w-0 flex-1">
-                                <p className="text-xs font-bold text-emerald-950 truncate block w-full" title={uploadedFileName}>
-                                  {uploadedFileName}
-                                </p>
-                                <span className="text-[10px] text-emerald-700 block truncate">✓ Ready to submit</span>
-                              </div>
+                    {/* SHOW ONLY ONE RESUME (LAST EDITED / UPLOADED) */}
+                    {activeResumeInfo && resumeMode !== "manual_link" ? (
+                      <div className="w-full min-w-0 p-4 bg-emerald-50/90 border-2 border-emerald-300 rounded-2xl space-y-3 shadow-2xs">
+                        <div className="flex items-start justify-between gap-3 min-w-0">
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                            <div className="w-10 h-10 rounded-xl bg-emerald-700 text-white flex items-center justify-center shrink-0 shadow-xs">
+                              <FileText size={20} />
                             </div>
-                            <label className="text-[11px] font-bold text-emerald-800 bg-white border border-emerald-300 hover:bg-emerald-100 px-2.5 py-1 rounded-lg cursor-pointer shrink-0">
-                              Change
-                              <input
-                                type="file"
-                                accept=".pdf,.doc,.docx"
-                                className="hidden"
-                                onChange={handleFileUpload}
-                              />
-                            </label>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="text-[10px] font-bold text-emerald-900 bg-emerald-200/90 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                                  <CheckCircle2 size={11} className="text-emerald-700" />
+                                  {activeResumeInfo.badge || "Active Resume"}
+                                </span>
+                              </div>
+                              <p
+                                className="text-xs font-bold text-emerald-950 truncate block mt-1"
+                                title={activeResumeInfo.title}
+                              >
+                                {activeResumeInfo.title}
+                              </p>
+                              <p className="text-[11px] text-emerald-800/80 truncate mt-0.5">
+                                {activeResumeInfo.subtitle}
+                                {activeResumeInfo.updatedAt && (
+                                  <>
+                                    {" "}• {new Date(activeResumeInfo.updatedAt).toLocaleDateString("en-IN", {
+                                      day: "numeric",
+                                      month: "short",
+                                      year: "numeric",
+                                    })}
+                                  </>
+                                )}
+                              </p>
+                            </div>
                           </div>
-                        ) : (
-                          <label
-                            onDragOver={handleDragOver}
-                            onDragEnter={handleDragOver}
-                            onDragLeave={handleDragLeave}
-                            onDrop={handleDrop}
-                            className={`border-2 border-dashed rounded-xl p-5 flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all w-full min-w-0 ${
-                              isDragging
-                                ? "border-emerald-600 bg-emerald-100/70 scale-[1.02] shadow-sm"
-                                : "border-gray-300 hover:border-emerald-500 bg-gray-50/50 hover:bg-emerald-50/30"
-                            }`}
-                          >
+                        </div>
+
+                        {/* Resume Actions Bar */}
+                        <div className="flex items-center justify-between gap-2 pt-2.5 border-t border-emerald-200/80 flex-wrap">
+                          <label className="text-[11px] font-bold text-emerald-900 bg-white border border-emerald-300 hover:bg-emerald-100/70 px-3 py-1.5 rounded-xl cursor-pointer inline-flex items-center gap-1.5 shadow-2xs transition-colors">
                             {uploadingResume ? (
-                              <div className="flex items-center gap-2 text-xs font-bold text-emerald-800 py-2">
-                                <Loader2 size={18} className="animate-spin text-emerald-600" /> Uploading resume...
-                              </div>
-                            ) : isDragging ? (
-                              <div className="flex flex-col items-center gap-1 text-emerald-800 py-1 animate-bounce">
-                                <UploadCloud size={28} className="text-emerald-600" />
-                                <p className="text-xs font-bold">Drop resume file here to upload</p>
-                              </div>
+                              <>
+                                <Loader2 size={13} className="animate-spin text-emerald-700" />
+                                <span>Uploading...</span>
+                              </>
                             ) : (
                               <>
-                                <UploadCloud size={24} className="text-gray-400" />
-                                <p className="text-xs font-bold text-brand-black text-center">
-                                  Click to browse or drag & drop resume
-                                </p>
-                                <p className="text-[10px] text-gray-500 text-center">
-                                  PDF, DOCX, or DOC (Max 10MB)
-                                </p>
+                                <UploadCloud size={13} className="text-emerald-700" />
+                                <span>Replace with File</span>
                               </>
                             )}
                             <input
@@ -1019,21 +1013,85 @@ const JobDetails = () => {
                               onChange={handleFileUpload}
                             />
                           </label>
-                        )}
+
+                          <div className="flex items-center gap-2">
+                            {activeResumeInfo.type === "builder" ? (
+                              <Link
+                                to="/resume-builder"
+                                target="_blank"
+                                className="text-[11px] font-bold text-emerald-800 hover:text-emerald-950 hover:underline inline-flex items-center gap-1"
+                              >
+                                <Edit3 size={12} /> Edit CV ↗
+                              </Link>
+                            ) : (
+                              <a
+                                href={
+                                  activeResumeInfo.url.startsWith("http")
+                                    ? activeResumeInfo.url
+                                    : `https://${activeResumeInfo.url}`
+                                }
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[11px] font-bold text-emerald-800 hover:text-emerald-950 hover:underline inline-flex items-center gap-1"
+                              >
+                                <ExternalLink size={12} /> View File ↗
+                              </a>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     ) : (
-                      /* Mode 2: Paste URL */
-                      <div className="w-full min-w-0">
-                        <input
-                          required
-                          className="input-field text-sm w-full min-w-0"
-                          placeholder="e.g. https://drive.google.com/file/d/..."
-                          value={resumeUrl}
-                          onChange={(e) => setResumeUrl(e.target.value)}
-                        />
-                        <p className="text-[11px] text-brand-grey mt-1 break-words">
-                          Ensure link access is set to "Anyone with the link".
-                        </p>
+                      /* No resume yet OR manual link mode */
+                      <div className="space-y-3">
+                        <label
+                          onDragOver={handleDragOver}
+                          onDragEnter={handleDragOver}
+                          onDragLeave={handleDragLeave}
+                          onDrop={handleDrop}
+                          className={`border-2 border-dashed rounded-xl p-5 flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all w-full min-w-0 ${
+                            isDragging
+                              ? "border-emerald-600 bg-emerald-100/70 scale-[1.02] shadow-sm"
+                              : "border-gray-300 hover:border-emerald-500 bg-gray-50/50 hover:bg-emerald-50/30"
+                          }`}
+                        >
+                          {uploadingResume ? (
+                            <div className="flex items-center gap-2 text-xs font-bold text-emerald-800 py-2">
+                              <Loader2 size={18} className="animate-spin text-emerald-600" /> Uploading resume...
+                            </div>
+                          ) : isDragging ? (
+                            <div className="flex flex-col items-center gap-1 text-emerald-800 py-1 animate-bounce">
+                              <UploadCloud size={28} className="text-emerald-600" />
+                              <p className="text-xs font-bold">Drop resume file here to upload</p>
+                            </div>
+                          ) : (
+                            <>
+                              <UploadCloud size={24} className="text-gray-400" />
+                              <p className="text-xs font-bold text-brand-black text-center">
+                                Click to browse or drag & drop resume file
+                              </p>
+                              <p className="text-[10px] text-gray-500 text-center">
+                                PDF, DOCX, or DOC (Max 10MB)
+                              </p>
+                            </>
+                          )}
+                          <input
+                            type="file"
+                            accept=".pdf,.doc,.docx"
+                            className="hidden"
+                            disabled={uploadingResume}
+                            onChange={handleFileUpload}
+                          />
+                        </label>
+
+                        <div className="text-center">
+                          <Link
+                            to="/resume-builder"
+                            target="_blank"
+                            className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-3.5 py-1.5 rounded-xl hover:bg-emerald-100 transition-colors"
+                          >
+                            <Edit3 size={13} className="text-emerald-600" /> Or Create with Resume Builder ↗
+                          </Link>
+                        </div>
                       </div>
                     )}
                   </div>
