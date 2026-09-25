@@ -1,5 +1,5 @@
 import React from "react";
-import { ArrowRight, Send } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 // Official brand SVG icons matching the design
 const WhatsAppIcon = () => (
@@ -11,12 +11,6 @@ const WhatsAppIcon = () => (
 const InstagramIcon = () => (
   <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
     <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
-  </svg>
-);
-
-const TelegramIcon = () => (
-  <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
-    <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.458c.538-.196 1.006.128.832.943z" />
   </svg>
 );
 
@@ -35,49 +29,32 @@ const YouTubeIcon = () => (
 const communityChannels = [
   {
     name: "WhatsApp",
-    count: "8.2K members",
-    link: "https://whatsapp.com/channel/0029VaA8yXz1iUxWp5wUq32A", // AgriYuvaa channel or fallback
+    link: "https://whatsapp.com/channel/0029VaA8yXz1iUxWp5wUq32A",
     icon: WhatsAppIcon,
     iconBg: "bg-[#25D366]",
-    badge: "Direct Alerts",
   },
   {
     name: "Instagram",
-    count: "42K followers",
     link: "https://www.instagram.com/agri_yuvaa/",
     icon: InstagramIcon,
     iconBg: "bg-gradient-to-tr from-amber-500 via-pink-600 to-purple-600",
-    badge: "Reels & Jobs",
-  },
-  {
-    name: "Telegram",
-    count: "3.1K members",
-    link: "https://t.me/agriyuvaa",
-    icon: TelegramIcon,
-    iconBg: "bg-[#0088cc]",
-    badge: "Instant PDF",
   },
   {
     name: "LinkedIn",
-    count: "12K followers",
     link: "https://www.linkedin.com/company/agriyuvaa/",
     icon: LinkedInIcon,
     iconBg: "bg-[#0077B5]",
-    badge: "Corporate Jobs",
   },
   {
     name: "YouTube",
-    count: "25K subscribers",
     link: "https://www.youtube.com/@agri_yuvaa",
     icon: YouTubeIcon,
     iconBg: "bg-[#FF0000]",
-    badge: "Webinars & Guides",
   },
 ];
 
 const CommunityBanner = () => {
   const handleJoinPrimary = () => {
-    // Open WhatsApp / Instagram community in new tab
     window.open("https://www.instagram.com/agri_yuvaa/", "_blank", "noopener,noreferrer");
   };
 
@@ -98,7 +75,7 @@ const CommunityBanner = () => {
           background: "linear-gradient(135deg, #059669 0%, #047857 45%, #065f46 100%)",
         }}
       >
-        {/* Subtle dot matrix pattern overlay like the reference design */}
+        {/* Subtle dot matrix pattern overlay */}
         <div
           className="absolute inset-0 pointer-events-none opacity-20"
           style={{
@@ -123,7 +100,7 @@ const CommunityBanner = () => {
             </h2>
 
             <p className="text-sm sm:text-base text-emerald-50/90 max-w-lg leading-relaxed font-normal">
-              Connect with 15,000+ students, get daily career updates, exclusive workshop invites, and mentorship access.
+              Connect with students, get daily career updates, exclusive workshop invites, and mentorship access.
             </p>
 
             <div className="flex flex-wrap items-center gap-3 pt-2">
@@ -146,7 +123,7 @@ const CommunityBanner = () => {
             </div>
           </div>
 
-          {/* Right Cards Grid */}
+          {/* Right Cards Grid (2x2 symmetrical clean cards) */}
           <div
             id="community-channels-grid"
             className="lg:col-span-6 grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4"
@@ -157,7 +134,7 @@ const CommunityBanner = () => {
                 href={c.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group p-4 sm:p-4.5 rounded-2xl bg-[#065f46]/60 hover:bg-[#065f46]/90 border border-white/15 hover:border-white/35 backdrop-blur-sm transition-all duration-200 flex items-center gap-3.5 shadow-sm hover:shadow-md hover:-translate-y-0.5 cursor-pointer"
+                className="group p-4 sm:p-5 rounded-2xl bg-[#065f46]/60 hover:bg-[#065f46]/95 border border-white/15 hover:border-white/40 backdrop-blur-sm transition-all duration-200 flex items-center gap-3.5 shadow-sm hover:shadow-md hover:-translate-y-0.5 cursor-pointer"
               >
                 {/* Brand Icon Square */}
                 <div
@@ -167,15 +144,14 @@ const CommunityBanner = () => {
                 </div>
 
                 {/* Details */}
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-1">
-                    <h3 className="font-display font-bold text-sm sm:text-base text-white truncate leading-tight group-hover:text-emerald-200 transition-colors">
-                      {c.name}
-                    </h3>
-                  </div>
-                  <p className="text-xs text-emerald-100/75 font-medium mt-0.5 truncate">
-                    {c.count}
-                  </p>
+                <div className="min-w-0 flex-1 flex items-center justify-between">
+                  <h3 className="font-display font-bold text-base sm:text-lg text-white truncate leading-tight group-hover:text-emerald-200 transition-colors">
+                    {c.name}
+                  </h3>
+                  <ArrowRight
+                    size={16}
+                    className="text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all shrink-0 ml-2"
+                  />
                 </div>
               </a>
             ))}
