@@ -467,8 +467,24 @@ const GovtJobs = () => {
                 </div>
               </div>
 
-              {/* Description & Details */}
-              <p className="text-xs text-brand-grey leading-relaxed">{job.description}</p>
+              {/* Description & Details (Truncated to 100 chars on card) */}
+              {job.description && (
+                <p className="text-xs text-brand-grey leading-relaxed">
+                  {job.description.length > 100 ? (
+                    <>
+                      {job.description.slice(0, 100).trim()}...{" "}
+                      <Link
+                        to={`/govt-jobs/${job.slug || job._id}`}
+                        className="text-emerald-700 font-semibold hover:underline inline-flex items-center"
+                      >
+                        Read more →
+                      </Link>
+                    </>
+                  ) : (
+                    job.description
+                  )}
+                </p>
+              )}
 
               {/* Footer Meta & Action Links */}
               <div className="flex flex-wrap items-center justify-between gap-4 pt-3 border-t border-brand-border">
