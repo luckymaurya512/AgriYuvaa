@@ -1138,7 +1138,7 @@ const JobDetails = () => {
                       }`
                     : "";
                 const company = companyDisplayName;
-                const text = `🌾 *Agriculture Hiring Alert on AgriYuvaa*:\n\n📌 *${job.title}*\n🏢 *Company:* ${company}\n📍 *Location:* ${job.location || "India"}\n💼 *Type:* ${job.employmentType || "Full-time"}${salaryInfo}\n\n👉 *View & Apply:* ${window.location.href}`;
+                const text = `🌾 *Agriculture Hiring Alert on AgriYuvaa Job Portal*:\n\n📌 *${job.title}*\n🏢 *Company:* ${company}\n📍 *Location:* ${job.location || "India"}\n💼 *Type:* ${job.employmentType || "Full-time"}${salaryInfo}\n\n👉 *View & Apply:* ${window.location.href}`;
                 window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank");
               }}
               className="w-full py-2.5 px-4 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-2 transition-colors"

@@ -362,7 +362,7 @@ const Home = () => {
               </p>
             </div>
             <Link to="/blog" className="text-xs sm:text-sm font-semibold text-brand-green-dark inline-flex items-center gap-1 shrink-0">
-              View all articles <ArrowRight size={16} />
+              View all blogs <ArrowRight size={16} />
             </Link>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
