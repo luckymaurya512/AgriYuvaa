@@ -22,6 +22,7 @@ import { fetchBlogs, fetchTestimonials } from "../services/landingService.js";
 import JobCard from "../components/JobCard.jsx";
 import GovtJobCard from "../components/GovtJobCard.jsx";
 import CategoryCard from "../components/CategoryCard.jsx";
+import CommunityBanner from "../components/CommunityBanner.jsx";
 import SEO from "../components/SEO.jsx";
 
 const stats = [
@@ -496,6 +497,9 @@ const Home = () => {
           </div>
         </section>
       )}
+
+      {/* Join Agriculture Student Community Banner */}
+      <CommunityBanner />
 
       {/* CTA banner */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
