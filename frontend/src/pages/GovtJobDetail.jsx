@@ -252,37 +252,37 @@ const GovtJobDetail = () => {
 
       {/* Top Breadcrumb Navigation */}
       <div className="bg-white border-b border-brand-border">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between gap-3 text-xs text-brand-grey">
-          <div className="flex items-center gap-1.5 overflow-hidden whitespace-nowrap truncate">
-            <Link to="/" className="hover:text-emerald-800 transition-colors">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3.5 flex flex-wrap items-center justify-between gap-2 text-xs text-brand-grey">
+          <div className="flex items-center gap-1.5 overflow-hidden flex-1 min-w-0">
+            <Link to="/" className="hover:text-emerald-800 transition-colors shrink-0">
               Home
             </Link>
             <ChevronRight size={13} className="shrink-0 text-gray-400" />
-            <Link to="/govt-jobs" className="hover:text-emerald-800 transition-colors">
+            <Link to="/govt-jobs" className="hover:text-emerald-800 transition-colors shrink-0">
               Govt Vacancies
             </Link>
             <ChevronRight size={13} className="shrink-0 text-gray-400" />
             <span className="font-semibold text-brand-black truncate">{job.organization}</span>
           </div>
 
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             {isAdmin && (
               <div className="flex items-center gap-1.5">
                 <button
                   type="button"
                   onClick={handleOpenEdit}
-                  className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-200 bg-white hover:bg-emerald-50 hover:text-emerald-700 text-gray-700 transition-colors shadow-2xs cursor-pointer"
+                  className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 sm:px-3 py-1.5 rounded-lg border border-gray-200 bg-white hover:bg-emerald-50 hover:text-emerald-700 text-gray-700 transition-colors shadow-2xs cursor-pointer"
                   title="Edit this government vacancy notice"
                 >
-                  <Edit3 size={13} /> Edit Notice
+                  <Edit3 size={13} /> <span className="hidden sm:inline">Edit Notice</span><span className="sm:hidden">Edit</span>
                 </button>
                 <button
                   type="button"
                   onClick={handleDelete}
-                  className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg border border-red-200 bg-white hover:bg-red-50 text-red-600 transition-colors shadow-2xs cursor-pointer"
+                  className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 sm:px-3 py-1.5 rounded-lg border border-red-200 bg-white hover:bg-red-50 text-red-600 transition-colors shadow-2xs cursor-pointer"
                   title="Delete this government vacancy notice"
                 >
-                  <Trash2 size={13} /> Delete
+                  <Trash2 size={13} /> <span className="hidden sm:inline">Delete</span>
                 </button>
               </div>
             )}
@@ -290,21 +290,21 @@ const GovtJobDetail = () => {
               to="/govt-jobs"
               className="shrink-0 inline-flex items-center gap-1 text-emerald-800 hover:text-emerald-950 font-semibold transition-colors"
             >
-              <ArrowLeft size={14} /> Back to all vacancies
+              <ArrowLeft size={14} /> <span className="hidden sm:inline">Back to all vacancies</span><span className="sm:hidden">Back</span>
             </Link>
           </div>
         </div>
       </div>
 
       {/* Main Content Area */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-5 sm:pt-8">
         {successMsg && (
           <div className="p-4 mb-6 bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-2xl text-xs font-semibold flex items-center gap-2 shadow-xs">
             <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
             <span>{successMsg}</span>
           </div>
         )}
-        <div className="card p-6 sm:p-8 bg-white border border-brand-border shadow-xs space-y-6">
+        <div className="card p-4 sm:p-8 bg-white border border-brand-border shadow-xs space-y-5 sm:space-y-6">
               {/* Header: Organization & Status Badges */}
               <div className="space-y-3 pb-6 border-b border-brand-border/70">
                 <div className="flex flex-wrap items-center justify-between gap-3">
@@ -380,7 +380,7 @@ const GovtJobDetail = () => {
                 <h3 className="text-xs font-bold uppercase tracking-wider text-brand-grey mb-3">
                   Vacancy Overview
                 </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3.5">
                   <div className="p-3.5 rounded-xl bg-gray-50 border border-gray-100/80">
                     <div className="flex items-center gap-1.5 text-xs text-brand-grey mb-1">
                       <Users size={14} className="text-emerald-700" />

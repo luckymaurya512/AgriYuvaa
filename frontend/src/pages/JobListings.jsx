@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
-import { SlidersHorizontal, Search, MapPin, X, RotateCcw } from "lucide-react";
+import { useSearchParams, Link } from "react-router-dom";
+import { SlidersHorizontal, Search, MapPin, X, RotateCcw, Sparkles } from "lucide-react";
 import { fetchJobs, fetchCategories } from "../services/jobService.js";
 import JobCard from "../components/JobCard.jsx";
 import SEO from "../components/SEO.jsx";
@@ -100,6 +100,8 @@ const JobListings = () => {
     setSearchParams({});
   };
 
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+
   const hasActiveFilters = Boolean(
     currentKeyword || currentLocation || currentCategory || currentEmploymentType || currentExperienceLevel
   );
@@ -115,16 +117,16 @@ const JobListings = () => {
     : "Browse full-time, part-time, internship, and fresher jobs in Indian agriculture, agritech, farming, and agribusiness.";
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
       <SEO
         title={pageTitle}
         description={pageDescription}
         canonical="/jobs"
       />
-      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+      <div className="mb-6 sm:mb-8 flex flex-wrap items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-display font-bold mb-1">Browse Agriculture Jobs</h1>
-          <p className="text-sm text-brand-grey">
+          <h1 className="text-xl sm:text-2xl font-display font-bold mb-1">Browse Agriculture Jobs</h1>
+          <p className="text-xs sm:text-sm text-brand-grey">
             {loading ? "Searching opportunities..." : `${total} opportunities available right now`}
           </p>
         </div>
@@ -139,9 +141,26 @@ const JobListings = () => {
         )}
       </div>
 
-      <div className="grid md:grid-cols-4 gap-8">
+      {/* Mobile Filter Toggle Button */}
+      <div className="md:hidden mb-4">
+        <button
+          type="button"
+          onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
+          className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl border border-brand-border bg-white font-medium text-sm text-brand-black shadow-sm"
+        >
+          <span className="flex items-center gap-2">
+            <SlidersHorizontal size={16} className="text-brand-green" />
+            Filters {hasActiveFilters && <span className="w-2 h-2 rounded-full bg-brand-green"></span>}
+          </span>
+          <span className="text-xs text-brand-grey font-normal">
+            {mobileFiltersOpen ? "Hide Filters ▲" : "Show Filters ▼"}
+          </span>
+        </button>
+      </div>
+
+      <div className="grid md:grid-cols-4 gap-6 md:gap-8">
         {/* Filters Sidebar */}
-        <aside className="card p-5 h-fit space-y-4">
+        <aside className={`card p-4 sm:p-5 h-fit space-y-4 ${mobileFiltersOpen ? "block" : "hidden md:block"}`}>
           <div className="flex items-center justify-between pb-3 border-b border-brand-border">
             <h2 className="flex items-center gap-2 font-semibold text-sm text-brand-black">
               <SlidersHorizontal size={16} className="text-brand-green" /> Filters
@@ -284,8 +303,37 @@ const JobListings = () => {
             </div>
           ) : (
             <div className="grid sm:grid-cols-2 gap-5">
-              {jobs.map((job) => (
-                <JobCard key={job._id} job={job} />
+              {jobs.map((job, index) => (
+                <React.Fragment key={job._id}>
+                  <JobCard job={job} />
+                  {index === 1 && (
+                    <div className="card p-4 sm:p-5 bg-gradient-to-br from-emerald-950 via-slate-900 to-green-950 text-white flex flex-col justify-between border border-emerald-800/60 shadow-md relative overflow-hidden group">
+                      <div className="space-y-2.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold tracking-wider uppercase bg-amber-400/20 text-amber-300 border border-amber-400/30 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                            <Sparkles size={11} className="text-amber-400" /> Free Tool
+                          </span>
+                          <span className="text-[11px] text-emerald-300 font-semibold">ATS-Friendly</span>
+                        </div>
+                        <h3 className="font-display font-bold text-base text-white leading-snug">
+                          Need an Agriculture Resume That Stands Out?
+                        </h3>
+                        <p className="text-xs text-gray-300 leading-relaxed">
+                          Build a recruiter-ready CV tailored for ICAR, Agronomy, and AgriTech roles in 2 minutes.
+                        </p>
+                      </div>
+                      <div className="pt-3.5 mt-2 border-t border-white/10 flex items-center justify-between">
+                        <span className="text-[11px] text-gray-400">1-Click PDF Download</span>
+                        <Link
+                          to="/resume-builder"
+                          className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs py-1.5 px-3.5 rounded-lg font-bold shadow-xs whitespace-nowrap transition-colors"
+                        >
+                          Build Resume →
+                        </Link>
+                      </div>
+                    </div>
+                  )}
+                </React.Fragment>
               ))}
             </div>
           )}

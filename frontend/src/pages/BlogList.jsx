@@ -50,12 +50,12 @@ const BlogList = () => {
       />
 
       {/* Header Banner */}
-      <div className="bg-gradient-to-br from-gray-950 via-emerald-950 to-gray-900 text-white py-16 px-4 sm:px-6 lg:px-8 shadow-inner">
+      <div className="bg-gradient-to-br from-gray-950 via-emerald-950 to-gray-900 text-white py-10 sm:py-16 px-4 sm:px-6 lg:px-8 shadow-inner">
         <div className="max-w-5xl mx-auto text-center space-y-4">
           <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3.5 py-1 rounded-full text-xs font-semibold text-emerald-300">
             <BookOpen size={14} /> Career Insights & Agriculture Knowledge Hub
           </div>
-          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight">
+          <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">
             AgriYuvaa <span className="text-emerald-400">Blog & Insights</span>
           </h1>
           <p className="text-sm sm:text-base text-gray-300 max-w-2xl mx-auto leading-relaxed">
@@ -85,7 +85,7 @@ const BlogList = () => {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-10">
         {/* Active Tag Filter Indicator */}
         {activeTag && (
           <div className="flex items-center gap-2 mb-6">
@@ -166,7 +166,7 @@ const BlogList = () => {
                     </div>
                   </Link>
 
-                  <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                  <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-4">
                     <div className="space-y-2.5">
                       {blog.tags && blog.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1.5">

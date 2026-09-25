@@ -31,7 +31,7 @@ const GovtJobCard = ({ job }) => {
   return (
     <Link
       to={`/govt-jobs/${jobIdentifier}`}
-      className="card p-5 flex flex-col gap-3 h-full relative group border border-emerald-100 hover:border-emerald-300 hover:shadow-md transition-all duration-200 bg-white"
+      className="card p-4 sm:p-5 flex flex-col gap-3 h-full relative group border border-emerald-100 hover:border-emerald-300 hover:shadow-md transition-all duration-200 bg-white"
     >
       {/* Top row: Organization tag, Status badge, Share */}
       <div className="flex items-start justify-between gap-2">

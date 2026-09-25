@@ -165,23 +165,23 @@ const Register = () => {
   // ═══════════════════════════════════════════════════════════════════════════
   if (step === "otp") {
     return (
-      <div className="max-w-md mx-auto px-4 py-16">
+      <div className="max-w-md mx-auto px-4 py-8 sm:py-16">
         <SEO title="Verify Account" noindex={true} />
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-brand-green-light mb-4">
-            <svg className="w-8 h-8 text-brand-green-dark" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-brand-green-light mb-3 sm:mb-4">
+            <svg className="w-7 h-7 sm:w-8 sm:h-8 text-brand-green-dark" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
           </div>
-          <h1 className="text-2xl font-display font-bold">Verify your email</h1>
-          <p className="text-sm text-brand-grey mt-2">
-            We sent a 6-digit code to <strong className="text-brand-green-dark">{form.email}</strong>
+          <h1 className="text-xl sm:text-2xl font-display font-bold">Verify your email</h1>
+          <p className="text-xs sm:text-sm text-brand-grey mt-1 sm:mt-2">
+            We sent a 6-digit code to <strong className="text-brand-green-dark break-all">{form.email}</strong>
           </p>
         </div>
 
-        <div className="card p-6">
+        <div className="card p-4 sm:p-6">
           {/* OTP Input Boxes */}
-          <div className="flex justify-center gap-3 mb-6" onPaste={handleOtpPaste}>
+          <div className="flex justify-center gap-1.5 sm:gap-3 mb-6" onPaste={handleOtpPaste}>
             {otpValues.map((value, index) => (
               <input
                 key={index}
@@ -192,7 +192,7 @@ const Register = () => {
                 value={value}
                 onChange={(e) => handleOtpChange(index, e.target.value)}
                 onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                className="w-12 h-14 text-center text-xl font-bold rounded-xl border-2 border-brand-border focus:border-brand-green focus:ring-2 focus:ring-brand-green-light outline-none transition-all"
+                className="w-10 h-12 sm:w-12 sm:h-14 text-center text-lg sm:text-xl font-bold rounded-xl border-2 border-brand-border focus:border-brand-green focus:ring-2 focus:ring-brand-green-light outline-none transition-all"
                 disabled={otpLoading}
               />
             ))}
@@ -246,14 +246,14 @@ const Register = () => {
   // REGISTRATION FORM STEP
   // ═══════════════════════════════════════════════════════════════════════════
   return (
-    <div className="max-w-md mx-auto px-4 py-16">
+    <div className="max-w-md mx-auto px-4 py-8 sm:py-16">
       <SEO
         title="Create Account — Job Seeker & Employer Sign Up"
         description="Register on AgriYuvaa. Discover agricultural career opportunities or hire top agribusiness & agronomy talent across India."
         canonical="/register"
       />
-      <div className="text-center mb-8">
-        <img src={logo} alt="AgriYuvaa" className="h-14 w-14 mx-auto mb-3" />
+      <div className="text-center mb-6 sm:mb-8">
+        <img src={logo} alt="AgriYuvaa" className="h-12 w-12 sm:h-14 sm:w-14 mx-auto mb-3" />
         <h1 className="text-2xl font-display font-bold">Join AgriYuvaa</h1>
         <p className="text-sm text-brand-grey mt-1">Create an account to get started</p>
       </div>
@@ -277,7 +277,7 @@ const Register = () => {
         </button>
       </div>
 
-      <form onSubmit={handleRegister} className="card p-6 space-y-4">
+      <form onSubmit={handleRegister} className="card p-5 sm:p-6 space-y-4">
         <div>
           <label className="text-xs font-semibold text-brand-grey uppercase tracking-wide">Full Name</label>
           <input required className="input-field mt-1 text-sm" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />

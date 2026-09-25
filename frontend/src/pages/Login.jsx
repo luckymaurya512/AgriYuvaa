@@ -41,15 +41,15 @@ const Login = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto px-4 py-16">
+    <div className="max-w-md mx-auto px-4 py-8 sm:py-16">
       <SEO title="Log In" noindex={true} />
-      <div className="text-center mb-8">
-        <img src={logo} alt="AgriYuvaa" className="h-14 w-14 mx-auto mb-3" />
+      <div className="text-center mb-6 sm:mb-8">
+        <img src={logo} alt="AgriYuvaa" className="h-12 w-12 sm:h-14 sm:w-14 mx-auto mb-3" />
         <h1 className="text-2xl font-display font-bold">Welcome back</h1>
         <p className="text-sm text-brand-grey mt-1">Log in to continue to AgriYuvaa</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="card p-6 space-y-4">
+      <form onSubmit={handleSubmit} className="card p-5 sm:p-6 space-y-4">
         <div>
           <label className="text-xs font-semibold text-brand-grey uppercase tracking-wide">Email</label>
           <input

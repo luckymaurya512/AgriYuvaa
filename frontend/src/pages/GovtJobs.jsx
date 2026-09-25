@@ -217,22 +217,22 @@ const GovtJobs = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
       <SEO
         title="Government Agriculture Jobs, ICAR, NABARD, IBPS AFO Alerts"
         description="Latest Government agriculture jobs, ICAR scientist recruitment, NABARD grade A/B, IBPS AFO, State ADO, and KVK Subject Matter Specialist vacancies."
         canonical="/govt-jobs"
       />
       {/* Header Banner */}
-      <div className="rounded-3xl bg-gradient-to-r from-emerald-900 via-emerald-850 to-emerald-950 text-white p-8 sm:p-12 mb-10 shadow-lg relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="relative z-10 max-w-2xl space-y-4">
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-3.5 py-1.5 rounded-full text-xs font-semibold text-emerald-200 border border-white/15">
+      <div className="rounded-2xl sm:rounded-3xl bg-gradient-to-r from-emerald-900 via-emerald-850 to-emerald-950 text-white p-5 sm:p-12 mb-6 sm:mb-10 shadow-lg relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="relative z-10 max-w-2xl space-y-3 sm:space-y-4">
+          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full text-xs font-semibold text-emerald-200 border border-white/15">
             <Landmark size={14} /> Official Government & ICAR Vacancies
           </div>
-          <h1 className="text-3xl sm:text-4xl font-display font-extrabold tracking-tight">
+          <h1 className="text-2xl sm:text-4xl font-display font-extrabold tracking-tight">
             Government Agriculture Jobs & Exam Alerts
           </h1>
-          <p className="text-sm sm:text-base text-emerald-100/90 leading-relaxed">
+          <p className="text-xs sm:text-base text-emerald-100/90 leading-relaxed">
             Direct recruitment notices for IBPS AFO, State ADO / Agriculture Officers, NABARD, ICAR & IARI Scientists, KVK SMS, and National Seeds Corporation.
           </p>
           {isAdmin && (
@@ -359,7 +359,7 @@ const GovtJobs = () => {
             <div
               key={job._id}
               id={`govt-job-${job._id}`}
-              className={`card p-6 sm:p-7 hover:shadow-md transition-all space-y-4 border relative ${
+              className={`card p-4 sm:p-7 hover:shadow-md transition-all space-y-4 border relative ${
                 targetJobId === job._id
                   ? "border-emerald-500 ring-4 ring-emerald-500/20 shadow-lg bg-emerald-50/10"
                   : "border-brand-border"
@@ -433,7 +433,7 @@ const GovtJobs = () => {
               </div>
 
               {/* Key Specs Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-gray-50/70 rounded-2xl text-xs border border-gray-100">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4 p-3 sm:p-4 bg-gray-50/70 rounded-2xl text-xs border border-gray-100">
                 <div className="flex items-center gap-2">
                   <Users size={16} className="text-brand-green-dark shrink-0" />
                   <div>

@@ -5,8 +5,8 @@ import logo from "../assets/logo.png";
 
 const Footer = () => {
   return (
-    <footer className="bg-brand-black text-white mt-24">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 grid grid-cols-1 md:grid-cols-4 gap-10">
+    <footer className="bg-brand-black text-white mt-12 sm:mt-24">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 grid grid-cols-1 md:grid-cols-4 gap-8 sm:gap-10">
         <div>
           <div className="flex items-center gap-2 mb-3">
             <img src={logo} alt="AgriYuvaa" className="h-7 w-7 object-contain rounded-md" />

@@ -2,13 +2,13 @@ import React from "react";
 import SEO from "../components/SEO.jsx";
 
 const About = () => (
-  <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+  <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-16">
     <SEO
       title="About Us"
       description="AgriYuvaa connects youth with verified agricultural careers in India across farming, agritech, and agribusiness."
       canonical="/about"
     />
-    <h1 className="text-3xl font-display font-bold mb-4">About AgriYuvaa</h1>
+    <h1 className="text-2xl sm:text-3xl font-display font-bold mb-4">About AgriYuvaa</h1>
     <p className="text-brand-grey mb-4">
       AgriYuvaa ("Yuvaa" meaning youth) exists to connect the next generation with real careers in
       agriculture — from farming and livestock to agri-tech, food processing, and agri-business.

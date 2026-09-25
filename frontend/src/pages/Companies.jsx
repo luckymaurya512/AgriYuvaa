@@ -163,34 +163,34 @@ const Companies = () => {
   });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
       <SEO
         title="Top AgriTech & Agribusiness Companies in India"
         description="Explore top Indian agriculture and agritech companies hiring youth: DeHaat, Ninjacart, AgroStar, CropIn, UPL, Godrej Agrovet, and more."
         canonical="/companies"
       />
       {/* Header Banner */}
-      <div className="rounded-3xl bg-gradient-to-r from-emerald-900 via-green-950 to-emerald-900 text-white p-8 sm:p-12 mb-10 shadow-lg relative overflow-hidden">
+      <div className="rounded-2xl sm:rounded-3xl bg-gradient-to-r from-emerald-900 via-green-950 to-emerald-900 text-white p-5 sm:p-12 mb-6 sm:mb-10 shadow-lg relative overflow-hidden">
         <div className="relative z-10 max-w-2xl space-y-3">
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-3.5 py-1.5 rounded-full text-xs font-semibold text-emerald-200 border border-white/15">
+          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full text-xs font-semibold text-emerald-200 border border-white/15">
             <Sprout size={14} /> Ecosystem Directory
           </div>
-          <h1 className="text-3xl sm:text-4xl font-display font-extrabold tracking-tight">
+          <h1 className="text-2xl sm:text-4xl font-display font-extrabold tracking-tight">
             Top AgriTech Companies & Agribusinesses
           </h1>
-          <p className="text-sm sm:text-base text-emerald-100/90 leading-relaxed">
+          <p className="text-xs sm:text-base text-emerald-100/90 leading-relaxed">
             Explore leading agricultural enterprises, innovative AgriTech unicorns, and agribusiness conglomerates hiring agricultural talent on AgriYuvaa.
           </p>
         </div>
 
         {/* Decorative background */}
-        <div className="absolute right-0 bottom-0 opacity-10 translate-x-10 translate-y-10">
+        <div className="absolute right-0 bottom-0 opacity-10 translate-x-10 translate-y-10 pointer-events-none">
           <Building2 size={280} />
         </div>
       </div>
 
       {/* Search & Sector Filters */}
-      <div className="card p-5 mb-8 space-y-4 shadow-sm border border-brand-border">
+      <div className="card p-4 sm:p-5 mb-6 sm:mb-8 space-y-4 shadow-sm border border-brand-border">
         <div className="relative">
           <Search size={18} className="absolute left-3.5 top-3 text-brand-grey" />
           <input
@@ -228,7 +228,7 @@ const Companies = () => {
         {filteredCompanies.map((comp) => (
           <div
             key={comp.id}
-            className="card p-6 sm:p-7 flex flex-col justify-between hover:shadow-md transition-shadow border border-brand-border space-y-4"
+            className="card p-4 sm:p-7 flex flex-col justify-between hover:shadow-md transition-shadow border border-brand-border space-y-4"
           >
             <div className="space-y-3">
               {/* Header: Name, Category, HQ */}

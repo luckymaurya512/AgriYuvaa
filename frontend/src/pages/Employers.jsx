@@ -81,35 +81,35 @@ const Employers = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
       <SEO
         title="Verified Employers & Farms Hiring on AgriYuvaa"
         description="Browse agricultural companies, progressive farms, and seed enterprises actively hiring talent across India."
         canonical="/employers"
       />
-      <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="mb-6 sm:mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-display font-bold mb-1">Hiring Employers on AgriYuvaa</h1>
-          <p className="text-sm text-brand-grey">
+          <h1 className="text-xl sm:text-2xl font-display font-bold mb-1">Hiring Employers on AgriYuvaa</h1>
+          <p className="text-xs sm:text-sm text-brand-grey">
             Farms, agri-businesses, and enterprises hiring talent. Follow your favorite companies to get instant job alerts!
           </p>
         </div>
         {isAdmin && (
           <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-semibold">
-            <ShieldAlert size={14} className="text-emerald-700" />
+            <ShieldAlert size={14} className="text-emerald-700 shrink-0" />
             <span>Admin Mode: You can delete test or unwanted employers directly</span>
           </div>
         )}
       </div>
 
-      <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
+      <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
         {employers.map((emp) => {
           const isFollowing = followedIds.includes(emp._id.toString());
 
           return (
             <div
               key={emp._id}
-              className="card p-6 flex flex-col justify-between hover:shadow-md transition-shadow border border-brand-border space-y-4 relative group"
+              className="card p-4 sm:p-6 flex flex-col justify-between hover:shadow-md transition-shadow border border-brand-border space-y-4 relative group"
             >
               <div className="flex items-start gap-4">
                 <div className="h-12 w-12 rounded-xl bg-brand-green-light flex items-center justify-center shrink-0">

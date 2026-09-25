@@ -397,7 +397,7 @@ const JobDetails = () => {
   const plainDesc = (job.description || "").replace(/<[^>]+>/g, " ").trim().slice(0, 160);
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10 grid md:grid-cols-3 gap-8 w-full min-w-0">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10 grid md:grid-cols-3 gap-8 w-full min-w-0">
       <SEO
         title={`${job.title} at ${companyDisplayName}`}
         description={plainDesc || `Apply for ${job.title} at ${companyDisplayName} in ${job.location || "India"}. Agriculture jobs on AgriYuvaa.`}
@@ -544,13 +544,13 @@ const JobDetails = () => {
           </div>
         </div>
 
-        <div className="card p-6">
+        <div className="card p-4 sm:p-6">
           <h2 className="font-display font-semibold mb-3">Job Description</h2>
           <RichTextRenderer content={job.description} className="text-sm text-brand-grey leading-relaxed" />
         </div>
 
         {job.responsibilities?.length > 0 && (
-          <div className="card p-6">
+          <div className="card p-4 sm:p-6">
             <h2 className="font-display font-semibold mb-3">Responsibilities</h2>
             <ul className="space-y-2">
               {job.responsibilities.map((r, i) => (
@@ -564,7 +564,7 @@ const JobDetails = () => {
         )}
 
         {job.requirements?.length > 0 && (
-          <div className="card p-6">
+          <div className="card p-4 sm:p-6">
             <h2 className="font-display font-semibold mb-3">Requirements</h2>
             <ul className="space-y-2">
               {job.requirements.map((r, i) => (
@@ -578,7 +578,7 @@ const JobDetails = () => {
         )}
 
         {job.benefits?.length > 0 && (
-          <div className="card p-6">
+          <div className="card p-4 sm:p-6">
             <h2 className="font-display font-semibold mb-3">Benefits</h2>
             <ul className="space-y-2">
               {job.benefits.map((r, i) => (

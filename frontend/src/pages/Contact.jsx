@@ -6,13 +6,13 @@ const Contact = () => {
   const [sent, setSent] = useState(false);
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-16">
       <SEO
         title="Contact Us"
         description="Contact AgriYuvaa support for employer job posting inquiries, recruiter partnerships, or candidate help."
         canonical="/contact"
       />
-      <h1 className="text-3xl font-display font-bold mb-8">Contact Us</h1>
+      <h1 className="text-2xl sm:text-3xl font-display font-bold mb-6 sm:mb-8">Contact Us</h1>
       <div className="grid md:grid-cols-2 gap-10">
         <div className="space-y-6">
           <div className="space-y-5">

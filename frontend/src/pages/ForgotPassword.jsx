@@ -78,21 +78,21 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto px-4 py-16">
+    <div className="max-w-md mx-auto px-4 py-8 sm:py-16">
       <SEO title="Reset Password" noindex={true} />
-      <div className="text-center mb-8">
-        <img src={logo} alt="AgriYuvaa" className="h-14 w-14 mx-auto mb-3" />
+      <div className="text-center mb-6 sm:mb-8">
+        <img src={logo} alt="AgriYuvaa" className="h-12 w-12 sm:h-14 sm:w-14 mx-auto mb-3" />
         <h1 className="text-2xl font-display font-bold">
           {step === 3 ? "Password Reset Complete" : "Reset Your Password"}
         </h1>
-        <p className="text-sm text-brand-grey mt-1">
+        <p className="text-sm text-brand-grey mt-1 break-all">
           {step === 1 && "Enter your registered email to receive a 6-digit verification code."}
           {step === 2 && `Enter the 6-digit code sent to ${email}`}
           {step === 3 && "Your password has been successfully updated."}
         </p>
       </div>
 
-      <div className="card p-6 md:p-8 space-y-5 shadow-sm border border-brand-border">
+      <div className="card p-5 sm:p-8 space-y-5 shadow-sm border border-brand-border">
         {error && (
           <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs flex items-center gap-2">
             <AlertCircle size={14} className="shrink-0" />
