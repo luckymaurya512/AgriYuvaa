@@ -146,10 +146,23 @@ const ResumeBuilder = () => {
     phone: user?.phone || "",
   }));
 
-  // Automatically populate profile details on page load if user is logged in
+  // Automatically populate profile details on page load if user is logged in or guest
   useEffect(() => {
-    if (!user) return;
     let isMounted = true;
+
+    if (!user) {
+      try {
+        const saved = localStorage.getItem("agriyuvaa_resume_backup");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && typeof parsed === "object") {
+            setData((prev) => ({ ...prev, ...parsed }));
+            if (parsed.template) setTemplate(parsed.template);
+          }
+        }
+      } catch (_) {}
+      return;
+    }
 
     const autoLoadProfile = async () => {
       try {
@@ -158,7 +171,7 @@ const ResumeBuilder = () => {
         const p = res?.profile || {};
         const u = res?.user || user || {};
 
-        // If seeker already has saved resume data from a previous session, restore it directly!
+        // If user (seeker or employer) already has saved resume data, restore it directly!
         if (p.resumeData && typeof p.resumeData === "object" && Object.keys(p.resumeData).length > 0) {
           setData((prev) => ({
             ...prev,
@@ -172,6 +185,19 @@ const ResumeBuilder = () => {
           }
           return;
         }
+
+        // Also check localStorage backup
+        try {
+          const saved = localStorage.getItem("agriyuvaa_resume_backup");
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (parsed && typeof parsed === "object" && Object.keys(parsed).length > 5) {
+              setData((prev) => ({ ...prev, ...parsed }));
+              if (parsed.template) setTemplate(parsed.template);
+              return;
+            }
+          }
+        } catch (_) {}
 
         const skillsFormatted = Array.isArray(p.skills)
           ? p.skills.filter(Boolean).join(", ")
@@ -231,18 +257,25 @@ const ResumeBuilder = () => {
 
   const handleSaveAndFinish = async () => {
     setSavingResume(true);
+    const resumePayload = {
+      ...data,
+      template,
+      updatedAt: new Date().toISOString(),
+    };
+
+    // Always backup to localStorage so data is never lost
     try {
-      if (user && user.role === "seeker") {
-        await saveSeekerResume({
-          ...data,
-          template,
-          updatedAt: new Date().toISOString(),
-        });
+      localStorage.setItem("agriyuvaa_resume_backup", JSON.stringify(resumePayload));
+    } catch (_) {}
+
+    try {
+      if (user) {
+        await saveSeekerResume(resumePayload);
       }
       setShowDoneModal(true);
     } catch (err) {
       console.error("Error saving resume to profile:", err);
-      // Still open the next steps modal so the student is never blocked
+      // Still open the next steps modal so user is never blocked
       setShowDoneModal(true);
     } finally {
       setSavingResume(false);

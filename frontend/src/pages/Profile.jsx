@@ -362,20 +362,18 @@ const Profile = () => {
           <span>General & Profile Details</span>
         </button>
 
-        {user?.role === "seeker" && (
-          <button
-            type="button"
-            onClick={() => setActiveTab("resume")}
-            className={`px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-bold border-b-2 flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer ${
-              activeTab === "resume"
-                ? "border-emerald-700 text-emerald-900 bg-emerald-50/50 rounded-t-xl"
-                : "border-transparent text-brand-grey hover:text-brand-black"
-            }`}
-          >
-            <FileText size={15} />
-            <span>Resume & Documents</span>
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={() => setActiveTab("resume")}
+          className={`px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-bold border-b-2 flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer ${
+            activeTab === "resume"
+              ? "border-emerald-700 text-emerald-900 bg-emerald-50/50 rounded-t-xl"
+              : "border-transparent text-brand-grey hover:text-brand-black"
+          }`}
+        >
+          <FileText size={15} />
+          <span>Resume & Documents</span>
+        </button>
 
         <button
           type="button"
@@ -677,8 +675,8 @@ const Profile = () => {
         </div>
       )}
 
-      {/* ── TAB 2: RESUME & DOCUMENTS (SEEKERS ONLY) ── */}
-      {activeTab === "resume" && user?.role === "seeker" && (
+      {/* ── TAB 2: RESUME & DOCUMENTS (ALL USERS) ── */}
+      {activeTab === "resume" && (
         <div className="space-y-6">
           <div className="card p-4 sm:p-8">
             <div className="border-b border-brand-border pb-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">

@@ -16,6 +16,8 @@ const employerProfileSchema = new mongoose.Schema(
       default: "approved",
     },
     documents: [{ type: String }],
+    resumeData: { type: mongoose.Schema.Types.Mixed },
+    resumeUrl: { type: String },
   },
   { timestamps: true }
 );

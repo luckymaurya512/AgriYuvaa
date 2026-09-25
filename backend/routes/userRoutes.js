@@ -233,12 +233,21 @@ router.post(
   })
 );
 
-// @route POST /api/users/seeker/me/resume
+// @route POST /api/users/seeker/me/resume and /api/users/me/resume
 router.post(
-  "/seeker/me/resume",
+  ["/seeker/me/resume", "/me/resume"],
   authenticate,
-  authorize("seeker"),
   asyncHandler(async (req, res) => {
+    if (req.user.role === "employer") {
+      let empProfile = await EmployerProfile.findOne({ user: req.user._id });
+      if (!empProfile) {
+        empProfile = await EmployerProfile.create({ user: req.user._id, companyName: req.user.name });
+      }
+      empProfile.resumeData = req.body;
+      await empProfile.save();
+      return res.json({ message: "Resume saved successfully", resumeData: empProfile.resumeData });
+    }
+
     const profile = await getOrCreateProfile(req.user._id);
     profile.resumeData = req.body;
     await profile.save();
