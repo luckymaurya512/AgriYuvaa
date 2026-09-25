@@ -241,7 +241,7 @@ const GovtJobDetail = () => {
 
       {/* Top Breadcrumb Navigation */}
       <div className="bg-white border-b border-brand-border">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between gap-3 text-xs text-brand-grey">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between gap-3 text-xs text-brand-grey">
           <div className="flex items-center gap-1.5 overflow-hidden whitespace-nowrap truncate">
             <Link to="/" className="hover:text-emerald-800 transition-colors">
               Home
@@ -286,17 +286,14 @@ const GovtJobDetail = () => {
       </div>
 
       {/* Main Content Area */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
         {successMsg && (
           <div className="p-4 mb-6 bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-2xl text-xs font-semibold flex items-center gap-2 shadow-xs">
             <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
             <span>{successMsg}</span>
           </div>
         )}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Left Column: Job Details Card (8 cols) */}
-          <div className="lg:col-span-8 space-y-6">
-            <div className="card p-6 sm:p-8 bg-white border border-brand-border shadow-xs space-y-6">
+        <div className="card p-6 sm:p-8 bg-white border border-brand-border shadow-xs space-y-6">
               {/* Header: Organization & Status Badges */}
               <div className="space-y-3 pb-6 border-b border-brand-border/70">
                 <div className="flex flex-wrap items-center justify-between gap-3">
@@ -454,68 +451,15 @@ const GovtJobDetail = () => {
                   </a>
                 )}
               </div>
-            </div>
-          </div>
 
-          {/* Right Column: Highlights & Quick Summary (4 cols) */}
-          <div className="lg:col-span-4 space-y-6">
-            {/* Quick Summary Card */}
-            <div className="card p-6 bg-white border border-brand-border shadow-xs space-y-5">
-              <h3 className="font-display font-bold text-base text-brand-black flex items-center gap-2">
-                <ShieldCheck size={18} className="text-emerald-700" />
-                Verified Notification
-              </h3>
-
-              <div className="space-y-3 text-xs text-gray-600">
-                <div className="flex justify-between py-2 border-b border-gray-100">
-                  <span className="text-brand-grey">Authority:</span>
-                  <span className="font-bold text-brand-black text-right">{job.organization}</span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-gray-100">
-                  <span className="text-brand-grey">Vacancies:</span>
-                  <span className="font-bold text-brand-black">{job.vacancies}</span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-gray-100">
-                  <span className="text-brand-grey">State / Area:</span>
-                  <span className="font-bold text-brand-black">{job.state}</span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-gray-100">
-                  <span className="text-brand-grey">Deadline:</span>
-                  <span className="font-bold text-red-600">{job.applicationDeadline}</span>
-                </div>
+              {/* Candidate Note */}
+              <div className="p-3.5 rounded-xl bg-emerald-50/60 border border-emerald-100 text-xs text-emerald-950 leading-relaxed flex items-start gap-2">
+                <span className="shrink-0 text-sm">ℹ️</span>
+                <span>
+                  <strong>Candidate Note:</strong> Always verify eligibility criteria, reservation categories, and fee details in the official advertisement PDF before submitting applications.
+                </span>
               </div>
-
-              <div className="p-3.5 rounded-xl bg-emerald-50/60 border border-emerald-100 text-[11px] text-emerald-900 leading-relaxed">
-                ℹ️ <strong>Candidate Note:</strong> Always verify eligibility criteria and fee details in the official advertisement PDF before submitting applications.
-              </div>
-
-              <button
-                type="button"
-                onClick={handleApplyClick}
-                className="w-full btn-primary py-2.5 text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer"
-              >
-                Direct Application Link <ExternalLink size={13} />
-              </button>
             </div>
-
-            {/* Share Prompt Box */}
-            <div className="card p-5 bg-gradient-to-br from-emerald-900 to-gray-900 text-white space-y-3">
-              <h4 className="font-bold text-sm flex items-center gap-2">
-                <span>📢</span> Share with Agri Batchmates
-              </h4>
-              <p className="text-xs text-gray-300 leading-relaxed">
-                Know someone preparing for ICAR, NABARD, or State Agriculture exams? Share this alert directly with them.
-              </p>
-              <button
-                type="button"
-                onClick={handleShareWhatsApp}
-                className="w-full inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1EBE5D] text-white text-xs font-bold py-2.5 px-4 rounded-xl transition-all shadow-sm cursor-pointer"
-              >
-                <WhatsAppIcon size={15} /> Share on WhatsApp
-              </button>
-            </div>
-          </div>
-        </div>
 
         {/* Related Government Vacancies Section */}
         {relatedJobs.length > 0 && (
