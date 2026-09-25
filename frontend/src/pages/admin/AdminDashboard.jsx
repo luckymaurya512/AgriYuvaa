@@ -569,6 +569,8 @@ const AdminDashboard = () => {
               {pendingJobs.length}
             </span>
           )}
+        </button>
+
         <button
           type="button"
           onClick={() => setTab("govt-jobs")}
