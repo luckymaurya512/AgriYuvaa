@@ -4,6 +4,7 @@ import EmployerProfile from "../models/EmployerProfile.js";
 import Job from "../models/Job.js";
 import Application from "../models/Application.js";
 import AuditLog from "../models/AuditLog.js";
+import SeekerProfile from "../models/SeekerProfile.js";
 import { broadcastNewJobAlert } from "../utils/webPush.js";
 
 import sendEmail from "../utils/sendEmail.js";
@@ -363,3 +364,70 @@ export const getAuditLogs = asyncHandler(async (req, res) => {
   const logs = await AuditLog.find().populate("actor", "name role").sort("-createdAt").limit(200);
   res.json(logs);
 });
+
+// @desc  List all employers (approved, pending, or rejected) for admin management
+// @route GET /api/admin/employers
+export const getAllEmployers = asyncHandler(async (req, res) => {
+  const employers = await EmployerProfile.find()
+    .populate("user", "name email phone status createdAt")
+    .sort("-createdAt");
+  res.json(employers);
+});
+
+// @desc  Delete an employer profile and all related data (cascade)
+// @route DELETE /api/admin/employers/:id
+export const deleteEmployer = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  let employer = await EmployerProfile.findById(id);
+  if (!employer) {
+    employer = await EmployerProfile.findOne({ user: id });
+  }
+
+  if (!employer) {
+    res.status(404);
+    throw new Error("Employer profile not found");
+  }
+
+  const userId = employer.user;
+  const companyName = employer.companyName;
+
+  // 1. Find all jobs posted by this employer (by employer user ID or companyName)
+  const queryConditions = [];
+  if (userId) queryConditions.push({ employer: userId });
+  if (companyName) queryConditions.push({ companyName });
+
+  const employerJobs = await Job.find({ $or: queryConditions });
+  const jobIds = employerJobs.map((j) => j._id);
+
+  // 2. Cascade delete applications for those jobs
+  if (jobIds.length > 0) {
+    await Application.deleteMany({ job: { $in: jobIds } });
+    await Job.deleteMany({ _id: { $in: jobIds } });
+  }
+
+  // 3. Remove employer reference from seekers' followed lists
+  await SeekerProfile.updateMany(
+    { followedEmployers: employer._id },
+    { $pull: { followedEmployers: employer._id } }
+  );
+
+  // 4. Delete the EmployerProfile document
+  await EmployerProfile.findByIdAndDelete(employer._id);
+
+  // 5. Delete the User account if it has role 'employer'
+  if (userId) {
+    await User.findOneAndDelete({ _id: userId, role: "employer" });
+  }
+
+  // 6. Log audit trail
+  await logAction(req.user, "delete_employer", "EmployerProfile", employer._id, {
+    companyName,
+    deletedJobsCount: jobIds.length,
+  });
+
+  res.json({
+    success: true,
+    message: `Employer "${companyName}" and associated data deleted successfully.`,
+  });
+});
+

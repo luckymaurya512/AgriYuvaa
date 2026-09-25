@@ -11,9 +11,12 @@ export const updateUserRole = (id, role) =>
     .catch(() => api.patch(`/admin/users/${id}/role`, { role }))
     .then((r) => r.data);
 
+export const fetchAllEmployers = () => api.get("/admin/employers").then((r) => r.data);
 export const fetchPendingEmployers = () => api.get("/admin/employers/pending").then((r) => r.data);
 export const verifyEmployer = (id, decision) =>
   api.post(`/admin/employers/${id}/verify`, { decision }).then((r) => r.data);
+export const deleteEmployer = (id) =>
+  api.delete(`/admin/employers/${id}`).then((r) => r.data);
 
 export const fetchPendingJobs = () => api.get("/admin/jobs/pending").then((r) => r.data);
 export const fetchAllPlatformJobs = (params) => api.get("/admin/jobs", { params }).then((r) => r.data);

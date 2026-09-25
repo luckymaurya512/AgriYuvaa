@@ -7,6 +7,8 @@ import {
   updateUserRole,
   getPendingEmployers,
   verifyEmployer,
+  getAllEmployers,
+  deleteEmployer,
   listAllJobs,
   listAllApplications,
   getPendingJobs,
@@ -27,8 +29,10 @@ router.get("/stats", getPlatformStats);
 router.get("/users", listUsers);
 router.route("/users/:id/status").patch(updateUserStatus).post(updateUserStatus);
 
+router.get("/employers", getAllEmployers);
 router.get("/employers/pending", getPendingEmployers);
 router.route("/employers/:id/verify").patch(verifyEmployer).post(verifyEmployer);
+router.delete("/employers/:id", deleteEmployer);
 
 router.get("/jobs", listAllJobs);
 router.get("/applications", listAllApplications);

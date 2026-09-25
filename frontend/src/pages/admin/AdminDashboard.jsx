@@ -631,8 +631,15 @@ const AdminDashboard = () => {
         </button>
 
         <Link
+          to="/employers"
+          className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold text-emerald-900 hover:bg-emerald-50 rounded-xl transition-all whitespace-nowrap ml-auto"
+        >
+          <Building2 size={14} className="text-emerald-700" /> Employers Directory ↗
+        </Link>
+
+        <Link
           to="/govt-jobs"
-          className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold text-purple-900 hover:bg-purple-50 rounded-xl transition-all whitespace-nowrap ml-auto"
+          className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold text-purple-900 hover:bg-purple-50 rounded-xl transition-all whitespace-nowrap"
         >
           <Landmark size={14} className="text-purple-700" /> Govt Jobs ↗
         </Link>
