@@ -802,13 +802,13 @@ const ResumeBuilder = () => {
                     </div>
                     <div>
                       <label className="text-[11px] font-semibold text-brand-grey uppercase">
-                        Grade / OGPA / %
+                        CGPA / OGPA / %
                       </label>
                       <input
                         className="input-field mt-1 text-xs bg-white"
                         value={edu.score}
                         onChange={(e) => handleEduChange(idx, "score", e.target.value)}
-                        placeholder="8.5 OGPA"
+                        placeholder="e.g. 8.5 CGPA / 8.4 OGPA / 82%"
                       />
                     </div>
                   </div>
