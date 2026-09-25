@@ -260,7 +260,7 @@ const Profile = () => {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+    <div className="max-w-5xl mx-auto px-3.5 sm:px-6 lg:px-8 py-5 sm:py-10">
       <SEO title="My Profile" noindex={true} />
       
       {/* Toast Notification Alert */}
@@ -282,49 +282,52 @@ const Profile = () => {
       )}
 
       {/* Top Profile Header Card */}
-      <div className="card p-6 sm:p-8 bg-gradient-to-r from-emerald-950 via-emerald-900 to-emerald-950 text-white rounded-3xl relative overflow-hidden shadow-xl mb-8">
+      <div className="card p-4 sm:p-8 bg-gradient-to-r from-emerald-950 via-emerald-900 to-emerald-950 text-white rounded-2xl sm:rounded-3xl relative overflow-hidden shadow-xl mb-6 sm:mb-8">
         <div className="absolute right-0 top-0 translate-x-12 -translate-y-12 w-64 h-64 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
         
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 relative z-10">
-          <div className="flex items-center gap-4 sm:gap-5">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-emerald-800 border-2 border-emerald-600/60 flex items-center justify-center text-white text-2xl sm:text-3xl font-display font-bold shadow-inner">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6 relative z-10">
+          <div className="flex items-start sm:items-center gap-3.5 sm:gap-5 w-full sm:w-auto">
+            <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-2xl bg-emerald-800 border-2 border-emerald-600/60 flex items-center justify-center text-white text-xl sm:text-3xl font-display font-bold shrink-0 shadow-inner">
               {user?.name ? user.name.charAt(0).toUpperCase() : "A"}
             </div>
 
-            <div className="space-y-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-xl sm:text-2xl font-display font-bold text-white">
+            <div className="space-y-1.5 min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                <h1 className="text-lg sm:text-2xl font-display font-bold text-white break-words">
                   {user?.name}
                 </h1>
-                <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-800 text-emerald-200 border border-emerald-700">
+                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-800 text-emerald-200 border border-emerald-700 whitespace-nowrap">
                   {user?.role === "seeker"
-                    ? "Job Seeker / Candidate"
+                    ? "Job Seeker"
                     : user?.role === "employer"
-                    ? "Employer Recruiter"
+                    ? "Employer"
                     : user?.role === "superadmin"
                     ? "Super Admin"
                     : "Admin"}
                 </span>
               </div>
 
-              <p className="text-xs sm:text-sm text-emerald-300/80 flex items-center gap-2">
-                <Mail size={13} className="shrink-0" /> {user?.email}
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-emerald-300/90">
+                <span className="flex items-center gap-1.5 break-all">
+                  <Mail size={13} className="shrink-0" />
+                  <span>{user?.email}</span>
+                </span>
                 {user?.isEmailVerified && (
-                  <span className="text-[10px] text-emerald-300 bg-emerald-900/60 border border-emerald-700 px-1.5 py-0.2 rounded font-semibold">
+                  <span className="text-[10px] text-emerald-300 bg-emerald-900/80 border border-emerald-600 px-1.5 py-0.5 rounded font-semibold whitespace-nowrap inline-flex items-center">
                     ✓ Verified
                   </span>
                 )}
-              </p>
+              </div>
 
               {user?.phone && (
-                <p className="text-xs text-emerald-300/80 flex items-center gap-2">
-                  <Phone size={13} className="shrink-0" /> {user.phone}
+                <p className="text-xs text-emerald-300/80 flex items-center gap-1.5">
+                  <Phone size={13} className="shrink-0" /> <span>{user.phone}</span>
                 </p>
               )}
             </div>
           </div>
 
-          <div className="shrink-0 self-end sm:self-center flex items-center gap-2">
+          <div className="w-full sm:w-auto pt-2.5 sm:pt-0 border-t border-emerald-800/60 sm:border-0 flex sm:justify-end">
             <Link
               to={
                 user?.role === "employer"
@@ -335,7 +338,7 @@ const Profile = () => {
                   ? "/superadmin"
                   : "/seeker"
               }
-              className="px-4 py-2 rounded-xl bg-emerald-800/80 hover:bg-emerald-700 text-emerald-100 text-xs font-bold flex items-center gap-1.5 border border-emerald-600 transition-colors shadow-xs"
+              className="w-full sm:w-auto px-4 py-2 rounded-xl bg-emerald-800/90 hover:bg-emerald-700 text-emerald-100 text-xs font-bold flex items-center justify-center gap-1.5 border border-emerald-600 transition-colors shadow-xs"
             >
               <span>Dashboard</span>
               <ArrowRight size={13} />
@@ -345,11 +348,11 @@ const Profile = () => {
       </div>
 
       {/* Profile Navigation Tabs */}
-      <div className="flex border-b border-brand-border space-x-2 sm:space-x-4 mb-8 overflow-x-auto pb-1">
+      <div className="flex border-b border-brand-border space-x-2 sm:space-x-4 mb-6 sm:mb-8 overflow-x-auto pb-1 -mx-3.5 px-3.5 sm:mx-0 sm:px-0">
         <button
           type="button"
           onClick={() => setActiveTab("general")}
-          className={`px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer ${
+          className={`px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-bold border-b-2 flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer ${
             activeTab === "general"
               ? "border-emerald-700 text-emerald-900 bg-emerald-50/50 rounded-t-xl"
               : "border-transparent text-brand-grey hover:text-brand-black"
@@ -363,7 +366,7 @@ const Profile = () => {
           <button
             type="button"
             onClick={() => setActiveTab("resume")}
-            className={`px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer ${
+            className={`px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-bold border-b-2 flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer ${
               activeTab === "resume"
                 ? "border-emerald-700 text-emerald-900 bg-emerald-50/50 rounded-t-xl"
                 : "border-transparent text-brand-grey hover:text-brand-black"
@@ -377,7 +380,7 @@ const Profile = () => {
         <button
           type="button"
           onClick={() => setActiveTab("security")}
-          className={`px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer ${
+          className={`px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-bold border-b-2 flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer ${
             activeTab === "security"
               ? "border-emerald-700 text-emerald-900 bg-emerald-50/50 rounded-t-xl"
               : "border-transparent text-brand-grey hover:text-brand-black"
@@ -390,7 +393,7 @@ const Profile = () => {
 
       {/* ── TAB 1: GENERAL & PROFILE DETAILS ── */}
       {activeTab === "general" && (
-        <div className="card p-6 sm:p-8">
+        <div className="card p-4 sm:p-8">
           <div className="border-b border-brand-border pb-4 mb-6">
             <h2 className="text-lg font-display font-bold text-brand-black">
               Account & Profile Information
@@ -677,7 +680,7 @@ const Profile = () => {
       {/* ── TAB 2: RESUME & DOCUMENTS (SEEKERS ONLY) ── */}
       {activeTab === "resume" && user?.role === "seeker" && (
         <div className="space-y-6">
-          <div className="card p-6 sm:p-8">
+          <div className="card p-4 sm:p-8">
             <div className="border-b border-brand-border pb-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h2 className="text-lg font-display font-bold text-brand-black">
@@ -791,7 +794,7 @@ const Profile = () => {
 
       {/* ── TAB 3: PASSWORD & SECURITY ── */}
       {activeTab === "security" && (
-        <div className="card p-6 sm:p-8 max-w-2xl">
+        <div className="card p-4 sm:p-8 max-w-2xl">
           <div className="border-b border-brand-border pb-4 mb-6">
             <h2 className="text-lg font-display font-bold text-brand-black flex items-center gap-2">
               <ShieldCheck size={20} className="text-emerald-700" />
