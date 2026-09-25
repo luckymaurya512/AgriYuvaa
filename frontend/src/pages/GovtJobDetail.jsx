@@ -20,6 +20,7 @@ import {
   Sparkles,
   Edit3,
   Trash2,
+  Building2,
   X,
   Save,
   Loader2,
@@ -118,17 +119,27 @@ const GovtJobDetail = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
 
     fetchGovtJobById(id)
-      .then((data) => {
+      .then(async (data) => {
         setJob(data);
-        // Load related vacancies in same category or general
-        fetchGovtJobs({ category: data.category !== "All" ? data.category : undefined })
-          .then((all) => {
-            const others = (Array.isArray(all) ? all : [])
-              .filter((j) => j._id !== data._id && j.slug !== data.slug)
-              .slice(0, 3);
-            setRelatedJobs(others);
-          })
-          .catch(() => setRelatedJobs([]));
+        try {
+          let others = [];
+          if (data.category && data.category !== "All") {
+            const catJobs = await fetchGovtJobs({ category: data.category });
+            others = (Array.isArray(catJobs) ? catJobs : []).filter(
+              (j) => j._id !== data._id && j.slug !== data.slug
+            );
+          }
+          if (others.length < 3) {
+            const allJobs = await fetchGovtJobs({});
+            const more = (Array.isArray(allJobs) ? allJobs : []).filter(
+              (j) => j._id !== data._id && j.slug !== data.slug && !others.some((o) => o._id === j._id)
+            );
+            others = [...others, ...more];
+          }
+          setRelatedJobs(others.slice(0, 6));
+        } catch (_) {
+          setRelatedJobs([]);
+        }
       })
       .catch(() => setError(true))
       .finally(() => setLoading(false));
@@ -450,6 +461,13 @@ const GovtJobDetail = () => {
                     <FileText size={15} /> Download Official Notification PDF
                   </a>
                 )}
+
+                <Link
+                  to="/govt-jobs"
+                  className="px-5 py-3 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 text-sm font-bold flex items-center justify-center gap-1.5 transition-all sm:ml-auto"
+                >
+                  <Briefcase size={15} className="text-emerald-700" /> More Vacancies →
+                </Link>
               </div>
 
               {/* Candidate Note */}
@@ -461,33 +479,76 @@ const GovtJobDetail = () => {
               </div>
             </div>
 
-        {/* Related Government Vacancies Section */}
-        {relatedJobs.length > 0 && (
-          <div className="mt-14 pt-10 border-t border-brand-border space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
+        {/* ── MORE JOBS SECTION ── */}
+        <div className="mt-12 pt-8 border-t border-brand-border space-y-6">
+          {/* Section Header & Direct Portal Navigation Pills */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="p-1.5 rounded-lg bg-emerald-100 text-emerald-800">
+                  <Sparkles size={16} />
+                </span>
                 <h2 className="text-xl font-display font-bold text-brand-black">
-                  Other Active Government Vacancies
+                  More Agriculture Jobs & Vacancies
                 </h2>
-                <p className="text-xs text-brand-grey mt-0.5">
-                  Explore other recent public sector recruitment notices in agriculture
-                </p>
               </div>
-              <Link
-                to="/govt-jobs"
-                className="text-xs font-bold text-emerald-800 hover:text-emerald-950 inline-flex items-center gap-1"
-              >
-                View all notifications →
-              </Link>
+              <p className="text-xs text-brand-grey">
+                Explore more public sector recruitments and verified agricultural job alerts
+              </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {/* Quick Switch Options */}
+            <div className="flex flex-wrap items-center gap-2">
+              <Link
+                to="/govt-jobs"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-purple-50 text-purple-900 border border-purple-200 hover:bg-purple-100 transition-colors shadow-2xs"
+              >
+                <Landmark size={14} className="text-purple-700" /> All Govt Vacancies ↗
+              </Link>
+              <Link
+                to="/jobs"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-900 border border-emerald-200 hover:bg-emerald-100 transition-colors shadow-2xs"
+              >
+                <Briefcase size={14} className="text-emerald-700" /> Private & Corporate Jobs ↗
+              </Link>
+              <Link
+                to="/employers"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 transition-colors shadow-2xs"
+              >
+                <Building2 size={14} className="text-gray-600" /> Hiring Employers ↗
+              </Link>
+            </div>
+          </div>
+
+          {/* Related Jobs Grid */}
+          {relatedJobs.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {relatedJobs.map((rj) => (
                 <GovtJobCard key={rj._id} job={rj} />
               ))}
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="card p-8 text-center bg-white border border-brand-border space-y-4">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-700 mx-auto flex items-center justify-center">
+                <Landmark size={24} />
+              </div>
+              <div>
+                <h3 className="font-bold text-base text-brand-black">Looking for more agriculture jobs?</h3>
+                <p className="text-xs text-brand-grey max-w-md mx-auto mt-1">
+                  Discover dozens of central & state government exams, banking recruitments, and private agribusiness openings.
+                </p>
+              </div>
+              <div className="flex flex-wrap justify-center gap-3 pt-2">
+                <Link to="/govt-jobs" className="btn-primary text-xs py-2.5 px-5">
+                  Browse All Govt Vacancies
+                </Link>
+                <Link to="/jobs" className="btn-secondary text-xs py-2.5 px-5">
+                  Browse Private Jobs
+                </Link>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* ── EDIT GOVT VACANCY MODAL (ADMIN) ── */}
         {editModalOpen && (
