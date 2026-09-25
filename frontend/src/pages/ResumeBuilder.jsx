@@ -29,6 +29,15 @@ import { useAuth } from "../context/AuthContext.jsx";
 import { fetchUserProfile, saveSeekerResume } from "../services/userService.js";
 import SEO from "../components/SEO.jsx";
 
+const formatLink = (url) => {
+  if (!url) return "";
+  const trimmed = url.trim();
+  if (/^(https?:\/\/|mailto:|tel:)/i.test(trimmed)) {
+    return trimmed;
+  }
+  return `https://${trimmed}`;
+};
+
 const sampleData = {
   fullName: "Rahul Sharma",
   title: "Agriculture Professional & Agronomist",
@@ -305,6 +314,7 @@ const ResumeBuilder = () => {
         margin: [4, 4, 4, 4],
         filename: `${(data.fullName || "Resume").replace(/[^a-z0-9]/gi, "_")}_AgriYuvaa_Resume.pdf`,
         image: { type: "jpeg", quality: 0.98 },
+        enableLinks: true,
         html2canvas: { scale: 2, useCORS: true, logging: false },
         jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
       };
@@ -1379,11 +1389,40 @@ const TemplateAgriClean = ({ data }) => {
           {data.title || "Professional Title"}
         </p>
 
-        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600 mt-2">
-          {data.email && <span>{data.email}</span>}
-          {data.phone && <span>· {data.phone}</span>}
-          {data.location && <span>· {data.location}</span>}
-          {data.website && <span>· {data.website}</span>}
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-600 mt-2">
+          {data.email && (
+            <a
+              href={`mailto:${data.email.trim()}`}
+              className="text-gray-700 hover:text-emerald-800 underline"
+            >
+              {data.email}
+            </a>
+          )}
+          {data.phone && (
+            <span>
+              {data.email ? "· " : ""}
+              <a
+                href={`tel:${data.phone.trim().replace(/\s+/g, "")}`}
+                className="text-gray-700 hover:text-emerald-800"
+              >
+                {data.phone}
+              </a>
+            </span>
+          )}
+          {data.location && <span>{(data.email || data.phone) ? "· " : ""}{data.location}</span>}
+          {data.website && (
+            <span>
+              {(data.email || data.phone || data.location) ? "· " : ""}
+              <a
+                href={formatLink(data.website)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-emerald-800 underline font-medium hover:text-emerald-950"
+              >
+                {data.website}
+              </a>
+            </span>
+          )}
         </div>
         <hr className="border-t-2 border-emerald-700 mt-3" />
       </div>
@@ -1463,7 +1502,20 @@ const TemplateAgriClean = ({ data }) => {
                 <div key={i} className="text-xs space-y-0.5">
                   <div className="flex justify-between items-baseline font-bold text-gray-900">
                     <span>{pub.title}</span>
-                    <span className="font-normal text-gray-600 shrink-0">{pub.year}</span>
+                    <span className="font-normal text-gray-600 shrink-0">
+                      {pub.year && (/^https?:\/\//i.test(pub.year.trim()) || pub.year.includes("doi.org")) ? (
+                        <a
+                          href={formatLink(pub.year)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-emerald-700 underline hover:text-emerald-900"
+                        >
+                          {pub.year}
+                        </a>
+                      ) : (
+                        pub.year
+                      )}
+                    </span>
                   </div>
                   {pub.journal && <p className="text-emerald-800 italic font-medium">{pub.journal}</p>}
                   {pub.description && <p className="text-gray-700 text-xs">{pub.description}</p>}
@@ -1581,11 +1633,40 @@ const TemplateModernGreen = ({ data }) => {
           {data.title || "Professional Title"}
         </p>
 
-        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-emerald-100/90 mt-3 pt-3 border-t border-emerald-800">
-          {data.email && <span>{data.email}</span>}
-          {data.phone && <span>· {data.phone}</span>}
-          {data.location && <span>· {data.location}</span>}
-          {data.website && <span>· {data.website}</span>}
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-emerald-100/90 mt-3 pt-3 border-t border-emerald-800">
+          {data.email && (
+            <a
+              href={`mailto:${data.email.trim()}`}
+              className="text-emerald-100 underline hover:text-white"
+            >
+              {data.email}
+            </a>
+          )}
+          {data.phone && (
+            <span>
+              {data.email ? "· " : ""}
+              <a
+                href={`tel:${data.phone.trim().replace(/\s+/g, "")}`}
+                className="text-emerald-100 hover:text-white"
+              >
+                {data.phone}
+              </a>
+            </span>
+          )}
+          {data.location && <span>{(data.email || data.phone) ? "· " : ""}{data.location}</span>}
+          {data.website && (
+            <span>
+              {(data.email || data.phone || data.location) ? "· " : ""}
+              <a
+                href={formatLink(data.website)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-emerald-200 underline font-semibold hover:text-white"
+              >
+                {data.website}
+              </a>
+            </span>
+          )}
         </div>
       </div>
 
@@ -1663,7 +1744,20 @@ const TemplateModernGreen = ({ data }) => {
                 <div key={i} className="text-xs">
                   <div className="flex justify-between items-baseline font-bold text-gray-900">
                     <span>{pub.title}</span>
-                    <span className="font-normal text-gray-600 shrink-0">{pub.year}</span>
+                    <span className="font-normal text-gray-600 shrink-0">
+                      {pub.year && (/^https?:\/\//i.test(pub.year.trim()) || pub.year.includes("doi.org")) ? (
+                        <a
+                          href={formatLink(pub.year)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-emerald-700 underline hover:text-emerald-900"
+                        >
+                          {pub.year}
+                        </a>
+                      ) : (
+                        pub.year
+                      )}
+                    </span>
                   </div>
                   {pub.journal && <p className="text-emerald-800 text-[11px] font-semibold">{pub.journal}</p>}
                   {pub.description && <p className="text-gray-700 text-xs mt-0.5">{pub.description}</p>}
@@ -1771,11 +1865,43 @@ const TemplateClassicSerif = ({ data }) => {
           {data.title || "Professional Title"}
         </p>
 
-        <div className="flex justify-center flex-wrap gap-x-3 text-xs text-gray-700 mt-1.5 font-sans">
+        <div className="flex justify-center flex-wrap items-center gap-x-2 text-xs text-gray-700 mt-1.5 font-sans">
           {data.location && <span>{data.location}</span>}
-          {data.phone && <span>| {data.phone}</span>}
-          {data.email && <span>| {data.email}</span>}
-          {data.website && <span>| {data.website}</span>}
+          {data.phone && (
+            <span>
+              {data.location ? "| " : ""}
+              <a
+                href={`tel:${data.phone.trim().replace(/\s+/g, "")}`}
+                className="text-gray-800 hover:text-black"
+              >
+                {data.phone}
+              </a>
+            </span>
+          )}
+          {data.email && (
+            <span>
+              {(data.location || data.phone) ? "| " : ""}
+              <a
+                href={`mailto:${data.email.trim()}`}
+                className="text-gray-800 underline hover:text-black"
+              >
+                {data.email}
+              </a>
+            </span>
+          )}
+          {data.website && (
+            <span>
+              {(data.location || data.phone || data.email) ? "| " : ""}
+              <a
+                href={formatLink(data.website)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-black underline font-medium hover:text-gray-700"
+              >
+                {data.website}
+              </a>
+            </span>
+          )}
         </div>
       </div>
 
@@ -1854,7 +1980,20 @@ const TemplateClassicSerif = ({ data }) => {
                 <div key={i} className="text-xs">
                   <div className="flex justify-between items-baseline font-bold text-black">
                     <span>{pub.title}</span>
-                    <span className="font-normal font-sans text-gray-700 shrink-0">{pub.year}</span>
+                    <span className="font-normal font-sans text-gray-700 shrink-0">
+                      {pub.year && (/^https?:\/\//i.test(pub.year.trim()) || pub.year.includes("doi.org")) ? (
+                        <a
+                          href={formatLink(pub.year)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-black underline hover:text-gray-700"
+                        >
+                          {pub.year}
+                        </a>
+                      ) : (
+                        pub.year
+                      )}
+                    </span>
                   </div>
                   {pub.journal && <p className="italic text-gray-800 text-[11px]">{pub.journal}</p>}
                   {pub.description && <p className="text-gray-700 text-xs">{pub.description}</p>}
