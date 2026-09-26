@@ -107,7 +107,7 @@ export const broadcastNewJobAlert = async (job, employerProfile) => {
             </p>
 
             <div style="text-align: center; margin: 28px 0 12px 0;">
-              <a href="https://frontend-lime-nine-60.vercel.app/jobs/${job._id}" style="display: inline-block; background-color: #15803d; color: #ffffff; padding: 12px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px;">View & Apply for this Job</a>
+              <a href="${process.env.CLIENT_URL || "https://job.agriyuvaa.com"}/jobs/${job._id}" style="display: inline-block; background-color: #15803d; color: #ffffff; padding: 12px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px;">View & Apply for this Job</a>
             </div>
 
             <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />

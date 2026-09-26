@@ -82,7 +82,8 @@ const JobCard = ({ job, isSavedInitial = false, onBookmarkChange }) => {
               e.stopPropagation();
               const salaryInfo = job.salaryMin || job.salaryMax ? `\n💰 *Salary:* ${formatSalary(job.salaryMin, job.salaryMax)}` : "";
               const company = job.companyName || job.employer?.name || "Agri Company";
-              const text = `🌾 *Agriculture Hiring Alert on AgriYuvaa Job Portal*:\n\n📌 *${job.title}*\n🏢 *Company:* ${company}\n📍 *Location:* ${job.location || "India"}\n💼 *Type:* ${job.employmentType || "Full-time"}${salaryInfo}\n\n👉 *View & Apply:* https://jobs.agriyuvaa.com/jobs/${job._id}`;
+              const shareBase = typeof window !== "undefined" && window.location.origin ? window.location.origin : "https://job.agriyuvaa.com";
+              const text = `🌾 *Agriculture Hiring Alert on AgriYuvaa Job Portal*:\n\n📌 *${job.title}*\n🏢 *Company:* ${company}\n📍 *Location:* ${job.location || "India"}\n💼 *Type:* ${job.employmentType || "Full-time"}${salaryInfo}\n\n👉 *View & Apply:* ${shareBase}/jobs/${job._id}`;
               window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
             }}
             className="p-1.5 rounded-lg border border-brand-border/60 bg-white text-brand-grey hover:text-[#25D366] hover:border-emerald-300 hover:bg-emerald-50/50 transition-colors flex items-center justify-center cursor-pointer"

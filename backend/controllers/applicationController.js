@@ -31,7 +31,7 @@ export const applyToJob = asyncHandler(async (req, res) => {
   const application = await Application.create({
     job: job._id,
     seeker: req.user._id,
-    resumeUrl: req.body.resumeUrl || candidateProfile?.resumeUrl || `${process.env.FRONTEND_URL || "https://jobs.agriyuvaa.com"}/resume-builder`,
+    resumeUrl: req.body.resumeUrl || candidateProfile?.resumeUrl || `${process.env.FRONTEND_URL || "https://job.agriyuvaa.com"}/resume-builder`,
     resumeOriginalName: candidateProfile?.resumeOriginalName,
     resumeMimeType: candidateProfile?.resumeMimeType,
     resumeFileData: candidateProfile?.resumeFileData,
@@ -217,7 +217,7 @@ export const updateApplicationStatus = asyncHandler(async (req, res) => {
           </div>
 
           <div style="text-align: center; margin: 28px 0 12px 0;">
-            <a href="https://frontend-lime-nine-60.vercel.app/seeker" style="display: inline-block; background-color: #15803d; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px;">View Application Dashboard</a>
+            <a href="${process.env.CLIENT_URL || "https://job.agriyuvaa.com"}/seeker" style="display: inline-block; background-color: #15803d; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px;">View Application Dashboard</a>
           </div>
 
           <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />

@@ -40,6 +40,9 @@ app.use((req, res, next) => {
   const allowed = [
     process.env.CLIENT_URL,
     "http://localhost:5173",
+    "https://job.agriyuvaa.com",
+    "https://jobs.agriyuvaa.com",
+    "https://agriyuvaa.com",
     "https://frontend-lime-nine-60.vercel.app",
   ].filter(Boolean);
 

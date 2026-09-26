@@ -132,7 +132,7 @@ export const createJob = asyncHandler(async (req, res) => {
               <p style="color: #4b5563; font-size: 13px; line-height: 1.5;">Please review the job details, verify compliance, and approve the posting so it goes live for candidates.</p>
 
               <div style="text-align: center; margin-top: 24px;">
-                <a href="https://frontend-lime-nine-60.vercel.app/admin" style="display: inline-block; background-color: #15803d; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px;">Review in Admin Panel →</a>
+                <a href="${process.env.CLIENT_URL || "https://job.agriyuvaa.com"}/admin" style="display: inline-block; background-color: #15803d; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px;">Review in Admin Panel →</a>
               </div>
             </div>
           `,

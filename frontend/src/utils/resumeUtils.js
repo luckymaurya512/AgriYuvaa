@@ -46,7 +46,7 @@ export function getActiveResume(profile, userName = "") {
   const chooseBuilder =
     (hasBuilder && !hasUpload) || (hasBuilder && hasUpload && builderTime > uploadTime);
 
-  const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://jobs.agriyuvaa.com";
+  const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://job.agriyuvaa.com";
 
   if (chooseBuilder) {
     const candidateName = profile.resumeData?.fullName || userName || "Candidate";
