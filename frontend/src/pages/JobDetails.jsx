@@ -38,6 +38,8 @@ import JobCard from "../components/JobCard.jsx";
 import WhatsAppIcon from "../components/WhatsAppIcon.jsx";
 import RichTextRenderer from "../components/common/RichTextRenderer.jsx";
 import SEO from "../components/SEO.jsx";
+import ResumePromoCard from "../components/ResumePromoCard.jsx";
+import CommunityPromoCard from "../components/CommunityPromoCard.jsx";
 
 const formatEmploymentType = (type) => {
   if (!type) return "Full-time";
@@ -1126,6 +1128,20 @@ const JobDetails = () => {
               </button>
             </div>
           </div>
+        </div>
+
+        {/* 🌟 Promo Cards: Resume Builder & WhatsApp Community */}
+        <div className="space-y-4">
+          <ResumePromoCard
+            variant="sidebar"
+            title="Applying for this Role?"
+            description="Build a standout ATS-friendly CV formatted for agricultural employers in 2 minutes."
+          />
+          <CommunityPromoCard
+            variant="sidebar"
+            title="Instant WhatsApp Job Alerts"
+            subtitle="Get similar agriculture job openings and interview updates sent directly to your phone."
+          />
         </div>
       </div>
 

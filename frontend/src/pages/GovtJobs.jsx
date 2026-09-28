@@ -28,6 +28,8 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import SEO from "../components/SEO.jsx";
 import WhatsAppIcon from "../components/WhatsAppIcon.jsx";
+import ResumePromoCard from "../components/ResumePromoCard.jsx";
+import CommunityPromoCard from "../components/CommunityPromoCard.jsx";
 
 const categories = [
   "All",
@@ -415,16 +417,30 @@ const GovtJobs = () => {
               </button>
             </div>
           )}
-          {(jobs.length > 0 ? jobs : otherJobs).map((job) => (
-            <div
-              key={job._id}
-              id={`govt-job-${job._id}`}
-              className={`card p-4 sm:p-7 hover:shadow-md transition-all space-y-4 border relative ${
-                targetJobId === job._id
-                  ? "border-emerald-500 ring-4 ring-emerald-500/20 shadow-lg bg-emerald-50/10"
-                  : "border-brand-border"
-              }`}
-            >
+          {(jobs.length > 0 ? jobs : otherJobs).map((job, index) => (
+            <React.Fragment key={job._id}>
+              {index === 1 && (
+                <CommunityPromoCard
+                  variant="compact"
+                  title="Instant Govt Exam & Job Alerts on WhatsApp"
+                  subtitle="Get ICAR, IBPS AFO, State PSC syllabus, exam dates & answer keys directly on your phone."
+                />
+              )}
+              {index === 4 && (
+                <ResumePromoCard
+                  variant="compact"
+                  title="Preparing for Agriculture Interviews?"
+                  description="Build a recruiter-ready CV formatted for ICAR, NABARD, and Agri research jobs in 2 minutes."
+                />
+              )}
+              <div
+                id={`govt-job-${job._id}`}
+                className={`card p-4 sm:p-7 hover:shadow-md transition-all space-y-4 border relative ${
+                  targetJobId === job._id
+                    ? "border-emerald-500 ring-4 ring-emerald-500/20 shadow-lg bg-emerald-50/10"
+                    : "border-brand-border"
+                }`}
+              >
               {/* Top Row: Organization, Badges & Direct Share Buttons */}
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                 <div className="space-y-1.5 flex-1 min-w-0">
@@ -617,7 +633,7 @@ const GovtJobs = () => {
                   )}
                 </div>
               </div>
-            </div>
+            </React.Fragment>
           ))}
         </div>
       )}

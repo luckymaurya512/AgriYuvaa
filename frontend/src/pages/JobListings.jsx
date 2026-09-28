@@ -4,6 +4,8 @@ import { SlidersHorizontal, Search, MapPin, X, RotateCcw, Sparkles, AlertCircle 
 import { fetchJobs, fetchCategories } from "../services/jobService.js";
 import JobCard from "../components/JobCard.jsx";
 import SEO from "../components/SEO.jsx";
+import ResumePromoCard from "../components/ResumePromoCard.jsx";
+import CommunityPromoCard from "../components/CommunityPromoCard.jsx";
 
 const employmentTypes = [
   { value: "full-time", label: "Full-time" },
@@ -356,33 +358,8 @@ const JobListings = () => {
                     {otherJobs.map((job, index) => (
                       <React.Fragment key={job._id}>
                         <JobCard job={job} />
-                        {index === 1 && (
-                          <div className="card p-4 sm:p-5 bg-gradient-to-br from-emerald-950 via-slate-900 to-green-950 text-white flex flex-col justify-between border border-emerald-800/60 shadow-md relative overflow-hidden group">
-                            <div className="space-y-2.5">
-                              <div className="flex items-center justify-between">
-                                <span className="text-[10px] font-bold tracking-wider uppercase bg-amber-400/20 text-amber-300 border border-amber-400/30 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
-                                  <Sparkles size={11} className="text-amber-400" /> Free Tool
-                                </span>
-                                <span className="text-[11px] text-emerald-300 font-semibold">ATS-Friendly</span>
-                              </div>
-                              <h3 className="font-display font-bold text-base text-white leading-snug">
-                                Need an Agriculture Resume That Stands Out?
-                              </h3>
-                              <p className="text-xs text-gray-300 leading-relaxed">
-                                Build a recruiter-ready CV tailored for ICAR, Agronomy, and AgriTech roles in 2 minutes.
-                              </p>
-                            </div>
-                            <div className="pt-3.5 mt-2 border-t border-white/10 flex items-center justify-between">
-                              <span className="text-[11px] text-gray-400">1-Click PDF Download</span>
-                              <Link
-                                to="/resume-builder"
-                                className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs py-1.5 px-3.5 rounded-lg font-bold shadow-xs whitespace-nowrap transition-colors"
-                              >
-                                Build Resume →
-                              </Link>
-                            </div>
-                          </div>
-                        )}
+                        {index === 1 && <ResumePromoCard />}
+                        {index === 3 && <CommunityPromoCard />}
                       </React.Fragment>
                     ))}
                   </div>
@@ -404,33 +381,8 @@ const JobListings = () => {
               {jobs.map((job, index) => (
                 <React.Fragment key={job._id}>
                   <JobCard job={job} />
-                  {index === 1 && (
-                    <div className="card p-4 sm:p-5 bg-gradient-to-br from-emerald-950 via-slate-900 to-green-950 text-white flex flex-col justify-between border border-emerald-800/60 shadow-md relative overflow-hidden group">
-                      <div className="space-y-2.5">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold tracking-wider uppercase bg-amber-400/20 text-amber-300 border border-amber-400/30 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
-                            <Sparkles size={11} className="text-amber-400" /> Free Tool
-                          </span>
-                          <span className="text-[11px] text-emerald-300 font-semibold">ATS-Friendly</span>
-                        </div>
-                        <h3 className="font-display font-bold text-base text-white leading-snug">
-                          Need an Agriculture Resume That Stands Out?
-                        </h3>
-                        <p className="text-xs text-gray-300 leading-relaxed">
-                          Build a recruiter-ready CV tailored for ICAR, Agronomy, and AgriTech roles in 2 minutes.
-                        </p>
-                      </div>
-                      <div className="pt-3.5 mt-2 border-t border-white/10 flex items-center justify-between">
-                        <span className="text-[11px] text-gray-400">1-Click PDF Download</span>
-                        <Link
-                          to="/resume-builder"
-                          className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs py-1.5 px-3.5 rounded-lg font-bold shadow-xs whitespace-nowrap transition-colors"
-                        >
-                          Build Resume →
-                        </Link>
-                      </div>
-                    </div>
-                  )}
+                  {index === 1 && <ResumePromoCard />}
+                  {index === 4 && <CommunityPromoCard />}
                 </React.Fragment>
               ))}
             </div>

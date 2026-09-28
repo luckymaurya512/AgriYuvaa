@@ -6,6 +6,8 @@ import { useAuth } from "../context/AuthContext.jsx";
 import { fetchSeekerProfile } from "../services/userService.js";
 import { toggleFollowEmployer, enablePushNotifications } from "../services/notificationService.js";
 import SEO from "../components/SEO.jsx";
+import ResumePromoCard from "../components/ResumePromoCard.jsx";
+import CommunityPromoCard from "../components/CommunityPromoCard.jsx";
 
 const Employers = () => {
   const { user } = useAuth();
@@ -173,6 +175,20 @@ const Employers = () => {
         {employers.length === 0 && (
           <p className="text-sm text-brand-grey col-span-3">No verified employers yet.</p>
         )}
+      </div>
+
+      {/* 🌟 Promo Cards: Community & Resume Builder */}
+      <div className="grid md:grid-cols-2 gap-5 mt-10 pt-8 border-t border-brand-border">
+        <CommunityPromoCard
+          variant="compact"
+          title="Connect with Hiring Companies on WhatsApp"
+          subtitle="Join 15,000+ students and professionals in India's leading Agriculture community."
+        />
+        <ResumePromoCard
+          variant="compact"
+          title="Apply to Top Agribusinesses"
+          description="Build an ATS-optimized agriculture resume that recruiters from leading agritech and farm enterprises love."
+        />
       </div>
     </div>
   );

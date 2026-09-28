@@ -31,6 +31,8 @@ import { useAuth } from "../context/AuthContext.jsx";
 import WhatsAppIcon from "../components/WhatsAppIcon.jsx";
 import GovtJobCard from "../components/GovtJobCard.jsx";
 import SEO from "../components/SEO.jsx";
+import ResumePromoCard from "../components/ResumePromoCard.jsx";
+import CommunityPromoCard from "../components/CommunityPromoCard.jsx";
 
 const slugify = (text) =>
   (text || "")
@@ -478,6 +480,20 @@ const GovtJobDetail = () => {
                 </span>
               </div>
             </div>
+
+        {/* 🌟 Promo Cards: WhatsApp Community & Resume Builder */}
+        <div className="grid md:grid-cols-2 gap-4 mt-6">
+          <CommunityPromoCard
+            variant="compact"
+            title="Instant Govt Exam & Job Alerts"
+            subtitle="Get ICAR, IBPS AFO, and State PSC syllabus, exam dates & answer keys on WhatsApp."
+          />
+          <ResumePromoCard
+            variant="compact"
+            title="Preparing for Agriculture Interviews?"
+            description="Build a recruiter-ready CV formatted for ICAR, NABARD, and Agriculture research positions in 2 minutes."
+          />
+        </div>
 
         {/* ── MORE JOBS SECTION ── */}
         <div className="mt-12 pt-8 border-t border-brand-border space-y-6">

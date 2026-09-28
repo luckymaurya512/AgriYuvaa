@@ -24,6 +24,8 @@ import { calculateProfileCompletion } from "../../utils/profileCompletion.js";
 import { toggleFollowEmployer } from "../../services/notificationService.js";
 import JobCard from "../../components/JobCard.jsx";
 import SEO from "../../components/SEO.jsx";
+import ResumePromoCard from "../../components/ResumePromoCard.jsx";
+import CommunityPromoCard from "../../components/CommunityPromoCard.jsx";
 
 const statusColors = {
   applied: "bg-blue-100 text-blue-700",
@@ -216,6 +218,20 @@ const SeekerDashboard = () => {
           </p>
           <p className="text-2xl sm:text-3xl font-display font-bold mt-1.5 text-brand-black">{followedEmployers.length}</p>
         </div>
+      </div>
+
+      {/* 🌟 Promo Cards: Resume Builder & WhatsApp Community */}
+      <div className="grid md:grid-cols-2 gap-4 mb-6">
+        <ResumePromoCard
+          variant="compact"
+          title="Keep Your Agriculture Resume Updated"
+          description="Update your ATS resume with your latest crop skills, degrees, and experience to get noticed by recruiters."
+        />
+        <CommunityPromoCard
+          variant="compact"
+          title="Join Our WhatsApp Job Community"
+          subtitle="Get instant daily alerts for private & govt agriculture vacancies directly on WhatsApp."
+        />
       </div>
 
       {/* Tab Navigation */}
