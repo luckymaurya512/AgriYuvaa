@@ -755,22 +755,18 @@ const JobDetails = () => {
                 </div>
               </div>
 
-              {/* Action Button: Opens Gmail App on phone, Web Gmail on desktop */}
+              {/* Action Button: Single button that opens Gmail app on phone, and Web Gmail on desktop */}
               <div className="pt-2">
-                {/* Phone / Small Screen (md:hidden): Opens Gmail / native Mail app directly */}
                 <a
                   href={mailtoLink}
-                  className="btn-primary w-full text-center flex items-center justify-center gap-2 py-3 text-sm font-bold shadow-xs md:hidden"
-                >
-                  <Mail size={17} /> Apply Now
-                </a>
-
-                {/* Large Screen / Desktop (hidden md:flex): Opens Web Gmail in browser */}
-                <a
-                  href={gmailWebLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-primary w-full text-center items-center justify-center gap-2 py-3 text-sm font-bold shadow-xs hidden md:flex"
+                  onClick={(e) => {
+                    const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || "");
+                    if (!isMobile) {
+                      e.preventDefault();
+                      window.open(gmailWebLink, "_blank", "noopener,noreferrer");
+                    }
+                  }}
+                  className="btn-primary w-full text-center flex items-center justify-center gap-2 py-3 text-sm font-bold shadow-xs cursor-pointer"
                 >
                   <Mail size={17} /> Apply Now
                 </a>
