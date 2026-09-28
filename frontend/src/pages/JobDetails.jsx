@@ -335,7 +335,7 @@ const JobDetails = () => {
     ? `${window.location.origin}/jobs/${job._id}`
     : `https://job.agriyuvaa.com/jobs/${job._id}`;
 
-  const emailBody = `Dear Hiring Team at ${companyDisplayName},\n\nI am writing to apply for the "${job.title}" position at ${companyDisplayName} via Agriyuvaa Job Portal.\n\nPlease find attached my resume for your review and consideration.\n\nApplicant Details:\n- Name: ${user?.name || "Candidate"}\n- Email: ${user?.email || ""}${candidatePhone}${resumeRef}\n\nThank you for your time and consideration.\n\nBest regards,\n${user?.name || "Candidate"}\nApplied through Agriyuvaa job portal (${currentJobUrl})`;
+  const emailBody = `Dear Hiring Team at ${companyDisplayName},\n\nI am writing to apply for the "${job.title}" position at ${companyDisplayName}.\n\nPlease find attached my resume for your review and consideration.\n\nApplicant Details:\n- Name: ${user?.name || "Candidate"}\n- Email: ${user?.email || ""}${candidatePhone}${resumeRef}\n\nThank you for your time and consideration.\n\nBest regards,\n${user?.name || "Candidate"}\nApplied through Agriyuvaa job portal (${currentJobUrl})\n\n🌱 AgriYuvaa — India's Agriculture Career Platform (https://job.agriyuvaa.com)`;
 
   const platformCcEmail = import.meta.env.VITE_PLATFORM_CC_EMAIL || "agriyuvaa@gmail.com";
 

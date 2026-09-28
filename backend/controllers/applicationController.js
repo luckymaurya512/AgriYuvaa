@@ -53,7 +53,7 @@ export const applyToJob = asyncHandler(async (req, res) => {
           <div style="background: #047857; color: white; padding: 12px 18px; border-radius: 8px; margin-bottom: 20px;">
             <h2 style="margin: 0; font-size: 18px;">New Job Application Received</h2>
           </div>
-          <p style="font-size: 14px;">A new candidate has applied for the <strong>${jobWithEmployer.title}</strong> position at <strong>${companyDisplayName}</strong> via Agriyuvaa Job Portal.</p>
+          <p style="font-size: 14px;">A new candidate has applied for the <strong>${jobWithEmployer.title}</strong> position at <strong>${companyDisplayName}</strong>.</p>
           
           <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px; margin: 16px 0;">
             <p style="margin: 0 0 6px 0; font-size: 13px;"><strong>Applicant:</strong> ${candidateName}</p>
@@ -72,9 +72,27 @@ export const applyToJob = asyncHandler(async (req, res) => {
             <p style="margin: 0; font-size: 13px; color: #14532d;">${req.body.coverNote}</p>
           </div>` : ""}
 
-          <div style="margin-top: 28px; padding-top: 16px; border-top: 1px solid #e5e7eb; font-size: 13px;">
-            <p style="margin: 0; font-weight: bold; color: #111827;">${candidateName}</p>
-            <p style="margin: 4px 0 0 0; color: #4b5563;">Applied through Agriyuvaa job portal (<a href="${jobLink}" style="color: #047857; text-decoration: underline;">${jobLink}</a>)</p>
+          <div style="margin-top: 28px; padding-top: 20px; border-top: 1px solid #e5e7eb; font-size: 13px;">
+            <p style="margin: 0; font-weight: bold; color: #111827; font-size: 14px;">${candidateName}</p>
+            <p style="margin: 4px 0 16px 0; color: #4b5563;">
+              Applied through Agriyuvaa job portal (<a href="${jobLink}" style="color: #047857; text-decoration: underline;">${jobLink}</a>)
+            </p>
+
+            <!-- AgriYuvaa Official Signature Badge -->
+            <table cellpadding="0" cellspacing="0" border="0" style="margin-top: 14px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 12px 16px; width: 100%;">
+              <tr>
+                <td style="width: 52px; vertical-align: middle; padding-right: 14px;">
+                  <img src="https://job.agriyuvaa.com/logo.png" alt="AgriYuvaa" width="48" height="48" style="display: block; border-radius: 8px; object-fit: contain;" />
+                </td>
+                <td style="vertical-align: middle;">
+                  <div style="font-weight: bold; color: #065f46; font-size: 14px; line-height: 1.2;">AgriYuvaa Job Portal</div>
+                  <div style="font-size: 12px; color: #047857; margin-top: 2px;">India's Premier Agriculture Career & Hiring Network</div>
+                  <div style="font-size: 11px; margin-top: 4px;">
+                    <a href="https://job.agriyuvaa.com" style="color: #059669; text-decoration: none; font-weight: 600;">https://job.agriyuvaa.com</a>
+                  </div>
+                </td>
+              </tr>
+            </table>
           </div>
         </div>
       `;
