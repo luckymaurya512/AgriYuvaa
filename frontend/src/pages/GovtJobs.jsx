@@ -633,10 +633,11 @@ const GovtJobs = () => {
                   )}
                 </div>
               </div>
-            </React.Fragment>
-          ))}
-        </div>
-      )}
+            </div>
+          </React.Fragment>
+        ))}
+      </div>
+    )}
 
       {/* ── CREATE / EDIT GOVT VACANCY MODAL (ADMIN ONLY) ── */}
       {showModal && (
