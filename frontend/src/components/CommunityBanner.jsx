@@ -92,10 +92,9 @@ const CommunityBanner = () => {
           {/* Left Text & CTA Section */}
           <div className="lg:col-span-6 space-y-4 sm:space-y-6">
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-display font-black tracking-tight leading-[1.15] text-white">
-              Join India's fastest <br className="hidden sm:inline" />
-              growing <br className="hidden sm:inline" />
+              Join India's best <br className="hidden sm:inline" />
               agriculture <br className="hidden sm:inline" />
-              <span className="text-[#fca34d]">student </span>
+              {/* <span className="text-[#fca34d]">student </span> */}
               <span className="text-[#fca34d]">community.</span>
             </h2>
 

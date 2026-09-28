@@ -564,7 +564,7 @@ const ResumeBuilder = () => {
                 </>
               ) : (
                 <>
-                  <CheckCircle2 size={14} /> Done / Submit Resume ✅
+                  <CheckCircle2 size={14} /> Save Resume
                 </>
               )}
             </button>
@@ -1211,7 +1211,7 @@ const ResumeBuilder = () => {
                     Finished your Resume Draft?
                   </h3>
                   <p className="text-xs text-emerald-800/90 mt-0.5 leading-relaxed">
-                    Click <strong>Submit & Save</strong> below to attach this resume to your profile and start applying for agriculture jobs.
+                    Click <strong>Save Resume</strong> below to attach this resume to your profile and start applying for agriculture jobs.
                   </p>
                 </div>
               </div>
@@ -1229,7 +1229,7 @@ const ResumeBuilder = () => {
                     </>
                   ) : (
                     <>
-                      <CheckCircle2 size={16} /> Submit / Done (Save to Profile) ✅
+                      <CheckCircle2 size={16} /> Save Resume
                     </>
                   )}
                 </button>
