@@ -7,17 +7,9 @@ import {
   BookOpen,
   Compass,
   Newspaper,
-  Target,
-  Award,
-  Sparkles,
-  ArrowRight,
   CheckCircle2,
-  Users,
 } from "lucide-react";
 import SEO from "../components/SEO.jsx";
-import ResumePromoCard from "../components/ResumePromoCard.jsx";
-import CommunityPromoCard from "../components/CommunityPromoCard.jsx";
-import CommunityBanner from "../components/CommunityBanner.jsx";
 
 const whatWeOfferList = [
   {
@@ -109,23 +101,6 @@ const About = () => {
             As agriculture continues to evolve through agri-tech, agribusiness, horticulture, food processing, biotechnology, and digital agriculture, AgriYuvaa connects young talent with relevant jobs, internships, learning opportunities, career guidance, and industry exposure.
           </p>
 
-          <div className="pt-4 flex flex-wrap items-center justify-center gap-3">
-            <Link
-              to="/jobs"
-              className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-6 py-3 rounded-xl transition-all shadow-md text-xs sm:text-sm flex items-center gap-2 cursor-pointer"
-            >
-              <span>Explore Jobs & Internships</span>
-              <ArrowRight size={15} />
-            </Link>
-
-            <Link
-              to="/resume-builder"
-              className="bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold px-6 py-3 rounded-xl transition-all text-xs sm:text-sm flex items-center gap-2 cursor-pointer"
-            >
-              <Sparkles size={15} className="text-amber-400" />
-              <span>Build Free Resume</span>
-            </Link>
-          </div>
         </div>
       </section>
 
@@ -221,99 +196,6 @@ const About = () => {
           </div>
         </section>
 
-        {/* ── OUR VISION & MISSION ── */}
-        <section className="grid md:grid-cols-2 gap-6">
-          <div className="card p-6 sm:p-8 border border-emerald-200/80 bg-emerald-50/30 rounded-3xl space-y-4 shadow-xs">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shadow-xs">
-              <Target size={24} />
-            </div>
-            <div>
-              <h3 className="font-display font-bold text-xl text-brand-black">Our Vision</h3>
-              <p className="text-xs sm:text-sm text-brand-grey mt-2 leading-relaxed">
-                To build an accessible and connected career ecosystem for the next generation of agriculture professionals.
-              </p>
-            </div>
-          </div>
-
-          <div className="card p-6 sm:p-8 border border-amber-200/80 bg-amber-50/30 rounded-3xl space-y-4 shadow-xs">
-            <div className="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center shadow-xs">
-              <Award size={24} />
-            </div>
-            <div>
-              <h3 className="font-display font-bold text-xl text-brand-black">Our Mission</h3>
-              <p className="text-xs sm:text-sm text-brand-grey mt-2 leading-relaxed">
-                To connect, inform, and empower agriculture youth through access to jobs, internships, learning opportunities, career resources, and industry exposure.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* ── PROMO HIGHLIGHT: COMMUNITY & RESUME BUILDER ── */}
-        <section className="space-y-6">
-          <div className="text-center max-w-2xl mx-auto space-y-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100/70 border border-emerald-200 px-3 py-0.5 rounded-full inline-block">
-              Free Platform Tools & Network
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-display font-bold text-brand-black">
-              Accelerate Your Agricultural Career
-            </h2>
-            <p className="text-xs sm:text-sm text-brand-grey">
-              Take advantage of our community channels and free resume builder to stay ahead of opportunities.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-6">
-            <CommunityPromoCard
-              variant="grid"
-              title="Join India's Best Agriculture Community"
-              subtitle="Connect with 15,000+ students and professionals. Get instant daily job notifications, ICAR exam study materials, and direct updates on WhatsApp."
-            />
-            <ResumePromoCard
-              variant="grid"
-              title="Build an ATS-Friendly Agriculture CV"
-              description="Craft a standout resume tailored for agronomy, farm management, ICAR research, and agritech roles in 2 minutes with free instant PDF download."
-            />
-          </div>
-        </section>
-
-        {/* ── FULL COMMUNITY BANNER ── */}
-        <section>
-          <CommunityBanner />
-        </section>
-
-        {/* ── BE PART OF AGRIYUVAA (CALLOUT) ── */}
-        <section className="card p-8 sm:p-12 text-center bg-gradient-to-r from-emerald-900 via-slate-900 to-green-950 text-white rounded-3xl space-y-5 shadow-xl border border-emerald-800">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold uppercase tracking-wider">
-            <span>🌱 Be Part of AgriYuvaa</span>
-          </div>
-
-          <h2 className="text-3xl sm:text-4xl font-display font-extrabold text-white">
-            Learn. Connect. Explore. Grow.
-          </h2>
-
-          <p className="text-sm sm:text-base text-gray-300 max-w-xl mx-auto leading-relaxed">
-            Join AgriYuvaa and discover opportunities that can help you build a rewarding career in agriculture.
-          </p>
-
-          <p className="text-lg sm:text-xl font-display font-bold text-[#fca34d]">
-            Your Career in Agriculture Starts Here.
-          </p>
-
-          <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
-            <Link
-              to="/register"
-              className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-7 py-3 rounded-xl transition-all shadow-md text-xs sm:text-sm cursor-pointer"
-            >
-              Get Started for Free →
-            </Link>
-            <Link
-              to="/jobs"
-              className="bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold px-6 py-3 rounded-xl transition-all text-xs sm:text-sm cursor-pointer"
-            >
-              Browse Openings
-            </Link>
-          </div>
-        </section>
       </div>
     </div>
   );
