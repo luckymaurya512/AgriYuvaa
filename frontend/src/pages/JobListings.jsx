@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { SlidersHorizontal, Search, MapPin, X, RotateCcw, Sparkles } from "lucide-react";
+import { SlidersHorizontal, Search, MapPin, X, RotateCcw, Sparkles, AlertCircle } from "lucide-react";
 import { fetchJobs, fetchCategories } from "../services/jobService.js";
 import JobCard from "../components/JobCard.jsx";
 import SEO from "../components/SEO.jsx";
@@ -22,6 +22,7 @@ const experienceFilterOptions = [
 const JobListings = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [jobs, setJobs] = useState([]);
+  const [otherJobs, setOtherJobs] = useState([]);
   const [categories, setCategories] = useState([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -63,11 +64,28 @@ const JobListings = () => {
       page,
     })
       .then((data) => {
-        setJobs(data.jobs || []);
+        const fetchedJobs = data.jobs || [];
+        setJobs(fetchedJobs);
         setTotal(data.total || 0);
         setPages(data.pages || 1);
+
+        if (fetchedJobs.length === 0) {
+          // If no matching jobs found for search/filter, fetch other available jobs
+          fetchJobs({ limit: 8, sort: "-isFeatured -createdAt" })
+            .then((fallbackData) => {
+              setOtherJobs(fallbackData.jobs || []);
+            })
+            .catch(() => setOtherJobs([]));
+        } else {
+          setOtherJobs([]);
+        }
       })
-      .catch(() => setJobs([]))
+      .catch(() => {
+        setJobs([]);
+        fetchJobs({ limit: 8, sort: "-isFeatured -createdAt" })
+          .then((fallbackData) => setOtherJobs(fallbackData.jobs || []))
+          .catch(() => setOtherJobs([]));
+      })
       .finally(() => setLoading(false));
   }, [searchParams, page, currentKeyword, currentLocation, currentCategory, currentEmploymentType, currentExperienceLevel]);
 
@@ -127,7 +145,11 @@ const JobListings = () => {
         <div>
           <h1 className="text-xl sm:text-2xl font-display font-bold mb-1">Browse Agriculture Jobs</h1>
           <p className="text-xs sm:text-sm text-brand-grey">
-            {loading ? "Searching opportunities..." : `${total} opportunities available right now`}
+            {loading
+              ? "Searching opportunities..."
+              : total === 0 && otherJobs.length > 0
+              ? `0 direct matches (Showing ${otherJobs.length} recommended opportunities below)`
+              : `${total} opportunities available right now`}
           </p>
         </div>
 
@@ -292,13 +314,89 @@ const JobListings = () => {
               <span>Searching jobs...</span>
             </div>
           ) : jobs.length === 0 ? (
-            <div className="py-24 text-center text-brand-grey card p-8">
-              <p className="text-base font-semibold text-brand-black mb-1">No jobs match your search</p>
-              <p className="text-sm text-brand-grey mb-4">Try adjusting your keywords or clearing some filters.</p>
-              {hasActiveFilters && (
-                <button onClick={clearAllFilters} className="btn-secondary text-xs">
-                  Reset All Filters
-                </button>
+            <div className="space-y-6">
+              {/* Informative Alert Banner */}
+              <div className="p-4 sm:p-5 bg-amber-50/80 border border-amber-200/90 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-amber-950 font-bold text-sm sm:text-base">
+                    <AlertCircle size={18} className="text-amber-600 shrink-0" />
+                    <span>
+                      No matching jobs found {currentKeyword ? `for "${currentKeyword}"` : "for your selected filters"}
+                    </span>
+                  </div>
+                  <p className="text-xs sm:text-sm text-amber-900/80">
+                    {otherJobs.length > 0
+                      ? "Don't worry! Here are other active agriculture jobs and openings you can explore below:"
+                      : "Try adjusting your search keywords, location, or clearing some filters."}
+                  </p>
+                </div>
+                {hasActiveFilters && (
+                  <button
+                    onClick={clearAllFilters}
+                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-amber-100/50 border border-amber-300 text-amber-900 text-xs font-bold transition-all shadow-2xs shrink-0 cursor-pointer"
+                  >
+                    <RotateCcw size={14} /> Clear All Filters
+                  </button>
+                )}
+              </div>
+
+              {/* Other Recommended Jobs Grid */}
+              {otherJobs.length > 0 ? (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-base sm:text-lg font-display font-bold text-brand-black flex items-center gap-2">
+                      <Sparkles size={18} className="text-brand-green" /> Other Agriculture Jobs
+                    </h3>
+                    <span className="text-xs text-brand-grey font-medium">
+                      Showing {otherJobs.length} recommendations
+                    </span>
+                  </div>
+
+                  <div className="grid sm:grid-cols-2 gap-5">
+                    {otherJobs.map((job, index) => (
+                      <React.Fragment key={job._id}>
+                        <JobCard job={job} />
+                        {index === 1 && (
+                          <div className="card p-4 sm:p-5 bg-gradient-to-br from-emerald-950 via-slate-900 to-green-950 text-white flex flex-col justify-between border border-emerald-800/60 shadow-md relative overflow-hidden group">
+                            <div className="space-y-2.5">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-bold tracking-wider uppercase bg-amber-400/20 text-amber-300 border border-amber-400/30 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                                  <Sparkles size={11} className="text-amber-400" /> Free Tool
+                                </span>
+                                <span className="text-[11px] text-emerald-300 font-semibold">ATS-Friendly</span>
+                              </div>
+                              <h3 className="font-display font-bold text-base text-white leading-snug">
+                                Need an Agriculture Resume That Stands Out?
+                              </h3>
+                              <p className="text-xs text-gray-300 leading-relaxed">
+                                Build a recruiter-ready CV tailored for ICAR, Agronomy, and AgriTech roles in 2 minutes.
+                              </p>
+                            </div>
+                            <div className="pt-3.5 mt-2 border-t border-white/10 flex items-center justify-between">
+                              <span className="text-[11px] text-gray-400">1-Click PDF Download</span>
+                              <Link
+                                to="/resume-builder"
+                                className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs py-1.5 px-3.5 rounded-lg font-bold shadow-xs whitespace-nowrap transition-colors"
+                              >
+                                Build Resume →
+                              </Link>
+                            </div>
+                          </div>
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="py-20 text-center text-brand-grey card p-8">
+                  <p className="text-base font-semibold text-brand-black mb-1">No jobs match your search</p>
+                  <p className="text-sm text-brand-grey mb-4">Try adjusting your keywords or clearing some filters.</p>
+                  {hasActiveFilters && (
+                    <button onClick={clearAllFilters} className="btn-secondary text-xs">
+                      Reset All Filters
+                    </button>
+                  )}
+                </div>
               )}
             </div>
           ) : (

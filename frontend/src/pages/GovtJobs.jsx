@@ -80,6 +80,7 @@ const GovtJobs = () => {
   const isAdmin = user?.role === "admin" || user?.role === "superadmin";
 
   const [jobs, setJobs] = useState([]);
+  const [otherJobs, setOtherJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -103,9 +104,38 @@ const GovtJobs = () => {
           search: search.trim() || undefined,
         },
       })
-      .then((res) => setJobs(res.data))
-      .catch(() => setJobs([]))
+      .then((res) => {
+        const list = Array.isArray(res.data) ? res.data : [];
+        setJobs(list);
+        if (list.length === 0) {
+          api
+            .get("/govt-jobs")
+            .then((fallbackRes) => {
+              const allList = Array.isArray(fallbackRes.data) ? fallbackRes.data : [];
+              setOtherJobs(allList.slice(0, 6));
+            })
+            .catch(() => setOtherJobs([]));
+        } else {
+          setOtherJobs([]);
+        }
+      })
+      .catch(() => {
+        setJobs([]);
+        api
+          .get("/govt-jobs")
+          .then((fallbackRes) => {
+            const allList = Array.isArray(fallbackRes.data) ? fallbackRes.data : [];
+            setOtherJobs(allList.slice(0, 6));
+          })
+          .catch(() => setOtherJobs([]));
+      })
       .finally(() => setLoading(false));
+  };
+
+  const handleClearFilters = () => {
+    setSelectedCategory("All");
+    setSelectedQual("All");
+    setSearch("");
   };
 
   const [searchParams] = useSearchParams();
@@ -337,7 +367,15 @@ const GovtJobs = () => {
       {/* Results Header */}
       <div className="flex items-center justify-between mb-6">
         <p className="text-sm font-semibold text-brand-grey">
-          Showing <span className="text-brand-black font-bold">{jobs.length}</span> Government Opportunities
+          {jobs.length === 0 && otherJobs.length > 0 ? (
+            <>
+              0 direct matches (<span className="text-brand-black font-bold">Showing {otherJobs.length}</span> other government notifications)
+            </>
+          ) : (
+            <>
+              Showing <span className="text-brand-black font-bold">{jobs.length}</span> Government Opportunities
+            </>
+          )}
         </p>
         <div className="flex items-center gap-2 text-xs text-brand-grey">
           <Bell size={14} className="text-amber-600" /> Notifications are verified from official government gazettes
@@ -347,7 +385,7 @@ const GovtJobs = () => {
       {/* Job Cards Grid */}
       {loading ? (
         <div className="py-20 text-center text-sm text-brand-grey">Loading government notifications...</div>
-      ) : jobs.length === 0 ? (
+      ) : jobs.length === 0 && otherJobs.length === 0 ? (
         <div className="card p-12 text-center space-y-3">
           <Landmark size={36} className="mx-auto text-gray-400" />
           <h3 className="font-display font-bold text-base text-gray-900">No matching government jobs found</h3>
@@ -355,7 +393,29 @@ const GovtJobs = () => {
         </div>
       ) : (
         <div className="grid gap-6">
-          {jobs.map((job) => (
+          {jobs.length === 0 && otherJobs.length > 0 && (
+            <div className="p-4 sm:p-5 bg-amber-50/80 border border-amber-200/90 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-amber-950 font-bold text-sm sm:text-base">
+                  <AlertCircle size={18} className="text-amber-600 shrink-0" />
+                  <span>
+                    No direct matches found {search.trim() ? `for "${search.trim()}"` : "for your selected filters"}
+                  </span>
+                </div>
+                <p className="text-xs sm:text-sm text-amber-900/80">
+                  Don't worry! Here are other active government agriculture job notifications and exams you can apply for:
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleClearFilters}
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-amber-100/50 border border-amber-300 text-amber-900 text-xs font-bold transition-all shadow-2xs shrink-0 cursor-pointer"
+              >
+                Clear All Filters
+              </button>
+            </div>
+          )}
+          {(jobs.length > 0 ? jobs : otherJobs).map((job) => (
             <div
               key={job._id}
               id={`govt-job-${job._id}`}
