@@ -10,15 +10,22 @@ const categories = [
   { name: "Farming & Crop Production", slug: "farming-crop-production", icon: "wheat" },
   { name: "Livestock & Dairy", slug: "livestock-dairy", icon: "cow" },
   { name: "Agri-Tech & Engineering", slug: "agri-tech-engineering", icon: "cpu" },
-  { name: "Food Processing", slug: "food-processing", icon: "factory" },
+  { name: "Food Processing", slug: "food-processing", icon: "utensils" },
   { name: "Horticulture", slug: "horticulture", icon: "flower" },
-  { name: "Forestry", slug: "forestry", icon: "tree" },
   { name: "Agri-Business & Sales", slug: "agri-business-sales", icon: "briefcase" },
   { name: "Government / NGO Agri Jobs", slug: "government-ngo-agri-jobs", icon: "landmark" },
 ];
 
 const run = async () => {
   await connectDB();
+
+  // Purge removed categories: IT, Forestry, Factory
+  await Category.deleteMany({
+    $or: [
+      { name: { $regex: /^(it|information\s*technology|forest(ry|ory)|factory)$/i } },
+      { slug: { $in: ["it", "information-technology", "forestry", "forestory", "factory"] } },
+    ],
+  });
 
   for (const c of categories) {
     await Category.updateOne({ slug: c.slug }, { $set: c }, { upsert: true });

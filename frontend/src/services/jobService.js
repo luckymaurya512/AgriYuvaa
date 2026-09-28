@@ -12,7 +12,17 @@ export const createJob = (payload) => api.post("/jobs", payload).then((r) => r.d
 export const updateJob = (id, payload) => api.patch(`/jobs/${id}`, payload).then((r) => r.data);
 export const deleteJob = (id) => api.delete(`/jobs/${id}`).then((r) => r.data);
 
-export const fetchCategories = () => api.get("/categories").then((r) => r.data);
+const EXCLUDED_CATEGORIES = ["it", "information technology", "forestry", "forestory", "factory"];
+
+export const fetchCategories = () =>
+  api.get("/categories").then((r) => {
+    const list = Array.isArray(r.data) ? r.data : [];
+    return list.filter((c) => {
+      const name = (c.name || "").toLowerCase().trim();
+      const slug = (c.slug || "").toLowerCase().trim();
+      return !EXCLUDED_CATEGORIES.some((exc) => name === exc || slug === exc);
+    });
+  });
 export const createCustomCategory = (name) => api.post("/categories/custom", { name }).then((r) => r.data);
 
 export const applyToJob = (jobId, payload) =>

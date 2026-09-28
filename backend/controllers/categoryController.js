@@ -1,9 +1,26 @@
 import asyncHandler from "express-async-handler";
 import Category from "../models/Category.js";
 
+const EXCLUDED_CATEGORY_REGEX = /^(it|information\s*technology|forest(ry|ory)|factory)$/i;
+
 // @route GET /api/categories
 export const getCategories = asyncHandler(async (req, res) => {
-  const categories = await Category.find().sort("name");
+  try {
+    // Purge removed categories from DB
+    await Category.deleteMany({
+      $or: [
+        { name: { $regex: EXCLUDED_CATEGORY_REGEX } },
+        { slug: { $in: ["it", "information-technology", "forestry", "forestory", "factory"] } },
+      ],
+    });
+  } catch (err) {
+    // Non-blocking cleanup
+  }
+
+  const categories = await Category.find({
+    name: { $not: EXCLUDED_CATEGORY_REGEX },
+    slug: { $nin: ["it", "information-technology", "forestry", "forestory", "factory"] },
+  }).sort("name");
   res.json(categories);
 });
 
@@ -16,6 +33,11 @@ export const createCustomCategory = asyncHandler(async (req, res) => {
   }
 
   const trimmedName = name.trim();
+  if (EXCLUDED_CATEGORY_REGEX.test(trimmedName)) {
+    res.status(400);
+    throw new Error(`The category "${trimmedName}" is not allowed.`);
+  }
+
   let existing = await Category.findOne({ name: { $regex: `^${trimmedName}$`, $options: "i" } });
   if (existing) {
     return res.status(200).json(existing);

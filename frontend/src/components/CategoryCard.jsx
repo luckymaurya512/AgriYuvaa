@@ -25,7 +25,16 @@ const formatCategoryName = (name = "") => {
   return trimmed;
 };
 
+const EXCLUDED_CATEGORIES = ["it", "information technology", "forestry", "forestory", "factory"];
+
 const CategoryCard = ({ category }) => {
+  if (!category) return null;
+  const normName = (category.name || "").toLowerCase().trim();
+  const normSlug = (category.slug || "").toLowerCase().trim();
+  if (EXCLUDED_CATEGORIES.includes(normName) || EXCLUDED_CATEGORIES.includes(normSlug)) {
+    return null;
+  }
+
   const iconKey = (category.icon || category.slug || category.name || "").toLowerCase().trim();
   const Icon = iconMap[iconKey] || (iconKey === "it" || iconKey.includes("tech") ? Laptop : Leaf);
   const displayName = formatCategoryName(category.name);
