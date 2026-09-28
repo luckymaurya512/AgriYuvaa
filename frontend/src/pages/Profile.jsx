@@ -15,6 +15,7 @@ import {
   AlertCircle,
   Upload,
   Eye,
+  EyeOff,
   Download,
   Loader2,
   Sparkles,
@@ -141,6 +142,9 @@ const Profile = () => {
     confirmPassword: "",
   });
   const [passwordSaving, setPasswordSaving] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const loadData = async () => {
     try {
@@ -1244,15 +1248,23 @@ const Profile = () => {
               <div className="relative">
                 <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-grey pointer-events-none" />
                 <input
-                  type="password"
+                  type={showCurrentPassword ? "text" : "password"}
                   required
                   value={passwordData.currentPassword}
                   onChange={(e) =>
                     setPasswordData({ ...passwordData, currentPassword: e.target.value })
                   }
-                  className="input-field !pl-10 text-xs sm:text-sm"
+                  className="input-field !pl-10 !pr-10 text-xs sm:text-sm"
                   placeholder="Enter your existing password"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 p-1 focus:outline-none cursor-pointer transition-colors"
+                  title={showCurrentPassword ? "Hide password" : "Show password"}
+                >
+                  {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
               </div>
             </div>
 
@@ -1263,16 +1275,24 @@ const Profile = () => {
               <div className="relative">
                 <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-grey pointer-events-none" />
                 <input
-                  type="password"
+                  type={showNewPassword ? "text" : "password"}
                   required
                   minLength={6}
                   value={passwordData.newPassword}
                   onChange={(e) =>
                     setPasswordData({ ...passwordData, newPassword: e.target.value })
                   }
-                  className="input-field !pl-10 text-xs sm:text-sm"
+                  className="input-field !pl-10 !pr-10 text-xs sm:text-sm"
                   placeholder="Minimum 6 characters"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 p-1 focus:outline-none cursor-pointer transition-colors"
+                  title={showNewPassword ? "Hide password" : "Show password"}
+                >
+                  {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
               </div>
             </div>
 
@@ -1283,16 +1303,24 @@ const Profile = () => {
               <div className="relative">
                 <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-grey pointer-events-none" />
                 <input
-                  type="password"
+                  type={showConfirmPassword ? "text" : "password"}
                   required
                   minLength={6}
                   value={passwordData.confirmPassword}
                   onChange={(e) =>
                     setPasswordData({ ...passwordData, confirmPassword: e.target.value })
                   }
-                  className="input-field !pl-10 text-xs sm:text-sm"
+                  className="input-field !pl-10 !pr-10 text-xs sm:text-sm"
                   placeholder="Re-enter your new password"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 p-1 focus:outline-none cursor-pointer transition-colors"
+                  title={showConfirmPassword ? "Hide password" : "Show password"}
+                >
+                  {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
               </div>
             </div>
 

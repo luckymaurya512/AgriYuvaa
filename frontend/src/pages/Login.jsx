@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
 import logo from "../assets/logo.png";
 import SEO from "../components/SEO.jsx";
@@ -19,6 +20,7 @@ const Login = () => {
   const [searchParams] = useSearchParams();
   const redirect = searchParams.get("redirect");
   const [form, setForm] = useState({ email: "", password: "" });
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -67,14 +69,24 @@ const Login = () => {
               Forgot password?
             </Link>
           </div>
-          <input
-            type="password"
-            required
-            placeholder="••••••••"
-            className="input-field mt-1 text-sm"
-            value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
-          />
+          <div className="relative mt-1">
+            <input
+              type={showPassword ? "text" : "password"}
+              required
+              placeholder="••••••••"
+              className="input-field !pr-10 text-sm"
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 p-1 focus:outline-none cursor-pointer transition-colors"
+              title={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
         </div>
         {error && <p className="text-xs text-red-600">{error}</p>}
         <button disabled={loading} type="submit" className="btn-primary w-full">
