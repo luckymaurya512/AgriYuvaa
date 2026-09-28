@@ -753,95 +753,14 @@ const JobDetails = () => {
                 </div>
               </div>
 
-              {/* CC Email Copy Box */}
-              <div>
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold text-brand-grey uppercase tracking-wide">
-                    CC Email Address
-                  </label>
-                  <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">
-                    Platform CC
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 mt-1 min-w-0">
-                  <input
-                    readOnly
-                    value={platformCcEmail}
-                    className="input-field text-sm font-medium bg-gray-50 flex-1 min-w-0 cursor-text select-all"
-                  />
-                  <button
-                    onClick={() => handleCopy(platformCcEmail, "cc")}
-                    className="btn-secondary text-xs px-3 py-2.5 shrink-0 flex items-center gap-1"
-                    title="Copy CC Email"
-                  >
-                    {copiedCc ? (
-                      <>
-                        <Check size={14} className="text-brand-green" /> Copied
-                      </>
-                    ) : (
-                      <>
-                        <Copy size={14} /> Copy
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* Subject Line Copy Box */}
-              <div>
-                <label className="text-xs font-semibold text-brand-grey uppercase tracking-wide">
-                  Recommended Subject Line
-                </label>
-                <div className="flex items-center gap-2 mt-1 min-w-0">
-                  <input
-                    readOnly
-                    value={defaultEmailSubject}
-                    className="input-field text-xs bg-gray-50 flex-1 min-w-0 cursor-text select-all"
-                  />
-                  <button
-                    onClick={() => handleCopy(defaultEmailSubject, "subject")}
-                    className="btn-secondary text-xs px-3 py-2.5 shrink-0 flex items-center gap-1"
-                    title="Copy Subject"
-                  >
-                    {copiedSubject ? (
-                      <>
-                        <Check size={14} className="text-brand-green" /> Copied
-                      </>
-                    ) : (
-                      <>
-                        <Copy size={14} /> Copy
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* Copy Full Email Body Button */}
-              <button
-                type="button"
-                onClick={() => handleCopy(emailBody, "body")}
-                className="w-full text-xs font-semibold py-2 px-3 rounded-lg border border-dashed border-brand-border hover:bg-gray-50 text-gray-700 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-                title="Copy complete pre-written email message"
-              >
-                {copiedBody ? (
-                  <>
-                    <Check size={14} className="text-brand-green" /> Email Message Copied!
-                  </>
-                ) : (
-                  <>
-                    <Copy size={14} /> Copy Full Email Body / Message
-                  </>
-                )}
-              </button>
-
-              {/* Action Button: Only one button shown - Opens Gmail App on phone, Web Gmail on desktop */}
-              <div className="pt-1">
+              {/* Action Button: Opens Gmail App on phone, Web Gmail on desktop */}
+              <div className="pt-2">
                 {/* Phone / Small Screen (md:hidden): Opens Gmail / native Mail app directly */}
                 <a
                   href={mailtoLink}
                   className="btn-primary w-full text-center flex items-center justify-center gap-2 py-3 text-sm font-bold shadow-xs md:hidden"
                 >
-                  <Mail size={17} /> Open in Gmail / Mail App
+                  <Mail size={17} /> Apply Now
                 </a>
 
                 {/* Large Screen / Desktop (hidden md:flex): Opens Web Gmail in browser */}
@@ -851,7 +770,7 @@ const JobDetails = () => {
                   rel="noopener noreferrer"
                   className="btn-primary w-full text-center items-center justify-center gap-2 py-3 text-sm font-bold shadow-xs hidden md:flex"
                 >
-                  <Mail size={17} /> Compose in Gmail (Web) ↗
+                  <Mail size={17} /> Apply Now
                 </a>
               </div>
             </div>
