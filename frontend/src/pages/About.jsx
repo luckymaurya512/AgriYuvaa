@@ -9,9 +9,18 @@ import {
   Newspaper,
   CheckCircle2,
   Sparkles,
+  UserPlus,
+  SearchCheck,
+  Handshake,
 } from "lucide-react";
 import SEO from "../components/SEO.jsx";
 import CommunityBanner from "../components/CommunityBanner.jsx";
+
+const steps = [
+  { icon: UserPlus, title: "Create Your Profile", desc: "Add your skills, education, and preferred agri sectors in minutes." },
+  { icon: SearchCheck, title: "Search & Apply", desc: "Filter jobs by crop, category, location, and employment type." },
+  { icon: Handshake, title: "Get Hired", desc: "Track your applications and connect directly with employers." },
+];
 
 const whatWeOfferList = [
   {
@@ -139,6 +148,37 @@ const About = () => {
                 Browse All Openings →
               </Link>
             </div>
+          </div>
+        </section>
+
+        {/* ── HOW AGRIYUVAA WORKS ── */}
+        <section className="card p-6 sm:p-10 lg:p-12 border border-brand-border bg-white rounded-3xl shadow-xs space-y-8">
+          <div className="text-center max-w-2xl mx-auto space-y-2">
+            <h2 className="text-2xl sm:text-3xl font-display font-bold text-brand-black">
+              How AgriYuvaa Works
+            </h2>
+            <p className="text-xs sm:text-sm text-brand-grey">
+              Get hired in India’s leading agriculture organizations in three simple steps.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6 sm:gap-8">
+            {steps.map((step, idx) => (
+              <div key={step.title} className="text-center relative">
+                <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-brand-black text-brand-green flex items-center justify-center mx-auto mb-4 shadow-sm">
+                  <step.icon size={26} className="text-emerald-400" />
+                </div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-2.5 py-0.5 rounded-full inline-block mb-1.5">
+                  Step 0{idx + 1}
+                </span>
+                <h3 className="font-display font-bold mb-1.5 text-base text-brand-black">
+                  {step.title}
+                </h3>
+                <p className="text-xs sm:text-sm text-brand-grey max-w-xs mx-auto leading-relaxed">
+                  {step.desc}
+                </p>
+              </div>
+            ))}
           </div>
         </section>
 
