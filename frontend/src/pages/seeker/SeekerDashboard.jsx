@@ -20,6 +20,7 @@ import { useAuth } from "../../context/AuthContext.jsx";
 import { fetchMyApplications } from "../../services/jobService.js";
 import { fetchSeekerProfile, toggleSaveJob, uploadSeekerResume } from "../../services/userService.js";
 import { getActiveResume } from "../../utils/resumeUtils.js";
+import { calculateProfileCompletion } from "../../utils/profileCompletion.js";
 import { toggleFollowEmployer } from "../../services/notificationService.js";
 import JobCard from "../../components/JobCard.jsx";
 import SEO from "../../components/SEO.jsx";
@@ -128,15 +129,62 @@ const SeekerDashboard = () => {
     }
   };
 
+  const completion = calculateProfileCompletion(user, profile);
+
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 w-full min-w-0">
       <SEO title="Job Seeker Dashboard" noindex={true} />
       <h1 className="text-2xl font-display font-bold mb-1">
         Welcome back, {user?.name?.split(" ")[0]}
       </h1>
-      <p className="text-sm text-brand-grey mb-8">
+      <p className="text-sm text-brand-grey mb-6">
         Track your job applications, saved postings, followed employers, and resume.
       </p>
+
+      {/* Profile Completion Callout */}
+      {completion.percentage < 100 && (
+        <div className="card p-4 sm:p-5 mb-8 border border-emerald-200 bg-gradient-to-r from-emerald-50/70 via-white to-emerald-50/30 shadow-xs rounded-2xl">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-xl bg-white border border-emerald-300 shadow-2xs flex items-center justify-center font-display font-black text-emerald-800 text-lg shrink-0">
+                {completion.percentage}%
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-display font-bold text-sm sm:text-base text-brand-black">
+                    Your Profile is {completion.percentage}% Complete
+                  </h3>
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                    {completion.statusLabel}
+                  </span>
+                </div>
+                <p className="text-xs text-brand-grey mt-0.5">
+                  Complete your Current CTC, Expected CTC & Notice Period to receive 3x more recruiter interview calls.
+                </p>
+              </div>
+            </div>
+            <Link
+              to="/profile"
+              className="btn-primary text-xs py-2 px-4 shrink-0 flex items-center justify-center gap-1.5 font-bold"
+            >
+              <span>Complete Profile (+{100 - completion.percentage}%)</span>
+              <ArrowRight size={14} />
+            </Link>
+          </div>
+          <div className="w-full bg-gray-100 rounded-full h-2 mt-3.5 overflow-hidden shadow-inner">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${
+                completion.percentage >= 80
+                  ? "bg-gradient-to-r from-emerald-500 to-green-600"
+                  : completion.percentage >= 50
+                  ? "bg-gradient-to-r from-teal-500 to-emerald-600"
+                  : "bg-gradient-to-r from-amber-500 to-orange-500"
+              }`}
+              style={{ width: `${completion.percentage}%` }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Top 4 Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">

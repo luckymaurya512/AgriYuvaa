@@ -306,7 +306,32 @@ export const listAllApplications = asyncHandler(async (req, res) => {
     });
   }
 
-  res.json(applications);
+  // Enrich with candidate profile details (CTC, Notice Period, Organization, etc.)
+  const seekerIds = applications.map((a) => a.seeker?._id).filter(Boolean);
+  const profiles = await SeekerProfile.find({ user: { $in: seekerIds } }).lean();
+  const profileMap = new Map(profiles.map((p) => [p.user.toString(), p]));
+
+  const enrichedApplications = applications.map((app) => {
+    const appObj = app.toObject ? app.toObject() : app;
+    if (appObj.seeker?._id) {
+      const sp = profileMap.get(appObj.seeker._id.toString());
+      if (sp) {
+        appObj.seekerProfile = {
+          currentOrganization: sp.currentOrganization || "",
+          currentDesignation: sp.currentDesignation || "",
+          currentCtc: sp.currentCtc || "",
+          expectedCtc: sp.expectedCtc || "",
+          noticePeriod: sp.noticePeriod || "",
+          location: sp.location || "",
+          highestQualification: sp.highestQualification || "",
+          totalExperience: sp.totalExperience || "",
+        };
+      }
+    }
+    return appObj;
+  });
+
+  res.json(enrichedApplications);
 });
 
 // @desc  List pending job postings

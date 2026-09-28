@@ -141,7 +141,32 @@ export const getApplicationsForJob = asyncHandler(async (req, res) => {
     .populate("seeker", "name email phone")
     .sort("-createdAt");
 
-  res.json(applications);
+  // Enrich with seeker profile details (current CTC, expected CTC, notice period, organization)
+  const seekerIds = applications.map((a) => a.seeker?._id).filter(Boolean);
+  const profiles = await SeekerProfile.find({ user: { $in: seekerIds } }).lean();
+  const profileMap = new Map(profiles.map((p) => [p.user.toString(), p]));
+
+  const enrichedApplications = applications.map((app) => {
+    const appObj = app.toObject ? app.toObject() : app;
+    if (appObj.seeker?._id) {
+      const sp = profileMap.get(appObj.seeker._id.toString());
+      if (sp) {
+        appObj.seekerProfile = {
+          currentOrganization: sp.currentOrganization || "",
+          currentDesignation: sp.currentDesignation || "",
+          currentCtc: sp.currentCtc || "",
+          expectedCtc: sp.expectedCtc || "",
+          noticePeriod: sp.noticePeriod || "",
+          location: sp.location || "",
+          highestQualification: sp.highestQualification || "",
+          totalExperience: sp.totalExperience || "",
+        };
+      }
+    }
+    return appObj;
+  });
+
+  res.json(enrichedApplications);
 });
 
 // @desc  Update an application's status (shortlist / reject / hire) & notify candidate

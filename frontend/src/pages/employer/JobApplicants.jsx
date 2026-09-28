@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Download, FileSpreadsheet, ArrowLeft, ExternalLink, Mail, Phone, Calendar, Eye } from "lucide-react";
+import { Download, FileSpreadsheet, ArrowLeft, ExternalLink, Mail, Phone, Calendar, Eye, Building2, Briefcase, IndianRupee, Clock } from "lucide-react";
 import ResumePreviewModal from "../../components/ResumePreviewModal.jsx";
 import { fetchApplicationsForJob, updateApplicationStatus, fetchJobById } from "../../services/jobService.js";
 import SEO from "../../components/SEO.jsx";
@@ -67,6 +67,11 @@ const JobApplicants = () => {
       "Applicant Name",
       "Email Address",
       "Phone Number",
+      "Current Designation",
+      "Current Organization",
+      "Current CTC",
+      "Expected CTC",
+      "Notice Period",
       "Applied Date",
       "Application Status",
       "Resume URL",
@@ -77,6 +82,11 @@ const JobApplicants = () => {
       `"${(app.seeker?.name || "N/A").replace(/"/g, '""')}"`,
       `"${(app.seeker?.email || "N/A").replace(/"/g, '""')}"`,
       `"${(app.seeker?.phone || "N/A").replace(/"/g, '""')}"`,
+      `"${(app.seekerProfile?.currentDesignation || "N/A").replace(/"/g, '""')}"`,
+      `"${(app.seekerProfile?.currentOrganization || "N/A").replace(/"/g, '""')}"`,
+      `"${(app.seekerProfile?.currentCtc || "N/A").replace(/"/g, '""')}"`,
+      `"${(app.seekerProfile?.expectedCtc || "N/A").replace(/"/g, '""')}"`,
+      `"${(app.seekerProfile?.noticePeriod || "N/A").replace(/"/g, '""')}"`,
       `"${new Date(app.createdAt).toLocaleDateString("en-IN")}"`,
       `"${app.status || "applied"}"`,
       `"${(app.resumeUrl || "N/A").replace(/"/g, '""')}"`,
@@ -178,6 +188,47 @@ const JobApplicants = () => {
                     {new Date(app.createdAt).toLocaleDateString("en-IN")}
                   </span>
                 </div>
+
+                {/* Candidate Professional Details (CTC, Organization, Notice Period) */}
+                {(app.seekerProfile?.currentOrganization ||
+                  app.seekerProfile?.currentDesignation ||
+                  app.seekerProfile?.currentCtc ||
+                  app.seekerProfile?.expectedCtc ||
+                  app.seekerProfile?.noticePeriod) && (
+                  <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
+                    {(app.seekerProfile?.currentDesignation || app.seekerProfile?.currentOrganization) && (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-900 border border-emerald-200 font-medium">
+                        <Briefcase size={12} className="text-emerald-700" />
+                        <span>
+                          {app.seekerProfile.currentDesignation}
+                          {app.seekerProfile.currentDesignation && app.seekerProfile.currentOrganization ? " at " : ""}
+                          {app.seekerProfile.currentOrganization}
+                        </span>
+                      </span>
+                    )}
+
+                    {app.seekerProfile?.currentCtc && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-gray-50 text-gray-800 border border-gray-200">
+                        <IndianRupee size={12} className="text-gray-600" />
+                        <span>Current CTC: <strong>{app.seekerProfile.currentCtc}</strong></span>
+                      </span>
+                    )}
+
+                    {app.seekerProfile?.expectedCtc && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50/70 text-emerald-800 border border-emerald-200">
+                        <IndianRupee size={12} className="text-emerald-700" />
+                        <span>Expected CTC: <strong>{app.seekerProfile.expectedCtc}</strong></span>
+                      </span>
+                    )}
+
+                    {app.seekerProfile?.noticePeriod && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-800 border border-blue-200 font-medium">
+                        <Clock size={12} className="text-blue-700" />
+                        <span>{app.seekerProfile.noticePeriod}</span>
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 {app.coverNote && (
                   <div className="p-3 bg-gray-50 rounded-xl text-xs text-gray-700 leading-relaxed border border-gray-100">

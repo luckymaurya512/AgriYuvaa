@@ -21,6 +21,13 @@ import {
   ShieldCheck,
   Save,
   ArrowRight,
+  IndianRupee,
+  Clock,
+  Compass,
+  Award,
+  TrendingUp,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import {
   fetchUserProfile,
@@ -29,6 +36,7 @@ import {
   uploadSeekerResume,
 } from "../services/userService.js";
 import { getActiveResume } from "../utils/resumeUtils.js";
+import { calculateProfileCompletion } from "../utils/profileCompletion.js";
 import ResumePreviewModal from "../components/ResumePreviewModal.jsx";
 import SEO from "../components/SEO.jsx";
 
@@ -71,6 +79,23 @@ const experienceLevels = [
   "5+ Years",
 ];
 
+const noticePeriodList = [
+  "Immediate Joiner (Available Now)",
+  "15 Days or less",
+  "30 Days (1 Month)",
+  "45 Days",
+  "60 Days (2 Months)",
+  "90 Days (3 Months)",
+  "Serving Notice Period",
+];
+
+const preferredJobTypes = [
+  "Full-time",
+  "Internship",
+  "Part-time",
+  "Contract / Project",
+];
+
 const Profile = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("general"); // "general" | "resume" | "security"
@@ -81,6 +106,7 @@ const Profile = () => {
   const [toast, setToast] = useState({ type: "", message: "" });
   const [previewResume, setPreviewResume] = useState(null);
   const [uploadingResume, setUploadingResume] = useState(false);
+  const [showChecklist, setShowChecklist] = useState(false);
 
   // Form States
   const [formData, setFormData] = useState({
@@ -91,6 +117,17 @@ const Profile = () => {
     specialization: "",
     experienceLevel: "",
     bio: "",
+    // New Employment & Compensation fields
+    currentOrganization: "",
+    currentDesignation: "",
+    currentCtc: "",
+    expectedCtc: "",
+    noticePeriod: "",
+    preferredJobType: "Full-time",
+    preferredLocations: "",
+    openToRelocate: true,
+    skills: "",
+    // Employer fields
     companyName: "",
     sector: "",
     website: "",
@@ -119,10 +156,19 @@ const Profile = () => {
         name: u.name || "",
         phone: u.phone || "",
         location: p.location || "",
-        qualification: p.education?.[0]?.degree || "",
-        specialization: p.skills?.[0] || "",
-        experienceLevel: p.experience?.[0]?.title || "",
-        bio: p.description || p.experience?.[0]?.description || "",
+        qualification: p.highestQualification || p.education?.[0]?.degree || "",
+        specialization: p.specialization || p.skills?.[0] || "",
+        experienceLevel: p.totalExperience || p.experience?.[0]?.title || "",
+        bio: p.bio || p.description || p.experience?.[0]?.description || "",
+        currentOrganization: p.currentOrganization || p.experience?.[0]?.organization || "",
+        currentDesignation: p.currentDesignation || "",
+        currentCtc: p.currentCtc || "",
+        expectedCtc: p.expectedCtc || "",
+        noticePeriod: p.noticePeriod || "",
+        preferredJobType: p.preferredJobType || "Full-time",
+        preferredLocations: p.preferredLocations || "",
+        openToRelocate: p.openToRelocate !== undefined ? p.openToRelocate : true,
+        skills: Array.isArray(p.skills) ? p.skills.join(", ") : p.skills || "",
         companyName: p.companyName || u.name || "",
         sector: p.sector || "",
         website: p.website || "",
@@ -162,12 +208,32 @@ const Profile = () => {
       };
 
       if (user?.role === "seeker") {
+        const skillsArray = typeof formData.skills === "string"
+          ? formData.skills.split(",").map((s) => s.trim()).filter(Boolean)
+          : formData.skills || [];
+
         payload.seekerProfile = {
           location: formData.location,
-          skills: formData.specialization ? [formData.specialization] : [],
+          highestQualification: formData.qualification,
+          specialization: formData.specialization,
+          totalExperience: formData.experienceLevel,
+          bio: formData.bio,
+          currentOrganization: formData.currentOrganization,
+          currentDesignation: formData.currentDesignation,
+          currentCtc: formData.currentCtc,
+          expectedCtc: formData.expectedCtc,
+          noticePeriod: formData.noticePeriod,
+          preferredJobType: formData.preferredJobType,
+          preferredLocations: formData.preferredLocations,
+          openToRelocate: formData.openToRelocate,
+          skills: skillsArray.length > 0 ? skillsArray : (formData.specialization ? [formData.specialization] : []),
           education: formData.qualification ? [{ degree: formData.qualification }] : [],
-          experience: formData.experienceLevel
-            ? [{ title: formData.experienceLevel, description: formData.bio }]
+          experience: formData.currentDesignation || formData.currentOrganization || formData.experienceLevel
+            ? [{
+                title: formData.currentDesignation || formData.experienceLevel,
+                organization: formData.currentOrganization,
+                description: formData.bio,
+              }]
             : [],
         };
       } else if (user?.role === "employer") {
@@ -349,6 +415,128 @@ const Profile = () => {
           </div>
         </div>
       </div>
+
+      {/* ── PROFILE STRENGTH & COMPLETION INDICATOR (FOR JOB SEEKERS) ── */}
+      {user?.role === "seeker" && (() => {
+        const completion = calculateProfileCompletion(user, profile, formData);
+        return (
+          <div className="card p-4 sm:p-6 mb-6 sm:mb-8 border border-emerald-200/80 bg-gradient-to-br from-emerald-50/50 via-white to-emerald-50/20 shadow-sm rounded-2xl relative overflow-hidden">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-center gap-3.5 sm:gap-4">
+                {/* Score badge */}
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white border-2 border-emerald-300 shadow-sm flex flex-col items-center justify-center shrink-0">
+                  <span className="font-display font-black text-xl sm:text-2xl text-emerald-800 leading-none">
+                    {completion.percentage}%
+                  </span>
+                  <span className="text-[9px] uppercase tracking-wider font-bold text-gray-500 mt-0.5">
+                    Complete
+                  </span>
+                </div>
+
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="font-display font-bold text-sm sm:text-base text-brand-black">
+                      Profile Strength: <span className="text-emerald-800">{completion.statusLabel}</span>
+                    </h3>
+                    <span
+                      className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
+                        completion.percentage >= 80
+                          ? "bg-emerald-100 text-emerald-800 border-emerald-300"
+                          : completion.percentage >= 50
+                          ? "bg-blue-50 text-blue-800 border-blue-200"
+                          : "bg-amber-50 text-amber-800 border-amber-300"
+                      }`}
+                    >
+                      {completion.badgeText}
+                    </span>
+                  </div>
+                  <p className="text-xs text-brand-grey mt-0.5 leading-relaxed">
+                    {completion.percentage === 100
+                      ? "⭐ Outstanding! Your profile is 100% complete and fully optimized for top agriculture recruiters."
+                      : "Add your Current CTC, Expected CTC & Notice Period below to get up to 3x more recruiter interview calls."}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowChecklist(!showChecklist)}
+                className="text-xs font-bold text-emerald-800 hover:text-emerald-950 flex items-center gap-1.5 self-start md:self-center shrink-0 px-3 py-1.5 rounded-xl border border-emerald-200 bg-white hover:bg-emerald-50 transition-colors shadow-2xs cursor-pointer"
+              >
+                <span>{showChecklist ? "Hide Checklist" : "View Checklist"}</span>
+                {showChecklist ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              </button>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="w-full bg-gray-100 rounded-full h-2.5 sm:h-3 mt-4 overflow-hidden shadow-inner">
+              <div
+                className={`h-full rounded-full transition-all duration-700 ${
+                  completion.percentage >= 80
+                    ? "bg-gradient-to-r from-emerald-500 to-green-600"
+                    : completion.percentage >= 50
+                    ? "bg-gradient-to-r from-teal-500 to-emerald-600"
+                    : "bg-gradient-to-r from-amber-500 to-orange-500"
+                }`}
+                style={{ width: `${completion.percentage}%` }}
+              />
+            </div>
+
+            {/* Expandable Checklist Details */}
+            {showChecklist ? (
+              <div className="mt-4 pt-4 border-t border-emerald-100 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 animate-in fade-in duration-200">
+                {completion.criteria.map((item) => (
+                  <div
+                    key={item.id}
+                    className={`p-2.5 rounded-xl border flex items-start gap-2 text-xs transition-colors ${
+                      item.completed
+                        ? "bg-emerald-50/70 border-emerald-200/80 text-emerald-900"
+                        : "bg-white border-amber-200 text-gray-700 shadow-2xs"
+                    }`}
+                  >
+                    {item.completed ? (
+                      <CheckCircle2 size={15} className="text-emerald-600 shrink-0 mt-0.5" />
+                    ) : (
+                      <div className="w-4 h-4 rounded-full border border-amber-400 bg-amber-50 text-amber-700 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                        !
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="font-bold truncate">{item.label}</p>
+                      <p className="text-[10px] text-brand-grey truncate">
+                        {item.completed ? "✓ Completed" : `+${item.weight}%: ${item.hint}`}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              completion.pendingCriteria.length > 0 && (
+                <div className="mt-3.5 pt-3 border-t border-emerald-100/70 flex flex-wrap items-center gap-2 text-xs">
+                  <span className="font-bold text-gray-600 text-[10px] uppercase tracking-wider">Pending to reach 100%:</span>
+                  {completion.pendingCriteria.slice(0, 3).map((item) => (
+                    <span
+                      key={item.id}
+                      className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-white border border-amber-200 text-amber-900 font-medium text-[11px] shadow-2xs"
+                    >
+                      <span className="text-amber-600 font-bold">+{item.weight}%</span> {item.label}
+                    </span>
+                  ))}
+                  {completion.pendingCriteria.length > 3 && (
+                    <button
+                      type="button"
+                      onClick={() => setShowChecklist(true)}
+                      className="text-[11px] font-bold text-emerald-700 hover:underline"
+                    >
+                      +{completion.pendingCriteria.length - 3} more
+                    </button>
+                  )}
+                </div>
+              )
+            )}
+          </div>
+        );
+      })()}
 
       {/* Profile Navigation Tabs */}
       <div className="flex border-b border-brand-border space-x-2 sm:space-x-4 mb-6 sm:mb-8 overflow-x-auto pb-1 -mx-3.5 px-3.5 sm:mx-0 sm:px-0">
@@ -540,6 +728,217 @@ const Profile = () => {
                   </div>
                 </div>
 
+                {/* ── Sub-Section: Current Employment Details ── */}
+                <div className="pt-4 border-t border-brand-border/70 space-y-4">
+                  <h4 className="text-xs font-bold text-emerald-900 uppercase tracking-wider flex items-center gap-1.5">
+                    <Briefcase size={15} className="text-emerald-700" />
+                    <span>Current Employment & Organization</span>
+                  </h4>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                      <label className="block text-xs font-bold text-brand-black mb-1.5">
+                        Current Company / Organization / College
+                      </label>
+                      <div className="relative">
+                        <Building2 size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-grey pointer-events-none" />
+                        <input
+                          type="text"
+                          value={formData.currentOrganization}
+                          onChange={(e) => setFormData({ ...formData, currentOrganization: e.target.value })}
+                          className="input-field !pl-10 text-xs sm:text-sm"
+                          placeholder="e.g. Anand Agro Care / IFFCO / PAU Ludhiana / Fresher"
+                        />
+                      </div>
+                      <p className="text-[11px] text-brand-grey mt-1">If student or seeking first job, you can write "Fresher" or your university name.</p>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-brand-black mb-1.5">
+                        Current Designation / Role
+                      </label>
+                      <div className="relative">
+                        <Briefcase size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-grey pointer-events-none" />
+                        <input
+                          type="text"
+                          value={formData.currentDesignation}
+                          onChange={(e) => setFormData({ ...formData, currentDesignation: e.target.value })}
+                          className="input-field !pl-10 text-xs sm:text-sm"
+                          placeholder="e.g. Field Agronomist / Business Coordinator / Student"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ── Sub-Section: Compensation (CTC) & Availability ── */}
+                <div className="pt-4 border-t border-brand-border/70 space-y-4">
+                  <h4 className="text-xs font-bold text-emerald-900 uppercase tracking-wider flex items-center gap-1.5">
+                    <IndianRupee size={15} className="text-emerald-700" />
+                    <span>Compensation (CTC) & Availability</span>
+                  </h4>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    {/* Current CTC */}
+                    <div>
+                      <label className="block text-xs font-bold text-brand-black mb-1.5">
+                        Current CTC (Annual / Monthly)
+                      </label>
+                      <div className="relative">
+                        <IndianRupee size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-grey pointer-events-none" />
+                        <input
+                          type="text"
+                          value={formData.currentCtc}
+                          onChange={(e) => setFormData({ ...formData, currentCtc: e.target.value })}
+                          className="input-field !pl-10 text-xs sm:text-sm"
+                          placeholder="e.g. ₹3,60,000 / year (or Fresher)"
+                        />
+                      </div>
+                      {/* Quick Chips for Current CTC */}
+                      <div className="flex flex-wrap gap-1 mt-1.5">
+                        {["Fresher / NA", "₹2.5 - 3.5 LPA", "₹3.5 - 5 LPA", "₹5 - 8 LPA"].map((chip) => (
+                          <button
+                            key={chip}
+                            type="button"
+                            onClick={() => setFormData({ ...formData, currentCtc: chip })}
+                            className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 hover:bg-emerald-100 hover:text-emerald-900 text-gray-700 transition-colors cursor-pointer"
+                          >
+                            {chip}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Expected CTC */}
+                    <div>
+                      <label className="block text-xs font-bold text-brand-black mb-1.5">
+                        Expected CTC (Annual)
+                      </label>
+                      <div className="relative">
+                        <IndianRupee size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-grey pointer-events-none" />
+                        <input
+                          type="text"
+                          value={formData.expectedCtc}
+                          onChange={(e) => setFormData({ ...formData, expectedCtc: e.target.value })}
+                          className="input-field !pl-10 text-xs sm:text-sm"
+                          placeholder="e.g. ₹5,00,000 / year"
+                        />
+                      </div>
+                      {/* Quick Chips for Expected CTC */}
+                      <div className="flex flex-wrap gap-1 mt-1.5">
+                        {["₹3 - 4.5 LPA", "₹4.5 - 6 LPA", "₹6 - 9 LPA", "Negotiable"].map((chip) => (
+                          <button
+                            key={chip}
+                            type="button"
+                            onClick={() => setFormData({ ...formData, expectedCtc: chip })}
+                            className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 hover:bg-emerald-100 hover:text-emerald-900 text-gray-700 transition-colors cursor-pointer"
+                          >
+                            {chip}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Notice Period */}
+                    <div>
+                      <label className="block text-xs font-bold text-brand-black mb-1.5">
+                        Notice Period / Availability
+                      </label>
+                      <div className="relative">
+                        <Clock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-grey pointer-events-none" />
+                        <select
+                          value={formData.noticePeriod}
+                          onChange={(e) => setFormData({ ...formData, noticePeriod: e.target.value })}
+                          className="input-field !pl-10 text-xs sm:text-sm bg-white"
+                        >
+                          <option value="">Select availability / notice...</option>
+                          {noticePeriodList.map((np) => (
+                            <option key={np} value={np}>
+                              {np}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <p className="text-[11px] text-brand-grey mt-1">Helps recruiters prioritize urgent openings.</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ── Sub-Section: Career Preferences & Relocation ── */}
+                <div className="pt-4 border-t border-brand-border/70 space-y-4">
+                  <h4 className="text-xs font-bold text-emerald-900 uppercase tracking-wider flex items-center gap-1.5">
+                    <Compass size={15} className="text-emerald-700" />
+                    <span>Career & Relocation Preferences</span>
+                  </h4>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                      <label className="block text-xs font-bold text-brand-black mb-1.5">
+                        Preferred Employment Type
+                      </label>
+                      <select
+                        value={formData.preferredJobType}
+                        onChange={(e) => setFormData({ ...formData, preferredJobType: e.target.value })}
+                        className="input-field text-xs sm:text-sm bg-white"
+                      >
+                        {preferredJobTypes.map((t) => (
+                          <option key={t} value={t}>
+                            {t}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-brand-black mb-1.5">
+                        Preferred Work Locations / States
+                      </label>
+                      <div className="relative">
+                        <MapPin size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-grey pointer-events-none" />
+                        <input
+                          type="text"
+                          value={formData.preferredLocations}
+                          onChange={(e) => setFormData({ ...formData, preferredLocations: e.target.value })}
+                          className="input-field !pl-10 text-xs sm:text-sm"
+                          placeholder="e.g. Pune, Delhi NCR, Lucknow, Pan India"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-1">
+                    <input
+                      type="checkbox"
+                      id="openToRelocate"
+                      checked={formData.openToRelocate}
+                      onChange={(e) => setFormData({ ...formData, openToRelocate: e.target.checked })}
+                      className="w-4 h-4 rounded text-emerald-700 focus:ring-emerald-500 border-gray-300"
+                    />
+                    <label htmlFor="openToRelocate" className="text-xs font-semibold text-brand-black cursor-pointer">
+                      I am open to relocating anywhere in India for the right agriculture opportunity
+                    </label>
+                  </div>
+                </div>
+
+                {/* Key Skills */}
+                <div className="pt-4 border-t border-brand-border/70 space-y-2">
+                  <label className="block text-xs font-bold text-brand-black mb-1">
+                    Key Agricultural Skills & Competencies
+                  </label>
+                  <div className="relative">
+                    <Award size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-grey pointer-events-none" />
+                    <input
+                      type="text"
+                      value={formData.skills}
+                      onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
+                      className="input-field !pl-10 text-xs sm:text-sm"
+                      placeholder="e.g. Agronomy, Field Trials, Soil Health, Farmer Advisory, Crop Protection, Seed Marketing"
+                    />
+                  </div>
+                  <p className="text-[11px] text-brand-grey">Separate skills with commas (e.g., Agronomy, Sales, Drip Irrigation).</p>
+                </div>
+
+                {/* Summary / Bio */}
                 <div>
                   <label className="block text-xs font-bold text-brand-black mb-1.5">
                     Professional Summary / Bio
