@@ -112,13 +112,13 @@ const CommunityBanner = () => {
                 <ArrowRight size={16} />
               </button>
 
-              <button
+              {/* <button
                 type="button"
                 onClick={handleBrowseCommunity}
                 className="border border-white/40 text-white font-medium px-6 py-3 rounded-full hover:bg-white/10 active:scale-95 transition-all text-sm cursor-pointer"
               >
                 Browse Community
-              </button>
+              </button> */}
             </div>
           </div>
 
