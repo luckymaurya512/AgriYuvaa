@@ -8,8 +8,10 @@ import {
   Compass,
   Newspaper,
   CheckCircle2,
+  Sparkles,
 } from "lucide-react";
 import SEO from "../components/SEO.jsx";
+import CommunityBanner from "../components/CommunityBanner.jsx";
 
 const whatWeOfferList = [
   {
@@ -194,6 +196,39 @@ const About = () => {
               );
             })}
           </div>
+        </section>
+
+        {/* ── RESUME BUILDER SECTION ── */}
+        <section className="card p-6 sm:p-10 border-2 border-emerald-500/20 bg-gradient-to-br from-slate-950 via-emerald-950 to-green-950 text-white rounded-3xl shadow-lg relative overflow-hidden">
+          <div className="absolute top-0 right-0 -mt-8 -mr-8 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+            <div className="space-y-3 max-w-2xl">
+              <span className="text-xs font-bold uppercase tracking-wider text-amber-300 bg-amber-400/20 border border-amber-400/30 px-3 py-1 rounded-full inline-flex items-center gap-1.5">
+                <Sparkles size={13} className="text-amber-400" /> Free Candidate Tool
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-display font-bold text-white">
+                Build an ATS-Friendly Agriculture Resume in Minutes
+              </h2>
+              <p className="text-xs sm:text-sm text-gray-300 leading-relaxed">
+                Create a recruiter-ready CV tailored for Agronomy, Horticulture, Farm Management, ICAR research, and AgriTech roles with pre-filled agriculture skills, education templates, and instant 1-click clean PDF download.
+              </p>
+            </div>
+
+            <div className="shrink-0 flex flex-col sm:flex-row items-center gap-3">
+              <Link
+                to="/resume-builder"
+                className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-6 py-3 rounded-xl transition-all shadow-md text-xs sm:text-sm inline-flex items-center gap-2 cursor-pointer w-full sm:w-auto justify-center"
+              >
+                <Sparkles size={15} />
+                <span>Build Free Resume →</span>
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* ── COMMUNITY BANNER ── */}
+        <section>
+          <CommunityBanner />
         </section>
 
       </div>

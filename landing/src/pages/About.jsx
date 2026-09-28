@@ -9,9 +9,11 @@ import {
   Newspaper,
   ArrowRight,
   CheckCircle2,
+  Sparkles,
 } from "lucide-react";
 import logo from "../assets/logo.png";
 import SEO from "../components/SEO.jsx";
+import CommunityBanner from "../components/CommunityBanner.jsx";
 
 const whatWeOfferList = [
   {
@@ -160,6 +162,38 @@ const About = () => {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* ── RESUME BUILDER SECTION ── */}
+        <div className="p-8 sm:p-10 rounded-3xl bg-gradient-to-br from-slate-950 via-emerald-950 to-green-950 text-white shadow-lg relative overflow-hidden border border-emerald-800/60">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+            <div className="space-y-3 max-w-2xl">
+              <span className="text-xs font-bold uppercase tracking-wider text-amber-300 bg-amber-400/20 border border-amber-400/30 px-3 py-1 rounded-full inline-flex items-center gap-1.5">
+                <Sparkles size={13} className="text-amber-400" /> Free Candidate Tool
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
+                Build an ATS-Friendly Agriculture Resume in Minutes
+              </h2>
+              <p className="text-xs sm:text-sm text-gray-300 leading-relaxed">
+                Create a recruiter-ready CV tailored for Agronomy, Horticulture, Farm Management, ICAR research, and AgriTech roles with pre-filled agriculture skills, education templates, and instant 1-click clean PDF download.
+              </p>
+            </div>
+
+            <div className="shrink-0 flex flex-col sm:flex-row items-center gap-3">
+              <a
+                href="https://job.agriyuvaa.com/resume-builder"
+                className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-6 py-3 rounded-xl transition-all shadow-md text-xs sm:text-sm inline-flex items-center gap-2 cursor-pointer w-full sm:w-auto justify-center"
+              >
+                <Sparkles size={15} />
+                <span>Build Free Resume →</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* ── COMMUNITY BANNER ── */}
+        <div>
+          <CommunityBanner />
         </div>
 
       </div>
