@@ -84,7 +84,7 @@ const About = () => {
       {/* ── HERO BANNER ── */}
       <section className="relative overflow-hidden bg-gradient-to-br from-emerald-950 via-slate-950 to-green-950 text-white py-16 sm:py-24">
         <div className="absolute inset-0 opacity-15 pointer-events-none bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:24px_24px]" />
-        
+
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs font-bold tracking-wide uppercase">
             <span>🌾 About AgriYuvaa</span>
@@ -99,9 +99,9 @@ const About = () => {
             AgriYuvaa is a youth-focused agriculture platform that helps students, freshers, and professionals discover opportunities, build skills, and grow their careers in agriculture and allied sectors.
           </p>
 
-          <p className="text-xs sm:text-sm text-gray-300 max-w-2xl mx-auto leading-relaxed">
+          {/* <p className="text-xs sm:text-sm text-gray-300 max-w-2xl mx-auto leading-relaxed">
             As agriculture continues to evolve through agri-tech, agribusiness, horticulture, food processing, biotechnology, and digital agriculture, AgriYuvaa connects young talent with relevant jobs, internships, learning opportunities, career guidance, and industry exposure.
-          </p>
+          </p> */}
 
         </div>
       </section>
