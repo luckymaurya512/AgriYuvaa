@@ -16,6 +16,9 @@ import {
   Award,
   Sparkles,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Quote,
 } from "lucide-react";
 import { fetchJobs, fetchGovtJobs } from "../services/jobService.js";
 import { fetchBlogs, fetchTestimonials } from "../services/landingService.js";
@@ -44,7 +47,70 @@ const Home = () => {
   const [govtJobs, setGovtJobs] = useState([]);
   const [blogs, setBlogs] = useState([]);
   const [testimonials, setTestimonials] = useState([]);
+  const [testimonialIndex, setTestimonialIndex] = useState(0);
+  const [visibleTestimonials, setVisibleTestimonials] = useState(3);
+  const [isTestimonialHovered, setIsTestimonialHovered] = useState(false);
+  const [touchStartX, setTouchStartX] = useState(null);
   const navigate = useNavigate();
+
+  // Responsive visible count for testimonials carousel
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 640) {
+        setVisibleTestimonials(1);
+      } else if (window.innerWidth < 1024) {
+        setVisibleTestimonials(2);
+      } else {
+        setVisibleTestimonials(3);
+      }
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const maxTestimonialIndex = Math.max(0, testimonials.length - visibleTestimonials);
+
+  useEffect(() => {
+    if (testimonialIndex > maxTestimonialIndex) {
+      setTestimonialIndex(maxTestimonialIndex);
+    }
+  }, [maxTestimonialIndex, testimonialIndex]);
+
+  // Auto-slide testimonials every 4.5s (pauses on hover)
+  useEffect(() => {
+    if (testimonials.length <= visibleTestimonials || isTestimonialHovered) return;
+    const timer = setInterval(() => {
+      setTestimonialIndex((prev) => (prev >= maxTestimonialIndex ? 0 : prev + 1));
+    }, 4500);
+    return () => clearInterval(timer);
+  }, [testimonials.length, visibleTestimonials, maxTestimonialIndex, isTestimonialHovered]);
+
+  const handlePrevTestimonial = () => {
+    setTestimonialIndex((prev) => (prev <= 0 ? maxTestimonialIndex : prev - 1));
+  };
+
+  const handleNextTestimonial = () => {
+    setTestimonialIndex((prev) => (prev >= maxTestimonialIndex ? 0 : prev + 1));
+  };
+
+  const handleTouchStart = (e) => {
+    if (e.touches && e.touches.length > 0) {
+      setTouchStartX(e.touches[0].clientX);
+    }
+  };
+
+  const handleTouchEnd = (e) => {
+    if (touchStartX === null || !e.changedTouches || e.changedTouches.length === 0) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartX - touchEndX;
+    if (diff > 45) {
+      handleNextTestimonial();
+    } else if (diff < -45) {
+      handlePrevTestimonial();
+    }
+    setTouchStartX(null);
+  };
 
   useEffect(() => {
     fetchJobs({ limit: 6, sort: "-isFeatured -createdAt" })
@@ -426,54 +492,150 @@ const Home = () => {
 
       {/* Testimonials / Community Feedback */}
       {testimonials.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 border-t border-brand-border">
-          <div className="text-center max-w-2xl mx-auto mb-10">
-            <h2 className="text-2xl font-display font-bold flex items-center justify-center gap-2.5">
-              <span className="p-1.5 rounded-xl bg-amber-100/80 text-amber-700 shrink-0">
-                <Star size={20} className="fill-amber-400 text-amber-500" />
-              </span>
-              <span>Trusted by Candidates & Agri Recruiters</span>
-            </h2>
-            <p className="text-xs sm:text-sm text-brand-grey mt-1">
-              Read how AgriYuvaa helps youth find agriculture jobs and employers hire skilled talent.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {testimonials.slice(0, 3).map((t) => (
-              <div
-                key={t._id}
-                className="card p-6 flex flex-col justify-between space-y-4 hover:shadow-md transition-shadow"
-              >
-                <div className="space-y-3">
-                  <div className="flex items-center gap-1">
-                    {[...Array(t.rating || 5)].map((_, i) => (
-                      <Star key={i} size={14} className="fill-amber-400 text-amber-400" />
-                    ))}
-                  </div>
-                  <p className="text-sm text-brand-grey italic leading-relaxed">
-                    "{t.content}"
-                  </p>
-                </div>
-                <div className="flex items-center gap-3 pt-3 border-t border-brand-border">
-                  {t.avatarUrl ? (
-                    <img
-                      src={t.avatarUrl}
-                      alt={t.name}
-                      className="w-10 h-10 rounded-full object-cover border border-brand-border"
-                      onError={(e) => { e.target.style.display = "none"; }}
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center text-sm">
-                      {t.name?.charAt(0) || "U"}
-                    </div>
-                  )}
-                  <div>
-                    <h4 className="text-sm font-bold text-brand-black">{t.name}</h4>
-                    <p className="text-xs text-brand-grey">{t.role || "Agriculture Professional"}</p>
-                  </div>
-                </div>
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 border-t border-brand-border">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-semibold mb-2 border border-amber-200/60">
+                <Star size={13} className="fill-amber-400 text-amber-500" />
+                <span>Testimonials & Success Stories</span>
               </div>
-            ))}
+              <h2 className="text-2xl sm:text-3xl font-display font-bold text-brand-black">
+                Trusted by Candidates & Agri Recruiters
+              </h2>
+              <p className="text-xs sm:text-sm text-brand-grey mt-1 max-w-xl">
+                Read how AgriYuvaa helps youth find agriculture jobs and employers hire skilled talent across India.
+              </p>
+            </div>
+
+            {/* Navigation Arrows & Counter */}
+            {testimonials.length > visibleTestimonials && (
+              <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
+                <span className="text-xs font-medium text-brand-grey mr-2 hidden sm:inline-block">
+                  {testimonialIndex + 1} - {Math.min(testimonialIndex + visibleTestimonials, testimonials.length)} of {testimonials.length}
+                </span>
+                <button
+                  type="button"
+                  onClick={handlePrevTestimonial}
+                  aria-label="Previous testimonials"
+                  className="w-10 h-10 rounded-xl border border-brand-border bg-white text-brand-black flex items-center justify-center hover:bg-emerald-50 hover:border-emerald-300 hover:text-brand-green-dark transition-all shadow-sm active:scale-95 cursor-pointer"
+                >
+                  <ChevronLeft size={18} />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleNextTestimonial}
+                  aria-label="Next testimonials"
+                  className="w-10 h-10 rounded-xl border border-brand-border bg-white text-brand-black flex items-center justify-center hover:bg-emerald-50 hover:border-emerald-300 hover:text-brand-green-dark transition-all shadow-sm active:scale-95 cursor-pointer"
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Carousel Slider */}
+          <div
+            className="relative"
+            onMouseEnter={() => setIsTestimonialHovered(true)}
+            onMouseLeave={() => setIsTestimonialHovered(false)}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
+            {/* Desktop Side Navigation Arrows */}
+            {testimonials.length > visibleTestimonials && (
+              <>
+                <button
+                  type="button"
+                  onClick={handlePrevTestimonial}
+                  aria-label="Previous testimonial"
+                  className="hidden md:flex absolute -left-4 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white shadow-md border border-brand-border text-brand-black items-center justify-center hover:bg-emerald-50 hover:border-emerald-300 hover:text-brand-green-dark transition-all active:scale-95 cursor-pointer"
+                >
+                  <ChevronLeft size={18} />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleNextTestimonial}
+                  aria-label="Next testimonial"
+                  className="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white shadow-md border border-brand-border text-brand-black items-center justify-center hover:bg-emerald-50 hover:border-emerald-300 hover:text-brand-green-dark transition-all active:scale-95 cursor-pointer"
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </>
+            )}
+
+            {/* Slider track overflow wrapper */}
+            <div className="overflow-hidden py-2 -mx-3 px-3">
+              <div
+                className="flex transition-transform duration-500 ease-out"
+                style={{
+                  transform: `translateX(-${testimonialIndex * (100 / visibleTestimonials)}%)`,
+                }}
+              >
+                {testimonials.map((t) => (
+                  <div
+                    key={t._id || t.id}
+                    style={{ width: `${100 / visibleTestimonials}%` }}
+                    className="flex-shrink-0 px-3"
+                  >
+                    <div className="card h-full p-6 flex flex-col justify-between space-y-4 hover:shadow-lg transition-all duration-300 border border-brand-border/80 bg-white rounded-2xl relative overflow-hidden group">
+                      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-400 via-brand-green to-teal-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1">
+                            {[...Array(t.rating || 5)].map((_, i) => (
+                              <Star key={i} size={15} className="fill-amber-400 text-amber-400" />
+                            ))}
+                          </div>
+                          <Quote size={20} className="text-emerald-100 fill-emerald-50 group-hover:text-emerald-200 transition-colors" />
+                        </div>
+                        <p className="text-sm text-brand-grey italic leading-relaxed">
+                          "{t.content}"
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-3 pt-4 border-t border-brand-border/70 mt-auto">
+                        {t.avatarUrl ? (
+                          <img
+                            src={t.avatarUrl}
+                            alt={t.name}
+                            className="w-11 h-11 rounded-full object-cover border-2 border-emerald-100 shadow-sm"
+                            onError={(e) => { e.target.style.display = "none"; }}
+                          />
+                        ) : (
+                          <div className="w-11 h-11 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 text-emerald-800 font-bold flex items-center justify-center text-sm shadow-sm border border-emerald-200">
+                            {t.name?.charAt(0) || "U"}
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <h4 className="text-sm font-bold text-brand-black truncate">{t.name}</h4>
+                          <p className="text-xs text-brand-grey truncate">{t.role || "Agriculture Professional"}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Dots Pagination */}
+            {testimonials.length > visibleTestimonials && (
+              <div className="flex justify-center items-center gap-2 mt-6">
+                {Array.from({ length: maxTestimonialIndex + 1 }).map((_, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setTestimonialIndex(idx)}
+                    className={`h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
+                      testimonialIndex === idx
+                        ? "w-8 bg-brand-green"
+                        : "w-2.5 bg-gray-200 hover:bg-gray-300"
+                    }`}
+                    aria-label={`Go to slide ${idx + 1}`}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </section>
       )}
