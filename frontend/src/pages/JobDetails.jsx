@@ -834,22 +834,24 @@ const JobDetails = () => {
                 )}
               </button>
 
-              {/* Action Buttons: Web Gmail + Default App */}
-              <div className="space-y-2 pt-1">
+              {/* Action Button: Only one button shown - Opens Gmail App on phone, Web Gmail on desktop */}
+              <div className="pt-1">
+                {/* Phone / Small Screen (md:hidden): Opens Gmail / native Mail app directly */}
+                <a
+                  href={mailtoLink}
+                  className="btn-primary w-full text-center flex items-center justify-center gap-2 py-3 text-sm font-bold shadow-xs md:hidden"
+                >
+                  <Mail size={17} /> Open in Gmail / Mail App
+                </a>
+
+                {/* Large Screen / Desktop (hidden md:flex): Opens Web Gmail in browser */}
                 <a
                   href={gmailWebLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="btn-primary w-full text-center flex items-center justify-center gap-2 py-2.5"
+                  className="btn-primary w-full text-center items-center justify-center gap-2 py-3 text-sm font-bold shadow-xs hidden md:flex"
                 >
-                  <Mail size={16} /> Compose in Gmail (Web) ↗
-                </a>
-
-                <a
-                  href={mailtoLink}
-                  className="btn-secondary w-full text-center flex items-center justify-center gap-2 py-2 text-xs text-brand-grey hover:text-brand-black"
-                >
-                  Open in Default Mail App (Outlook/Apple)
+                  <Mail size={17} /> Compose in Gmail (Web) ↗
                 </a>
               </div>
             </div>
