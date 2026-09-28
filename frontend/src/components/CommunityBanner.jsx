@@ -29,7 +29,7 @@ const YouTubeIcon = () => (
 const communityChannels = [
   {
     name: "WhatsApp",
-    link: "https://whatsapp.com/channel/0029VaA8yXz1iUxWp5wUq32A",
+    link: "https://chat.whatsapp.com/KXExVgaKwi28tQIRItEepl",
     icon: WhatsAppIcon,
     iconBg: "bg-[#25D366]",
   },
@@ -55,7 +55,7 @@ const communityChannels = [
 
 const CommunityBanner = () => {
   const handleJoinPrimary = () => {
-    window.open("https://www.instagram.com/agri_yuvaa/", "_blank", "noopener,noreferrer");
+    window.open("https://chat.whatsapp.com/KXExVgaKwi28tQIRItEepl", "_blank", "noopener,noreferrer");
   };
 
   const handleBrowseCommunity = () => {

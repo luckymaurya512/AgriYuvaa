@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Facebook, Instagram, Linkedin, Youtube } from "lucide-react";
+import WhatsAppIcon from "./WhatsAppIcon.jsx";
 import logo from "../assets/logo.png";
 
 const Footer = () => {
@@ -43,6 +44,16 @@ const Footer = () => {
             <li><Link to="/contact" className="hover:text-brand-green">Contact</Link></li>
           </ul>
           <div className="flex items-center gap-3">
+            <a
+              href="https://chat.whatsapp.com/KXExVgaKwi28tQIRItEepl"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="AgriYuvaa on WhatsApp Community"
+              className="text-white/60 hover:text-[#25D366] transition-colors p-1"
+              title="Join WhatsApp Community"
+            >
+              <WhatsAppIcon size={19} />
+            </a>
             <a
               href="https://www.linkedin.com/company/agriyuvaa/"
               target="_blank"

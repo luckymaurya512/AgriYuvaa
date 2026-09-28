@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Mail, Phone, MapPin, Linkedin, Instagram, Youtube, Facebook } from "lucide-react";
+import WhatsAppIcon from "../components/WhatsAppIcon.jsx";
 import SEO from "../components/SEO.jsx";
 
 const Contact = () => {
@@ -44,6 +45,15 @@ const Contact = () => {
               Connect on Social Media
             </p>
             <div className="flex items-center gap-3">
+              <a
+                href="https://chat.whatsapp.com/KXExVgaKwi28tQIRItEepl"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-xl bg-gray-100 hover:bg-emerald-50 text-gray-700 hover:text-emerald-700 flex items-center justify-center transition-colors shadow-2xs"
+                title="WhatsApp Community"
+              >
+                <WhatsAppIcon size={18} />
+              </a>
               <a
                 href="https://www.linkedin.com/company/agriyuvaa/"
                 target="_blank"
