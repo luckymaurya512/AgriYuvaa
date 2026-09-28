@@ -207,7 +207,7 @@ const Profile = () => {
         phone: formData.phone,
       };
 
-      if (user?.role === "seeker") {
+      if (user?.role !== "employer") {
         const skillsArray = typeof formData.skills === "string"
           ? formData.skills.split(",").map((s) => s.trim()).filter(Boolean)
           : formData.skills || [];
@@ -416,8 +416,8 @@ const Profile = () => {
         </div>
       </div>
 
-      {/* ── PROFILE STRENGTH & COMPLETION INDICATOR (FOR JOB SEEKERS) ── */}
-      {user?.role === "seeker" && (() => {
+      {/* ── PROFILE STRENGTH & COMPLETION INDICATOR (FOR JOB SEEKERS & ADMINS) ── */}
+      {user?.role !== "employer" && (() => {
         const completion = calculateProfileCompletion(user, profile, formData);
         return (
           <div className="card p-4 sm:p-6 mb-6 sm:mb-8 border border-emerald-200/80 bg-gradient-to-br from-emerald-50/50 via-white to-emerald-50/20 shadow-sm rounded-2xl relative overflow-hidden">
@@ -646,8 +646,8 @@ const Profile = () => {
               </div>
             </div>
 
-            {/* ── Seeker Specific Details ── */}
-            {user?.role === "seeker" && (
+            {/* ── Seeker & Candidate Specific Details ── */}
+            {user?.role !== "employer" && (
               <div className="pt-4 border-t border-brand-border space-y-5">
                 <h3 className="text-sm font-bold text-emerald-950 uppercase tracking-wide flex items-center gap-1.5">
                   <GraduationCap size={16} className="text-emerald-700" />

@@ -81,6 +81,11 @@ const SuperAdminDashboard = () => {
       "Applicant Name",
       "Email Address",
       "Phone Number",
+      "Current Designation",
+      "Current Organization",
+      "Current CTC",
+      "Expected CTC",
+      "Notice Period",
       "Target Job Title",
       "Company Name",
       "Job Location",
@@ -105,6 +110,11 @@ const SuperAdminDashboard = () => {
         `"${(app.seeker?.name || "Applicant").replace(/"/g, '""')}"`,
         `"${(app.seeker?.email || "").replace(/"/g, '""')}"`,
         `"${(app.seeker?.phone || "").replace(/"/g, '""')}"`,
+        `"${(app.seekerProfile?.currentDesignation || "N/A").replace(/"/g, '""')}"`,
+        `"${(app.seekerProfile?.currentOrganization || "N/A").replace(/"/g, '""')}"`,
+        `"${(app.seekerProfile?.currentCtc || "N/A").replace(/"/g, '""')}"`,
+        `"${(app.seekerProfile?.expectedCtc || "N/A").replace(/"/g, '""')}"`,
+        `"${(app.seekerProfile?.noticePeriod || "N/A").replace(/"/g, '""')}"`,
         `"${(app.job?.title || "Job").replace(/"/g, '""')}"`,
         `"${(app.job?.companyName || app.job?.employer?.name || "Company").replace(/"/g, '""')}"`,
         `"${(app.job?.location || "").replace(/"/g, '""')}"`,
@@ -1059,8 +1069,25 @@ const SuperAdminDashboard = () => {
 
                                       return (
                                         <tr key={app._id} className="hover:bg-gray-50/70 transition-colors">
-                                          <td className="px-4 py-3 font-bold text-brand-black">
-                                            {app.seeker?.name || "Applicant"}
+                                          <td className="px-4 py-3 text-brand-black">
+                                            <p className="font-bold text-brand-black">{app.seeker?.name || "Applicant"}</p>
+                                            {(app.seekerProfile?.currentDesignation || app.seekerProfile?.currentOrganization) && (
+                                              <p className="text-[11px] text-brand-grey font-medium truncate max-w-[200px]">
+                                                💼 {app.seekerProfile.currentDesignation}
+                                                {app.seekerProfile.currentDesignation && app.seekerProfile.currentOrganization ? " @ " : ""}
+                                                {app.seekerProfile.currentOrganization}
+                                              </p>
+                                            )}
+                                            {(app.seekerProfile?.currentCtc || app.seekerProfile?.expectedCtc) && (
+                                              <p className="text-[10px] text-emerald-800 font-semibold mt-0.5">
+                                                CTC: {app.seekerProfile.currentCtc || "-"} ➔ Exp: {app.seekerProfile.expectedCtc || "-"}
+                                              </p>
+                                            )}
+                                            {app.seekerProfile?.noticePeriod && (
+                                              <p className="text-[10px] text-blue-700 font-medium">
+                                                ⏱️ {app.seekerProfile.noticePeriod}
+                                              </p>
+                                            )}
                                           </td>
                                           <td className="px-4 py-3 text-brand-grey">
                                             <p>{app.seeker?.email}</p>
@@ -1171,6 +1198,23 @@ const SuperAdminDashboard = () => {
                         <tr key={app._id} className="border-t border-brand-border hover:bg-gray-50/50 transition-colors">
                           <td className="px-5 py-3.5">
                             <p className="font-semibold text-brand-black">{app.seeker?.name || "Applicant"}</p>
+                            {(app.seekerProfile?.currentDesignation || app.seekerProfile?.currentOrganization) && (
+                              <p className="text-[11px] text-brand-grey font-medium truncate max-w-[200px]">
+                                💼 {app.seekerProfile.currentDesignation}
+                                {app.seekerProfile.currentDesignation && app.seekerProfile.currentOrganization ? " @ " : ""}
+                                {app.seekerProfile.currentOrganization}
+                              </p>
+                            )}
+                            {(app.seekerProfile?.currentCtc || app.seekerProfile?.expectedCtc) && (
+                              <p className="text-[10px] text-emerald-800 font-semibold mt-0.5">
+                                CTC: {app.seekerProfile.currentCtc || "-"} ➔ Exp: {app.seekerProfile.expectedCtc || "-"}
+                              </p>
+                            )}
+                            {app.seekerProfile?.noticePeriod && (
+                              <p className="text-[10px] text-blue-700 font-medium">
+                                ⏱️ {app.seekerProfile.noticePeriod}
+                              </p>
+                            )}
                             <p className="text-xs text-brand-grey mt-0.5">{app.seeker?.email}</p>
                             {app.seeker?.phone && <p className="text-[11px] text-brand-grey">📞 {app.seeker.phone}</p>}
                           </td>

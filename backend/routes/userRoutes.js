@@ -30,7 +30,7 @@ router.get(
     }
 
     let profileData = null;
-    if (user.role === "seeker") {
+    if (["seeker", "admin", "superadmin"].includes(user.role)) {
       profileData = await SeekerProfile.findOne({ user: user._id })
         .populate("savedJobs", "title location employer isFeatured")
         .populate("followedEmployers", "companyName sector location logo user");
@@ -74,7 +74,7 @@ router.patch(
     await user.save();
 
     let profileData = null;
-    if (user.role === "seeker" && seekerProfile) {
+    if (["seeker", "admin", "superadmin"].includes(user.role) && seekerProfile) {
       profileData = await SeekerProfile.findOne({ user: user._id });
       if (!profileData) {
         profileData = await SeekerProfile.create({ user: user._id, ...seekerProfile });
@@ -91,7 +91,7 @@ router.patch(
         await profileData.save();
       }
     } else {
-      if (user.role === "seeker") {
+      if (["seeker", "admin", "superadmin"].includes(user.role)) {
         profileData = await SeekerProfile.findOne({ user: user._id });
       } else if (user.role === "employer") {
         profileData = await EmployerProfile.findOne({ user: user._id });
