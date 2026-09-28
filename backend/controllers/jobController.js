@@ -60,6 +60,42 @@ export const createJob = asyncHandler(async (req, res) => {
     });
   }
 
+  // Ensure the company name shows in the employers section
+  const inputCompanyName = (req.body.companyName || "").trim();
+  if (inputCompanyName) {
+    const escaped = inputCompanyName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    let companyProfile = await EmployerProfile.findOne({
+      companyName: { $regex: `^${escaped}$`, $options: "i" },
+    });
+
+    if (!companyProfile) {
+      try {
+        companyProfile = await EmployerProfile.create({
+          companyName: inputCompanyName,
+          location: req.body.location || "",
+          sector: req.body.sector || "Agriculture & Agribusiness",
+          verificationStatus: "approved",
+          user: req.user._id,
+        });
+      } catch (err) {
+        console.error("Error creating EmployerProfile for job company:", err);
+      }
+    } else {
+      if (companyProfile.verificationStatus !== "approved") {
+        companyProfile.verificationStatus = "approved";
+        await companyProfile.save().catch(() => {});
+      }
+      if (!companyProfile.location && req.body.location) {
+        companyProfile.location = req.body.location;
+        await companyProfile.save().catch(() => {});
+      }
+    }
+
+    if (!employerProfile && companyProfile) {
+      employerProfile = companyProfile;
+    }
+  }
+
   // Admin-created jobs are automatically approved; employer jobs are pending review
   const initialStatus = isPrivileged ? (req.body.status || "approved") : "pending";
   const isFeatured = isPrivileged ? Boolean(req.body.isFeatured) : false;
@@ -313,6 +349,29 @@ export const updateJob = asyncHandler(async (req, res) => {
 
   Object.assign(job, fieldsToUpdate);
   await job.save();
+
+  // If companyName was updated, ensure an approved EmployerProfile exists
+  const updatedCompanyName = (job.companyName || "").trim();
+  if (updatedCompanyName) {
+    const escaped = updatedCompanyName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const existingCompany = await EmployerProfile.findOne({
+      companyName: { $regex: `^${escaped}$`, $options: "i" },
+    });
+    if (!existingCompany) {
+      try {
+        await EmployerProfile.create({
+          companyName: updatedCompanyName,
+          location: job.location || "",
+          sector: "Agriculture & Agribusiness",
+          verificationStatus: "approved",
+          user: req.user._id,
+        });
+      } catch (err) {
+        console.error("Error creating EmployerProfile on updateJob:", err);
+      }
+    }
+  }
+
   res.json(job);
 });
 

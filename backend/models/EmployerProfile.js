@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const employerProfileSchema = new mongoose.Schema(
   {
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, unique: true },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: false },
     companyName: { type: String, required: true, trim: true },
     sector: { type: String, trim: true },
     logoUrl: { type: String },

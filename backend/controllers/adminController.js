@@ -416,12 +416,15 @@ export const deleteEmployer = asyncHandler(async (req, res) => {
   const userId = employer.user;
   const companyName = employer.companyName;
 
+  const userObj = userId ? await User.findById(userId).select("role") : null;
+  const isPrivilegedUser = userObj && ["admin", "superadmin"].includes(userObj.role);
+
   // 1. Find all jobs posted by this employer (by employer user ID or companyName)
   const queryConditions = [];
-  if (userId) queryConditions.push({ employer: userId });
   if (companyName) queryConditions.push({ companyName });
+  if (userId && !isPrivilegedUser) queryConditions.push({ employer: userId });
 
-  const employerJobs = await Job.find({ $or: queryConditions });
+  const employerJobs = queryConditions.length > 0 ? await Job.find({ $or: queryConditions }) : [];
   const jobIds = employerJobs.map((j) => j._id);
 
   // 2. Cascade delete applications for those jobs
