@@ -87,6 +87,7 @@ const JobDetails = () => {
   const [copiedSubject, setCopiedSubject] = useState(false);
   const [copiedShare, setCopiedShare] = useState(false);
   const [copiedCc, setCopiedCc] = useState(false);
+  const [copiedBody, setCopiedBody] = useState(false);
 
   useEffect(() => {
     fetchJobById(id)
@@ -303,6 +304,9 @@ const JobDetails = () => {
     } else if (type === "subject") {
       setCopiedSubject(true);
       setTimeout(() => setCopiedSubject(false), 2000);
+    } else if (type === "body") {
+      setCopiedBody(true);
+      setTimeout(() => setCopiedBody(false), 2000);
     } else if (type === "share") {
       setCopiedShare(true);
       setTimeout(() => setCopiedShare(false), 2000);
@@ -312,14 +316,14 @@ const JobDetails = () => {
   if (loading) return <div className="py-24 text-center text-brand-grey">Loading job...</div>;
   if (!job) return <div className="py-24 text-center text-brand-grey">{error || "Job not found."}</div>;
 
-  const companyDisplayName = job.companyName || job.employer?.name || "Hiring Company";
+  const companyDisplayName = job.companyName || job.employer?.name || "Company";
   
-  // Format subject: always ensure [AgriYuvaa] reference is present in the subject
+  // Format subject: "Apply for the [Job Title] position at [Company] via (Agriyuvaa Job Portal)"
   let defaultEmailSubject = job.applyEmailSubject?.trim();
   if (!defaultEmailSubject) {
-    defaultEmailSubject = `[AgriYuvaa Application] ${job.title} - ${user?.name || "Candidate"}`;
+    defaultEmailSubject = `Apply for the ${job.title} position at ${companyDisplayName} via (Agriyuvaa Job Portal)`;
   } else if (!defaultEmailSubject.toLowerCase().includes("agriyuvaa")) {
-    defaultEmailSubject = `[AgriYuvaa] ${defaultEmailSubject} - ${user?.name || "Candidate"}`;
+    defaultEmailSubject = `Apply for the ${job.title} position at ${companyDisplayName} via (Agriyuvaa Job Portal)`;
   }
 
   const candidatePhone = user?.phone ? `\n- Phone: ${user.phone}` : "";
@@ -327,7 +331,11 @@ const JobDetails = () => {
     ? `\n- Online Resume Link: ${resumeUrl.startsWith("http") ? resumeUrl : `https://${resumeUrl}`}`
     : "";
 
-  const emailBody = `Dear Hiring Team at ${companyDisplayName},\n\nI am writing to apply for the "${job.title}" position at ${companyDisplayName} via AgriYuvaa (Agriculture Career & Talent Platform).\n\nPlease find attached my resume for your review and consideration.\n\nApplicant Details:\n- Name: ${user?.name || "Candidate"}\n- Email: ${user?.email || ""}${candidatePhone}${resumeRef}\n\nThank you for your time and consideration.\n\nBest regards,\n${user?.name || "Candidate"}\n(Applied through AgriYuvaa - https://job.agriyuvaa.com)`;
+  const currentJobUrl = typeof window !== "undefined" && window.location.origin
+    ? `${window.location.origin}/jobs/${job._id}`
+    : `https://job.agriyuvaa.com/jobs/${job._id}`;
+
+  const emailBody = `Dear Hiring Team at ${companyDisplayName},\n\nI am writing to apply for the "${job.title}" position at ${companyDisplayName} via Agriyuvaa Job Portal.\n\nPlease find attached my resume for your review and consideration.\n\nApplicant Details:\n- Name: ${user?.name || "Candidate"}\n- Email: ${user?.email || ""}${candidatePhone}${resumeRef}\n\nThank you for your time and consideration.\n\nBest regards,\n${user?.name || "Candidate"}\nApplied through Agriyuvaa job portal (${currentJobUrl})`;
 
   const platformCcEmail = import.meta.env.VITE_PLATFORM_CC_EMAIL || "agriyuvaa@gmail.com";
 
@@ -807,6 +815,24 @@ const JobDetails = () => {
                   </button>
                 </div>
               </div>
+
+              {/* Copy Full Email Body Button */}
+              <button
+                type="button"
+                onClick={() => handleCopy(emailBody, "body")}
+                className="w-full text-xs font-semibold py-2 px-3 rounded-lg border border-dashed border-brand-border hover:bg-gray-50 text-gray-700 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                title="Copy complete pre-written email message"
+              >
+                {copiedBody ? (
+                  <>
+                    <Check size={14} className="text-brand-green" /> Email Message Copied!
+                  </>
+                ) : (
+                  <>
+                    <Copy size={14} /> Copy Full Email Body / Message
+                  </>
+                )}
+              </button>
 
               {/* Action Buttons: Web Gmail + Default App */}
               <div className="space-y-2 pt-1">

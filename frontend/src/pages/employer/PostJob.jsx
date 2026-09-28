@@ -338,7 +338,7 @@ const PostJob = () => {
                 Recommended Email Subject Line (Optional)
               </label>
               <input
-                placeholder={`e.g. Application for ${form.title || "this role"} - via AgriYuvaa`}
+                placeholder={`e.g. Apply for the ${form.title || "Horticulture"} position at ${form.companyName || "company"} via (Agriyuvaa Job Portal)`}
                 className="input-field mt-1 text-sm bg-white"
                 value={form.applyEmailSubject}
                 onChange={(e) => setForm({ ...form, applyEmailSubject: e.target.value })}

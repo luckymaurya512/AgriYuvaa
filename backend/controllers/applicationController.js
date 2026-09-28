@@ -38,6 +38,57 @@ export const applyToJob = asyncHandler(async (req, res) => {
     coverNote: req.body.coverNote,
   });
 
+  // Notify employer / recruiter via email using standard Agriyuvaa format
+  try {
+    const jobWithEmployer = await Job.findById(job._id).populate("employer", "email name");
+    const recipientEmail = jobWithEmployer?.applyEmail || jobWithEmployer?.employer?.email;
+    const companyDisplayName = jobWithEmployer?.companyName || jobWithEmployer?.employer?.name || "Company";
+    const candidateName = req.user.name || "Candidate";
+    const jobLink = `${process.env.FRONTEND_URL || "https://job.agriyuvaa.com"}/jobs/${job._id}`;
+
+    if (recipientEmail) {
+      const emailSubject = `Apply for the ${jobWithEmployer.title} position at ${companyDisplayName} via (Agriyuvaa Job Portal)`;
+      const emailHtml = `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1f2937; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px;">
+          <div style="background: #047857; color: white; padding: 12px 18px; border-radius: 8px; margin-bottom: 20px;">
+            <h2 style="margin: 0; font-size: 18px;">New Job Application Received</h2>
+          </div>
+          <p style="font-size: 14px;">A new candidate has applied for the <strong>${jobWithEmployer.title}</strong> position at <strong>${companyDisplayName}</strong> via Agriyuvaa Job Portal.</p>
+          
+          <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px; margin: 16px 0;">
+            <p style="margin: 0 0 6px 0; font-size: 13px;"><strong>Applicant:</strong> ${candidateName}</p>
+            <p style="margin: 0 0 6px 0; font-size: 13px;"><strong>Email:</strong> ${req.user.email}</p>
+            ${req.user.phone ? `<p style="margin: 0 0 6px 0; font-size: 13px;"><strong>Phone:</strong> ${req.user.phone}</p>` : ""}
+            ${candidateProfile?.currentOrganization ? `<p style="margin: 0 0 6px 0; font-size: 13px;"><strong>Current Organization:</strong> ${candidateProfile.currentOrganization}</p>` : ""}
+            ${candidateProfile?.currentDesignation ? `<p style="margin: 0 0 6px 0; font-size: 13px;"><strong>Current Designation:</strong> ${candidateProfile.currentDesignation}</p>` : ""}
+            ${candidateProfile?.currentCtc ? `<p style="margin: 0 0 6px 0; font-size: 13px;"><strong>Current CTC:</strong> ${candidateProfile.currentCtc}</p>` : ""}
+            ${candidateProfile?.expectedCtc ? `<p style="margin: 0 0 6px 0; font-size: 13px;"><strong>Expected CTC:</strong> ${candidateProfile.expectedCtc}</p>` : ""}
+            ${candidateProfile?.noticePeriod ? `<p style="margin: 0 0 6px 0; font-size: 13px;"><strong>Notice Period:</strong> ${candidateProfile.noticePeriod}</p>` : ""}
+          </div>
+
+          ${req.body.coverNote ? `
+          <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px; margin: 16px 0;">
+            <p style="margin: 0 0 4px 0; font-weight: bold; color: #166534; font-size: 12px; text-transform: uppercase;">Cover Note:</p>
+            <p style="margin: 0; font-size: 13px; color: #14532d;">${req.body.coverNote}</p>
+          </div>` : ""}
+
+          <div style="margin-top: 28px; padding-top: 16px; border-top: 1px solid #e5e7eb; font-size: 13px;">
+            <p style="margin: 0; font-weight: bold; color: #111827;">${candidateName}</p>
+            <p style="margin: 4px 0 0 0; color: #4b5563;">Applied through Agriyuvaa job portal (<a href="${jobLink}" style="color: #047857; text-decoration: underline;">${jobLink}</a>)</p>
+          </div>
+        </div>
+      `;
+
+      await sendEmail({
+        to: recipientEmail,
+        subject: emailSubject,
+        html: emailHtml,
+      }).catch((err) => console.error("Failed to send employer application notification email:", err.message));
+    }
+  } catch (emailErr) {
+    console.error("Application email trigger notice:", emailErr.message);
+  }
+
   res.status(201).json(application);
 });
 
