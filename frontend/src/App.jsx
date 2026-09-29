@@ -20,6 +20,7 @@ import GovtJobs from "./pages/GovtJobs.jsx";
 import GovtJobDetail from "./pages/GovtJobDetail.jsx";
 import BlogList from "./pages/BlogList.jsx";
 import BlogDetail from "./pages/BlogDetail.jsx";
+import WorkshopList from "./pages/WorkshopList.jsx";
 
 // Dashboard Pages
 import SeekerDashboard from "./pages/seeker/SeekerDashboard.jsx";
@@ -46,6 +47,7 @@ function App() {
           <Route path="/blog" element={<BlogList />} />
           <Route path="/blogs" element={<BlogList />} />
           <Route path="/blog/:slug" element={<BlogDetail />} />
+          <Route path="/workshops" element={<WorkshopList />} />
           <Route path="/employers" element={<Employers />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
@@ -53,6 +55,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/resume-builder" element={<ResumeBuilder />} />
+
 
           {/* Job Seeker */}
           <Route

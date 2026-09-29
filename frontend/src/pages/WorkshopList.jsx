@@ -58,20 +58,23 @@ const WorkshopList = () => {
   const otherWorkshops = filteredWorkshops.length === 0 ? workshops : [];
 
   return (
-    <div className="pt-24 pb-20">
+    <div className="pb-20">
       <SEO
-        title="Hands-on Agriculture Workshops & Practical Training"
+        title="Hands-on Agriculture Workshops & Practical Training | AgriYuvaa"
         description="Explore practical agricultural workshops on hydroponics, drone technology, beekeeping, biofloc, and precision farming for students and youth."
         canonical="/workshops"
       />
       {/* Header */}
-      <div className="bg-gradient-to-br from-gray-950 via-emerald-950 to-gray-900 py-16 -mt-24 pt-36">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl font-extrabold text-white mb-3">
-            Workshops & <span className="text-emerald-400">Trainings</span>
+      <div className="bg-gradient-to-br from-gray-950 via-emerald-950 to-gray-900 py-12 sm:py-16 text-center text-white px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto space-y-3">
+          <div className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full uppercase tracking-wider">
+            <GraduationCap size={14} /> Practical Agricultural Training
+          </div>
+          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight">
+            Workshops & <span className="text-emerald-400">Masterclasses</span>
           </h1>
-          <p className="text-white/60 max-w-lg mx-auto">
-            Hands-on workshops designed to equip young farmers with cutting-edge skills in modern agriculture.
+          <p className="text-gray-300 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
+            Hands-on masterclasses designed to equip agriculture students and professionals with modern field skills.
           </p>
         </div>
       </div>
@@ -110,7 +113,7 @@ const WorkshopList = () => {
       </div>
 
       {/* Workshops Grid */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {loading ? (
           <div className="grid md:grid-cols-3 gap-6">
             {[1, 2, 3].map((n) => (
@@ -286,22 +289,6 @@ const WorkshopList = () => {
         </div>
       )}
 
-      {/* CTA */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-gradient-to-r from-emerald-600 to-lime-600 rounded-2xl px-8 py-10 text-center text-white">
-          <h3 className="text-2xl font-extrabold mb-2">Interested in hosting a workshop?</h3>
-          <p className="text-white/80 text-sm mb-5 max-w-md mx-auto">
-            We partner with agricultural organizations, NGOs, and educational institutions.
-          </p>
-          <Link
-            to="/contact"
-            className="inline-flex items-center gap-2 bg-white text-emerald-700 font-semibold px-6 py-3 rounded-xl hover:bg-emerald-50 transition-all text-sm"
-          >
-            Contact Us <ArrowRight size={15} />
-          </Link>
-        </div>
-      </div>
-
       {/* YouTube Video Modal Player */}
       {activeVideo && (
         <div
@@ -427,7 +414,6 @@ const WorkshopList = () => {
                 </div>
               )}
             </div>
-
           </div>
         </div>
       )}

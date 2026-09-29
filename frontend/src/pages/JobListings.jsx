@@ -7,6 +7,7 @@ import SEO from "../components/SEO.jsx";
 import ResumePromoCard from "../components/ResumePromoCard.jsx";
 import CommunityPromoCard from "../components/CommunityPromoCard.jsx";
 
+
 const employmentTypes = [
   { value: "full-time", label: "Full-time" },
   { value: "part-time", label: "Part-time" },
@@ -85,10 +86,14 @@ const JobListings = () => {
       .catch(() => {
         setJobs([]);
         fetchJobs({ limit: 8, sort: "-isFeatured -createdAt" })
-          .then((fallbackData) => setOtherJobs(fallbackData.jobs || []))
+          .then((fallbackData) => {
+            setOtherJobs(fallbackData.jobs || []);
+          })
           .catch(() => setOtherJobs([]));
       })
       .finally(() => setLoading(false));
+
+
   }, [searchParams, page, currentKeyword, currentLocation, currentCategory, currentEmploymentType, currentExperienceLevel]);
 
   const applyTextFilters = (e) => {
@@ -343,7 +348,7 @@ const JobListings = () => {
               </div>
 
               {/* Other Recommended Jobs Grid */}
-              {otherJobs.length > 0 ? (
+              {otherJobs.length > 0 && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <h3 className="text-base sm:text-lg font-display font-bold text-brand-black flex items-center gap-2">
@@ -364,18 +369,10 @@ const JobListings = () => {
                     ))}
                   </div>
                 </div>
-              ) : (
-                <div className="py-20 text-center text-brand-grey card p-8">
-                  <p className="text-base font-semibold text-brand-black mb-1">No jobs match your search</p>
-                  <p className="text-sm text-brand-grey mb-4">Try adjusting your keywords or clearing some filters.</p>
-                  {hasActiveFilters && (
-                    <button onClick={clearAllFilters} className="btn-secondary text-xs">
-                      Reset All Filters
-                    </button>
-                  )}
-                </div>
               )}
             </div>
+
+
           ) : (
             <div className="grid sm:grid-cols-2 gap-5">
               {jobs.map((job, index) => (

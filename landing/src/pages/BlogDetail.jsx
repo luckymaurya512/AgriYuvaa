@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Calendar, User, Tag, BookOpen } from "lucide-react";
-import { fetchBlogBySlug } from "../services/landingService.js";
+import { ArrowLeft, Calendar, User, Tag, BookOpen, ArrowRight, GraduationCap, Play } from "lucide-react";
+import { fetchBlogBySlug, fetchBlogs, fetchWorkshops } from "../services/landingService.js";
+import { getWorkshopThumbnail } from "../utils/fallbackData.js";
 import RichTextRenderer from "../components/RichTextRenderer.jsx";
 import SEO from "../components/SEO.jsx";
 
@@ -10,6 +11,8 @@ const BlogDetail = () => {
   const [blog, setBlog] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [otherBlogs, setOtherBlogs] = useState([]);
+  const [workshops, setWorkshops] = useState([]);
 
   useEffect(() => {
     setLoading(true);
@@ -17,7 +20,22 @@ const BlogDetail = () => {
       .then((data) => setBlog(data))
       .catch(() => setError(true))
       .finally(() => setLoading(false));
+
+    fetchBlogs({ limit: 6 })
+      .then((data) => {
+        const list = (data.blogs || []).filter((b) => b.slug !== slug);
+        setOtherBlogs(list.slice(0, 3));
+      })
+      .catch(() => setOtherBlogs([]));
+
+    fetchWorkshops()
+      .then((data) => {
+        const list = Array.isArray(data) ? data : data?.workshops || [];
+        setWorkshops(list.slice(0, 3));
+      })
+      .catch(() => setWorkshops([]));
   }, [slug]);
+
 
   if (loading) {
     return (
@@ -140,6 +158,135 @@ const BlogDetail = () => {
           </div>
         </div>
       </div>
+
+      {/* ── OTHER BLOGS / ARTICLES ── */}
+      {otherBlogs.length > 0 && (
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 space-y-6">
+          <div className="flex items-center justify-between border-b border-gray-200 pb-4">
+            <div>
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <BookOpen size={20} className="text-emerald-600" /> More Agriculture Articles & Guides
+              </h2>
+              <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
+                Explore insightful guides on careers, ICAR exam prep, and modern agricultural technology.
+              </p>
+            </div>
+            <Link
+              to="/blog"
+              className="text-xs sm:text-sm font-semibold text-emerald-700 hover:text-emerald-800 flex items-center gap-1 shrink-0"
+            >
+              All articles <ArrowRight size={14} />
+            </Link>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {otherBlogs.map((item) => (
+              <Link
+                key={item._id || item.slug}
+                to={`/blog/${item.slug}`}
+                className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-xs hover:shadow-md hover:-translate-y-1 transition-all duration-200 flex flex-col group"
+              >
+                <div className="relative aspect-[16/9] bg-gray-100 overflow-hidden">
+                  <img
+                    src={item.coverImage}
+                    alt={item.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    onError={(e) => { e.target.style.display = "none"; }}
+                  />
+                </div>
+                <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
+                  <div className="space-y-1.5">
+                    <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md inline-block">
+                      {item.tags?.[0] || "Agriculture"}
+                    </span>
+                    <h3 className="font-bold text-sm text-gray-900 group-hover:text-emerald-700 transition-colors line-clamp-2">
+                      {item.title}
+                    </h3>
+                    <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">
+                      {item.excerpt}
+                    </p>
+                  </div>
+                  <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-[11px] text-gray-400">
+                    <span>{item.author || "AgriYuvaa Team"}</span>
+                    <span className="font-semibold text-emerald-700 group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
+                      Read <ArrowRight size={11} />
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── RECOMMENDED WORKSHOPS ── */}
+      {workshops.length > 0 && (
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 space-y-6">
+          <div className="flex items-center justify-between border-b border-gray-200 pb-4">
+            <div>
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <GraduationCap size={22} className="text-emerald-600" /> Practical Workshops & Trainings
+              </h2>
+              <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
+                Hands-on skill development video sessions in drones, hydroponics, and agribusiness.
+              </p>
+            </div>
+            <Link
+              to="/workshops"
+              className="text-xs sm:text-sm font-semibold text-emerald-700 hover:text-emerald-800 flex items-center gap-1 shrink-0"
+            >
+              All workshops <ArrowRight size={14} />
+            </Link>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {workshops.map((w) => (
+              <div
+                key={w._id || w.title}
+                className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-xs hover:shadow-md hover:-translate-y-1 transition-all duration-200 flex flex-col group"
+              >
+                <div className="relative aspect-[16/9] bg-gray-100 overflow-hidden">
+                  <img
+                    src={getWorkshopThumbnail(w)}
+                    alt={w.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                  <span className="absolute top-2.5 right-2.5 text-[10px] font-bold bg-white/95 text-emerald-800 px-2 py-0.5 rounded-full shadow-xs">
+                    {w.category}
+                  </span>
+                  {w.duration && (
+                    <span className="absolute bottom-2.5 left-2.5 text-[10px] font-semibold bg-black/60 text-white px-2 py-0.5 rounded-md">
+                      ⏱️ {w.duration}
+                    </span>
+                  )}
+                </div>
+                <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
+                  <div className="space-y-1.5">
+                    <h3 className="font-bold text-sm text-gray-900 group-hover:text-emerald-700 transition-colors line-clamp-2">
+                      {w.title}
+                    </h3>
+                    <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">
+                      {w.description}
+                    </p>
+                  </div>
+                  <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
+                    <span className="text-[11px] text-gray-500 truncate max-w-[140px]">
+                      {w.instructor}
+                    </span>
+                    <Link
+                      to="/workshops"
+                      className="inline-flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white text-[11px] font-bold px-3 py-1.5 rounded-lg transition-colors shadow-xs"
+                    >
+                      <Play size={11} className="fill-current" /> Watch
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

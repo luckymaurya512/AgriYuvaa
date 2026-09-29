@@ -31,6 +31,7 @@ import WhatsAppIcon from "../components/WhatsAppIcon.jsx";
 import ResumePromoCard from "../components/ResumePromoCard.jsx";
 import CommunityPromoCard from "../components/CommunityPromoCard.jsx";
 
+
 const categories = [
   "All",
   "Banking & NABARD",
@@ -132,6 +133,8 @@ const GovtJobs = () => {
           .catch(() => setOtherJobs([]));
       })
       .finally(() => setLoading(false));
+
+
   };
 
   const handleClearFilters = () => {
@@ -392,6 +395,13 @@ const GovtJobs = () => {
           <Landmark size={36} className="mx-auto text-gray-400" />
           <h3 className="font-display font-bold text-base text-gray-900">No matching government jobs found</h3>
           <p className="text-xs text-brand-grey">Try adjusting your search terms or clearing selected category filters.</p>
+          <button
+            type="button"
+            onClick={handleClearFilters}
+            className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold transition-all mx-auto mt-2"
+          >
+            Clear All Filters
+          </button>
         </div>
       ) : (
         <div className="grid gap-6">
@@ -418,6 +428,7 @@ const GovtJobs = () => {
             </div>
           )}
           {(jobs.length > 0 ? jobs : otherJobs).map((job, index) => (
+
             <React.Fragment key={job._id}>
               {index === 1 && (
                 <CommunityPromoCard
@@ -426,6 +437,7 @@ const GovtJobs = () => {
                   subtitle="Get ICAR, IBPS AFO, State PSC syllabus, exam dates & answer keys directly on your phone."
                 />
               )}
+
               {index === 4 && (
                 <ResumePromoCard
                   variant="compact"
