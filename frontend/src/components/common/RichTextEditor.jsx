@@ -88,11 +88,34 @@ const RichTextEditor = ({
       .join("");
   };
 
-  // Sync value into contentEditable when switching or mounting
+  // Switch between Visual, HTML Source, and Preview without losing content
+  const switchMode = (newMode) => {
+    if (viewMode === "visual" && editorRef.current) {
+      let currentHtml = editorRef.current.innerHTML;
+      if (currentHtml === "<p><br></p>" || currentHtml === "<p></p>" || currentHtml === "<br>") {
+        currentHtml = "";
+      }
+      lastHtmlRef.current = currentHtml;
+      if (onChange) onChange(currentHtml);
+    }
+    if (newMode === "visual" && editorRef.current) {
+      const incoming = formatInitialHtml(value);
+      if (editorRef.current.innerHTML !== incoming) {
+        editorRef.current.innerHTML = incoming;
+      }
+      lastHtmlRef.current = incoming;
+    }
+    setViewMode(newMode);
+  };
+
+  // Sync value into contentEditable when mounting or when external value changes
   useEffect(() => {
     if (editorRef.current) {
       const incoming = formatInitialHtml(value);
-      if (incoming !== lastHtmlRef.current && incoming !== editorRef.current.innerHTML) {
+      const isFocused =
+        document.activeElement === editorRef.current ||
+        editorRef.current.contains(document.activeElement);
+      if (!isFocused && editorRef.current.innerHTML !== incoming) {
         editorRef.current.innerHTML = incoming;
         lastHtmlRef.current = incoming;
       }
@@ -1025,7 +1048,7 @@ const RichTextEditor = ({
           <div className="flex items-center gap-1 bg-gray-200/80 p-0.5 rounded-lg text-xs font-semibold">
             <button
               type="button"
-              onClick={() => setViewMode("visual")}
+              onClick={() => switchMode("visual")}
               className={`px-2.5 py-1 rounded-md transition-all flex items-center gap-1 cursor-pointer ${
                 viewMode === "visual"
                   ? "bg-white text-brand-black shadow-xs font-bold"
@@ -1037,7 +1060,7 @@ const RichTextEditor = ({
             </button>
             <button
               type="button"
-              onClick={() => setViewMode("code")}
+              onClick={() => switchMode("code")}
               className={`px-2 py-1 rounded-md transition-all flex items-center gap-1 cursor-pointer ${
                 viewMode === "code"
                   ? "bg-white text-brand-black shadow-xs font-bold"
@@ -1049,7 +1072,7 @@ const RichTextEditor = ({
             </button>
             <button
               type="button"
-              onClick={() => setViewMode("preview")}
+              onClick={() => switchMode("preview")}
               className={`px-2.5 py-1 rounded-md transition-all flex items-center gap-1 cursor-pointer ${
                 viewMode === "preview"
                   ? "bg-emerald-600 text-white shadow-xs font-bold"
@@ -1072,7 +1095,7 @@ const RichTextEditor = ({
             <button
               type="button"
               onClick={addTableRow}
-              className="px-2 py-1 rounded-lg bg-white hover:bg-emerald-100 border border-emerald-200 text-emerald-800 font-semibold cursor-pointer text-[11px] flex items-center gap-1 shadow-2xs"
+              className="px-2 py-1 rounded-lg bg-white hover:bg-emerald-100 border border-emerald-200 text-emerald-800 font-semibold cursor-pointer text-[11px] flex items-center gap-1 shadow-xs"
               title="Insert row below"
             >
               <Rows size={12} /> + Row
@@ -1080,7 +1103,7 @@ const RichTextEditor = ({
             <button
               type="button"
               onClick={addTableCol}
-              className="px-2 py-1 rounded-lg bg-white hover:bg-emerald-100 border border-emerald-200 text-emerald-800 font-semibold cursor-pointer text-[11px] flex items-center gap-1 shadow-2xs"
+              className="px-2 py-1 rounded-lg bg-white hover:bg-emerald-100 border border-emerald-200 text-emerald-800 font-semibold cursor-pointer text-[11px] flex items-center gap-1 shadow-xs"
               title="Insert column to the right"
             >
               <Columns size={12} /> + Column
@@ -1088,7 +1111,7 @@ const RichTextEditor = ({
             <button
               type="button"
               onClick={deleteTableRow}
-              className="px-2 py-1 rounded-lg bg-white hover:bg-red-50 border border-gray-200 text-red-600 font-medium cursor-pointer text-[11px] flex items-center gap-1 shadow-2xs ml-auto"
+              className="px-2 py-1 rounded-lg bg-white hover:bg-red-50 border border-gray-200 text-red-600 font-medium cursor-pointer text-[11px] flex items-center gap-1 shadow-xs ml-auto"
               title="Delete current row"
             >
               Delete Row
@@ -1096,7 +1119,7 @@ const RichTextEditor = ({
             <button
               type="button"
               onClick={deleteCurrentTable}
-              className="px-2 py-1 rounded-lg bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 font-bold cursor-pointer text-[11px] flex items-center gap-1 shadow-2xs"
+              className="px-2 py-1 rounded-lg bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 font-bold cursor-pointer text-[11px] flex items-center gap-1 shadow-xs"
               title="Delete whole table"
             >
               <Trash2 size={12} /> Delete Table
@@ -1104,22 +1127,22 @@ const RichTextEditor = ({
           </div>
         )}
 
-        {/* ── Visual WYSIWYG Editable Area ── */}
-        {viewMode === "visual" && (
-          <div
-            ref={editorRef}
-            contentEditable={true}
-            suppressContentEditableWarning={true}
-            onInput={handleInput}
-            onKeyDown={handleKeyDown}
-            onMouseUp={saveSelection}
-            onKeyUp={saveSelection}
-            onFocus={saveSelection}
-            style={{ minHeight: `${rows * 28}px` }}
-            className="rich-text-content p-4 text-sm focus:outline-none leading-relaxed text-gray-800 bg-white min-h-[160px] overflow-y-auto"
-            data-placeholder={placeholder}
-          />
-        )}
+        {/* ── Visual WYSIWYG Editable Area (Kept in DOM so state is never lost) ── */}
+        <div
+          ref={editorRef}
+          contentEditable={true}
+          suppressContentEditableWarning={true}
+          onInput={handleInput}
+          onKeyDown={handleKeyDown}
+          onMouseUp={saveSelection}
+          onKeyUp={saveSelection}
+          onFocus={saveSelection}
+          style={{ minHeight: `${rows * 28}px` }}
+          className={`rich-text-content p-4 text-sm focus:outline-none leading-relaxed text-gray-800 bg-white min-h-[160px] overflow-y-auto ${
+            viewMode !== "visual" ? "hidden" : "block"
+          }`}
+          data-placeholder={placeholder}
+        />
 
         {/* ── HTML Source Code Mode ── */}
         {viewMode === "code" && (
