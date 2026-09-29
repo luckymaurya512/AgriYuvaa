@@ -54,7 +54,7 @@ const BlogDetail = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50/50 py-16">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="animate-pulse space-y-6">
             <div className="h-4 bg-gray-200 rounded w-28" />
             <div className="h-10 bg-gray-200 rounded-xl w-4/5" />
@@ -127,7 +127,7 @@ const BlogDetail = () => {
 
       {/* Header Banner */}
       <div className="bg-gradient-to-br from-gray-950 via-emerald-950 to-gray-900 text-white pt-12 pb-16 px-4 sm:px-6 lg:px-8 shadow-inner">
-        <div className="max-w-3xl mx-auto space-y-5">
+        <div className="max-w-5xl mx-auto space-y-5">
           <Link
             to="/blog"
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-300/80 hover:text-emerald-300 transition-colors"
@@ -195,7 +195,7 @@ const BlogDetail = () => {
       </div>
 
       {/* Main Container */}
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6">
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-10 space-y-8">
           {blog.coverImage && (
             <div className="relative w-full aspect-[16/9] rounded-2xl overflow-hidden border border-gray-100 shadow-2xs bg-gray-100">

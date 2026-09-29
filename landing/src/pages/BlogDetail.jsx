@@ -39,7 +39,7 @@ const BlogDetail = () => {
 
   if (loading) {
     return (
-      <div className="pt-32 pb-20 max-w-3xl mx-auto px-4">
+      <div className="pt-32 pb-20 max-w-5xl mx-auto px-4">
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-gray-200 rounded-lg w-3/4" />
           <div className="h-4 bg-gray-100 rounded w-1/2" />
@@ -97,7 +97,7 @@ const BlogDetail = () => {
       />
       {/* Header */}
       <div className="bg-gradient-to-br from-gray-950 via-emerald-950 to-gray-900 py-16 -mt-24 pt-36">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <Link to="/blog" className="inline-flex items-center gap-2 text-white/60 hover:text-white text-sm mb-6 transition-colors">
             <ArrowLeft size={16} /> Back to Blogs
           </Link>
@@ -130,7 +130,7 @@ const BlogDetail = () => {
       </div>
 
       {/* Content */}
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {blog.coverImage && (
           <div className="relative w-full aspect-[16/9] mb-8 rounded-2xl overflow-hidden shadow-sm border border-gray-100 bg-gray-100">
             <img
