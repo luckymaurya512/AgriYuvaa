@@ -97,7 +97,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .rich-text-content .table-responsive {
-  @apply my-6 overflow-x-auto rounded-xl border border-gray-200 shadow-2xs;
+  @apply my-6 overflow-x-auto rounded-xl border border-gray-200 shadow-sm;
 }
 
 .rich-text-content table {
