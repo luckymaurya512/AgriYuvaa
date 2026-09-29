@@ -83,3 +83,16 @@ h1, h2, h3, h4, h5, h6 {
 .rich-text-content blockquote {
   @apply border-l-4 border-emerald-500 pl-4 py-1.5 italic my-4 text-gray-600 bg-emerald-50/50 rounded-r-lg;
 }
+
+.rich-text-content img {
+  @apply rounded-xl max-w-full h-auto my-4 shadow-sm mx-auto block;
+}
+
+.rich-text-content hr {
+  @apply border-t border-gray-200 my-6;
+}
+
+.rich-text-content .callout-box {
+  @apply my-4 p-4 rounded-xl bg-emerald-50/70 border border-emerald-200 text-emerald-900 text-sm flex gap-3 items-start leading-relaxed;
+}
+

@@ -386,9 +386,9 @@ const PostJob = () => {
         {/* Description */}
         <RichTextEditor
           label="Job Overview / Description"
-          mode="linkOnly"
+          mode="full"
           required
-          rows={5}
+          rows={6}
           placeholder="Brief overview of the role, team, and company mission..."
           value={form.description}
           onChange={(val) => setForm({ ...form, description: val })}

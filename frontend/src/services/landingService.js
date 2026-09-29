@@ -54,7 +54,10 @@ export const uploadBlogImage = async (file) => {
   const { data } = await api.post("/blogs/upload-image", formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
-  return data;
+  return {
+    ...data,
+    imageUrl: data.imageUrl || data.url,
+  };
 };
 
 // Workshops Admin

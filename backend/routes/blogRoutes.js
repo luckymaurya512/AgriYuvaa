@@ -134,7 +134,7 @@ router.delete("/:id", authenticate, authorize("admin", "superadmin"), async (req
 router.post(
   "/upload-image",
   authenticate,
-  authorize("admin", "superadmin"),
+  authorize("admin", "superadmin", "employer"),
   upload.single("image"),
   async (req, res) => {
     try {

@@ -66,7 +66,7 @@ const formatRichText = (content) => {
         const trimmed = block.trim();
         if (!trimmed) return "";
         // If the block is already a block-level HTML element, keep it without wrapping in <p>
-        const isBlockLevel = /^<(?:ul|ol|li|h[1-6]|blockquote|div|table|hr|pre)[^>]*>/i.test(trimmed);
+        const isBlockLevel = /^<(?:ul|ol|li|h[1-6]|blockquote|div|table|hr|pre|img|figure)[^>]*>/i.test(trimmed);
         if (isBlockLevel) {
           return trimmed.replace(/([^>\r\n])\n([^<\r\n])/g, "$1<br />$2");
         }
