@@ -38,6 +38,72 @@ const formatLink = (url) => {
   return `https://${trimmed}`;
 };
 
+export const checkIsLongResume = (data) => {
+  if (!data) return false;
+  let score = 0;
+  if (data.objective && data.objective.trim().length > 0) {
+    score += Math.ceil(data.objective.length / 70);
+  }
+  const validEdu = (data.education || []).filter((e) => e.degree || e.institution);
+  score += validEdu.length * 2.5;
+
+  const validExp = (data.experience || []).filter((e) => e.role || e.company);
+  validExp.forEach((e) => {
+    score += 3;
+    if (e.description) {
+      score += Math.ceil(e.description.length / 80);
+    }
+  });
+
+  const validPubs = (data.publications || []).filter((p) => p.title);
+  score += validPubs.length * 2.5;
+
+  const validCerts = (data.certificationsList || []).filter((c) => c.name);
+  score += validCerts.length * 1.8;
+
+  if (data.skills && data.skills.trim()) {
+    score += Math.ceil(data.skills.split(",").length / 3) * 1.5;
+  }
+
+  const validProj = (data.projects || []).filter((p) => p.title);
+  validProj.forEach((p) => {
+    score += 2.5;
+    if (p.description) score += Math.ceil(p.description.length / 80);
+  });
+
+  (data.customSections || []).forEach((s) => {
+    score += 1.5;
+    (s.items || []).forEach((it) => {
+      if (it.title || it.description) score += 2;
+    });
+  });
+
+  if (data.languages && data.languages.trim()) {
+    score += 1;
+  }
+
+  // A standard 1-page A4 sheet comfortably fits score <= 18
+  return score > 18;
+};
+
+export const getEffectiveSplit = (data, splitSetting) => {
+  if (splitSetting && splitSetting !== "auto") return splitSetting;
+
+  const validEdu = (data.education || []).filter((e) => e.degree || e.institution);
+  const validExp = (data.experience || []).filter((e) => e.role || e.company);
+
+  if (validEdu.length >= 2 && validExp.length >= 2) {
+    return "education";
+  }
+  if (validExp.length > 0) {
+    return "experience";
+  }
+  if (validEdu.length > 0) {
+    return "education";
+  }
+  return "objective";
+};
+
 const sampleData = {
   fullName: "Rahul Sharma",
   title: "Agriculture Professional & Agronomist",
@@ -147,6 +213,8 @@ const ResumeBuilder = () => {
   const { user } = useAuth();
   const [template, setTemplate] = useState("agri_clean"); // "agri_clean" | "modern_green" | "classic_serif"
   const [activeTab, setActiveTab] = useState("editor"); // For mobile: "editor" | "preview"
+  const [pageMode, setPageMode] = useState("auto"); // "auto" | "1" | "2"
+  const [splitAfter, setSplitAfter] = useState("auto"); // "auto" | "education" | "experience" | "publications" | "certifications" | "skills"
 
   const [data, setData] = useState(() => ({
     ...initialEmptyData,
@@ -167,6 +235,8 @@ const ResumeBuilder = () => {
           if (parsed && typeof parsed === "object") {
             setData((prev) => ({ ...prev, ...parsed }));
             if (parsed.template) setTemplate(parsed.template);
+            if (parsed.pageMode) setPageMode(parsed.pageMode);
+            if (parsed.splitAfter) setSplitAfter(parsed.splitAfter);
           }
         }
       } catch (_) {}
@@ -192,6 +262,12 @@ const ResumeBuilder = () => {
           if (p.resumeData.template) {
             setTemplate(p.resumeData.template);
           }
+          if (p.resumeData.pageMode) {
+            setPageMode(p.resumeData.pageMode);
+          }
+          if (p.resumeData.splitAfter) {
+            setSplitAfter(p.resumeData.splitAfter);
+          }
           return;
         }
 
@@ -203,6 +279,8 @@ const ResumeBuilder = () => {
             if (parsed && typeof parsed === "object" && Object.keys(parsed).length > 5) {
               setData((prev) => ({ ...prev, ...parsed }));
               if (parsed.template) setTemplate(parsed.template);
+              if (parsed.pageMode) setPageMode(parsed.pageMode);
+              if (parsed.splitAfter) setSplitAfter(parsed.splitAfter);
               return;
             }
           }
@@ -264,11 +342,17 @@ const ResumeBuilder = () => {
   const [savingResume, setSavingResume] = useState(false);
   const [showDoneModal, setShowDoneModal] = useState(false);
 
+  const isLong = checkIsLongResume(data);
+  const isTwoPages = pageMode === "2" || (pageMode === "auto" && isLong);
+  const effectiveSplit = getEffectiveSplit(data, splitAfter);
+
   const handleSaveAndFinish = async () => {
     setSavingResume(true);
     const resumePayload = {
       ...data,
       template,
+      pageMode,
+      splitAfter,
       updatedAt: new Date().toISOString(),
     };
 
@@ -315,8 +399,12 @@ const ResumeBuilder = () => {
         filename: `${(data.fullName || "Resume").replace(/[^a-z0-9]/gi, "_")}_AgriYuvaa_Resume.pdf`,
         image: { type: "jpeg", quality: 0.98 },
         enableLinks: true,
-        html2canvas: { scale: 2, useCORS: true, logging: false },
+        html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0, scrollX: 0 },
         jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+        pagebreak: {
+          mode: ["css", "legacy"],
+          before: ".html2pdf__page-break",
+        },
       };
 
       await window.html2pdf().set(opt).from(element).save();
@@ -1240,7 +1328,7 @@ const ResumeBuilder = () => {
                   disabled={downloadingPdf}
                   className="w-full sm:w-auto py-3 px-4 btn-secondary text-xs font-bold bg-white text-emerald-900 border-emerald-300 hover:bg-emerald-100 flex items-center justify-center gap-1.5 shadow-2xs"
                 >
-                  <Download size={15} /> Download PDF
+                  <Download size={15} /> {isTwoPages ? "Download 2-Page PDF" : "Download PDF"}
                 </button>
               </div>
             </div>
@@ -1252,21 +1340,178 @@ const ResumeBuilder = () => {
               activeTab === "editor" ? "hidden md:block" : "block"
             }`}
           >
-            <div className="flex items-center justify-between mb-3 no-print">
-              <span className="text-xs font-bold uppercase tracking-wider text-brand-grey flex items-center gap-1.5">
-                <Eye size={14} className="text-brand-green" /> Live Preview
-              </span>
-              <span className="text-[11px] text-brand-grey">Standard A4 Format</span>
+            {/* Live Preview Controls Header */}
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-3 no-print bg-white p-2.5 rounded-xl border border-gray-200 shadow-2xs">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-brand-grey flex items-center gap-1.5">
+                  <Eye size={14} className="text-brand-green" /> Live Preview
+                </span>
+                <span
+                  className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${
+                    isTwoPages
+                      ? "bg-amber-100 text-amber-900 border border-amber-300"
+                      : "bg-emerald-100 text-emerald-900 border border-emerald-300"
+                  }`}
+                >
+                  {isTwoPages ? "📄 2 Pages (A4)" : "📄 1 Page (A4)"}
+                </span>
+              </div>
+
+              {/* Page mode controls */}
+              <div className="flex items-center gap-2">
+                <div className="flex items-center bg-gray-100 p-0.5 rounded-lg text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setPageMode("auto")}
+                    className={`px-2 py-1 rounded-md text-[11px] font-semibold transition-all ${
+                      pageMode === "auto"
+                        ? "bg-white text-emerald-800 shadow-2xs"
+                        : "text-gray-500 hover:text-gray-800"
+                    }`}
+                    title="Auto-detect whether resume fits 1 page or needs 2 pages"
+                  >
+                    Auto
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPageMode("1")}
+                    className={`px-2 py-1 rounded-md text-[11px] font-semibold transition-all ${
+                      pageMode === "1"
+                        ? "bg-white text-emerald-800 shadow-2xs"
+                        : "text-gray-500 hover:text-gray-800"
+                    }`}
+                    title="Force single page layout"
+                  >
+                    1 Page
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPageMode("2")}
+                    className={`px-2 py-1 rounded-md text-[11px] font-semibold transition-all ${
+                      pageMode === "2"
+                        ? "bg-white text-emerald-800 shadow-2xs"
+                        : "text-gray-500 hover:text-gray-800"
+                    }`}
+                    title="Force two pages layout"
+                  >
+                    2 Pages
+                  </button>
+                </div>
+
+                {isTwoPages && (
+                  <div className="flex items-center gap-1 text-[11px]">
+                    <span className="text-gray-500 hidden sm:inline">Split:</span>
+                    <select
+                      value={splitAfter}
+                      onChange={(e) => setSplitAfter(e.target.value)}
+                      className="text-xs bg-gray-50 border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 font-medium focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+                      title="Choose section after which Page 2 starts"
+                    >
+                      <option value="auto">Auto Split</option>
+                      <option value="education">After Education</option>
+                      <option value="experience">After Experience</option>
+                      <option value="publications">After Publications</option>
+                      <option value="certifications">After Certifications</option>
+                      <option value="skills">After Skills</option>
+                    </select>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Resume Sheet Container */}
-            <div className="bg-white border border-gray-300 shadow-xl rounded-xl overflow-hidden print:shadow-none print:border-none print:m-0 print:p-0 print:w-full">
-              <div id="resume-canvas" className="min-h-[800px] p-8 sm:p-10 text-gray-800">
-                {/* Render Selected Template */}
-                {template === "agri_clean" && <TemplateAgriClean data={data} />}
-                {template === "modern_green" && <TemplateModernGreen data={data} />}
-                {template === "classic_serif" && <TemplateClassicSerif data={data} />}
-              </div>
+            <div id="resume-canvas" className="space-y-6 print:space-y-0 print:m-0 print:p-0 print:w-full">
+              {isTwoPages ? (
+                <>
+                  {/* ── SHEET 1 (PAGE 1) ── */}
+                  <div className="resume-page-sheet bg-white border border-gray-300 shadow-xl rounded-xl overflow-hidden print:shadow-none print:border-none print:m-0 print:p-0 print:w-full print:rounded-none">
+                    <div className="bg-gray-50 border-b border-gray-200 px-6 py-2 flex items-center justify-between text-[11px] text-gray-500 font-semibold no-print html2pdf__ignore">
+                      <span className="flex items-center gap-1.5 text-emerald-800">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500"></span> Page 1 of 2
+                      </span>
+                      <span>Standard A4 Sheet</span>
+                    </div>
+
+                    <div className="p-8 sm:p-10 text-gray-800 min-h-[700px] flex flex-col justify-between">
+                      <div>
+                        {template === "agri_clean" && (
+                          <TemplateAgriClean data={data} page={1} splitAfter={effectiveSplit} />
+                        )}
+                        {template === "modern_green" && (
+                          <TemplateModernGreen data={data} page={1} splitAfter={effectiveSplit} />
+                        )}
+                        {template === "classic_serif" && (
+                          <TemplateClassicSerif data={data} page={1} splitAfter={effectiveSplit} />
+                        )}
+                      </div>
+                      <div className="pt-6 border-t border-gray-100 flex justify-between items-center text-[10px] text-gray-400 no-print html2pdf__ignore mt-6">
+                        <span>{data.fullName || "Candidate"} · AgriYuvaa Resume</span>
+                        <span>Page 1 of 2</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ── VISUAL PAGE BREAK SEPARATOR ── */}
+                  <div className="no-print html2pdf__ignore my-4 flex items-center justify-center gap-3">
+                    <div className="h-px bg-gray-300 flex-1 border-dashed border-t border-gray-400" />
+                    <div className="px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-bold flex items-center gap-2 shadow-2xs">
+                      <span>✂️</span>
+                      <span>A4 Page Break • Page 2 Starts Below</span>
+                    </div>
+                    <div className="h-px bg-gray-300 flex-1 border-dashed border-t border-gray-400" />
+                  </div>
+
+                  {/* PDF/Print Break Marker */}
+                  <div
+                    className="html2pdf__page-break"
+                    style={{ pageBreakBefore: "always", breakBefore: "page" }}
+                  />
+
+                  {/* ── SHEET 2 (PAGE 2) ── */}
+                  <div className="resume-page-sheet bg-white border border-gray-300 shadow-xl rounded-xl overflow-hidden print:shadow-none print:border-none print:m-0 print:p-0 print:w-full print:rounded-none">
+                    <div className="bg-gray-50 border-b border-gray-200 px-6 py-2 flex items-center justify-between text-[11px] text-gray-500 font-semibold no-print html2pdf__ignore">
+                      <span className="flex items-center gap-1.5 text-emerald-800">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500"></span> Page 2 of 2
+                      </span>
+                      <span>Standard A4 Sheet</span>
+                    </div>
+
+                    <div className="p-8 sm:p-10 text-gray-800 min-h-[700px] flex flex-col justify-between">
+                      <div>
+                        {template === "agri_clean" && (
+                          <TemplateAgriClean data={data} page={2} splitAfter={effectiveSplit} />
+                        )}
+                        {template === "modern_green" && (
+                          <TemplateModernGreen data={data} page={2} splitAfter={effectiveSplit} />
+                        )}
+                        {template === "classic_serif" && (
+                          <TemplateClassicSerif data={data} page={2} splitAfter={effectiveSplit} />
+                        )}
+                      </div>
+                      <div className="pt-6 border-t border-gray-100 flex justify-between items-center text-[10px] text-gray-400 no-print html2pdf__ignore mt-6">
+                        <span>{data.fullName || "Candidate"} · AgriYuvaa Resume</span>
+                        <span>Page 2 of 2</span>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                /* ── SINGLE PAGE RESUME ── */
+                <div className="resume-page-sheet bg-white border border-gray-300 shadow-xl rounded-xl overflow-hidden print:shadow-none print:border-none print:m-0 print:p-0 print:w-full print:rounded-none">
+                  <div className="bg-gray-50 border-b border-gray-200 px-6 py-2 flex items-center justify-between text-[11px] text-gray-500 font-semibold no-print html2pdf__ignore">
+                    <span className="flex items-center gap-1.5 text-emerald-800">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500"></span> Page 1 of 1 (Single Page)
+                    </span>
+                    <span>Fits A4 Standard Format</span>
+                  </div>
+
+                  <div className="p-8 sm:p-10 text-gray-800 min-h-[800px]">
+                    {template === "agri_clean" && <TemplateAgriClean data={data} page="all" />}
+                    {template === "modern_green" && <TemplateModernGreen data={data} page="all" />}
+                    {template === "classic_serif" && <TemplateClassicSerif data={data} page="all" />}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1343,7 +1588,7 @@ const ResumeBuilder = () => {
                     <Download size={18} />
                   </div>
                   <div>
-                    <p className="text-xs font-bold">Download Offline PDF Copy</p>
+                    <p className="text-xs font-bold">{isTwoPages ? "Download 2-Page Offline PDF" : "Download Offline PDF Copy"}</p>
                     <p className="text-[10px] text-brand-grey mt-0.5">Save a high-res PDF to your phone or computer</p>
                   </div>
                 </div>
@@ -1373,62 +1618,103 @@ const ResumeBuilder = () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 // TEMPLATE 1: AGRI CLEAN
 // ═══════════════════════════════════════════════════════════════════════════════
-const TemplateAgriClean = ({ data }) => {
+const TemplateAgriClean = ({ data, page = "all", splitAfter = "experience" }) => {
   const skillList = data.skills
     ? data.skills.split(",").map((s) => s.trim()).filter(Boolean)
     : [];
 
+  const SECTION_KEYS = [
+    "objective",
+    "education",
+    "experience",
+    "publications",
+    "certifications",
+    "skills",
+    "projects",
+    "customSections",
+    "languages",
+  ];
+
+  const splitIdx = SECTION_KEYS.indexOf(splitAfter);
+  const effectiveSplitIdx = splitIdx === -1 ? SECTION_KEYS.indexOf("experience") : splitIdx;
+
+  const showSection = (key) => {
+    if (page === "all") return true;
+    const idx = SECTION_KEYS.indexOf(key);
+    if (page === 1) return idx <= effectiveSplitIdx;
+    if (page === 2) return idx > effectiveSplitIdx;
+    return true;
+  };
+
   return (
     <div className="font-sans text-[13px] leading-relaxed space-y-4">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-emerald-800 tracking-tight">
-          {data.fullName || "Your Full Name"}
-        </h1>
-        <p className="text-base font-semibold text-gray-800 mt-0.5">
-          {data.title || "Professional Title"}
-        </p>
+      {/* Header (Page 1 or All) */}
+      {(page === "all" || page === 1) && (
+        <div>
+          <h1 className="text-2xl font-bold text-emerald-800 tracking-tight">
+            {data.fullName || "Your Full Name"}
+          </h1>
+          <p className="text-base font-semibold text-gray-800 mt-0.5">
+            {data.title || "Professional Title"}
+          </p>
 
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-600 mt-2">
-          {data.email && (
-            <a
-              href={`mailto:${data.email.trim()}`}
-              className="text-gray-700 hover:text-emerald-800 underline"
-            >
-              {data.email}
-            </a>
-          )}
-          {data.phone && (
-            <span>
-              {data.email ? "· " : ""}
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-600 mt-2">
+            {data.email && (
               <a
-                href={`tel:${data.phone.trim().replace(/\s+/g, "")}`}
-                className="text-gray-700 hover:text-emerald-800"
+                href={`mailto:${data.email.trim()}`}
+                className="text-gray-700 hover:text-emerald-800 underline"
               >
-                {data.phone}
+                {data.email}
               </a>
-            </span>
-          )}
-          {data.location && <span>{(data.email || data.phone) ? "· " : ""}{data.location}</span>}
-          {data.website && (
-            <span>
-              {(data.email || data.phone || data.location) ? "· " : ""}
-              <a
-                href={formatLink(data.website)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-emerald-800 underline font-medium hover:text-emerald-950"
-              >
-                {data.website}
-              </a>
-            </span>
-          )}
+            )}
+            {data.phone && (
+              <span>
+                {data.email ? "· " : ""}
+                <a
+                  href={`tel:${data.phone.trim().replace(/\s+/g, "")}`}
+                  className="text-gray-700 hover:text-emerald-800"
+                >
+                  {data.phone}
+                </a>
+              </span>
+            )}
+            {data.location && <span>{(data.email || data.phone) ? "· " : ""}{data.location}</span>}
+            {data.website && (
+              <span>
+                {(data.email || data.phone || data.location) ? "· " : ""}
+                <a
+                  href={formatLink(data.website)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-emerald-800 underline font-medium hover:text-emerald-950"
+                >
+                  {data.website}
+                </a>
+              </span>
+            )}
+          </div>
+          <hr className="border-t-2 border-emerald-700 mt-3" />
         </div>
-        <hr className="border-t-2 border-emerald-700 mt-3" />
-      </div>
+      )}
+
+      {/* Header (Page 2 Mini-Header) */}
+      {page === 2 && (
+        <div className="pb-3 border-b-2 border-emerald-700 flex flex-wrap justify-between items-baseline gap-2 mb-2">
+          <div>
+            <h2 className="text-lg font-bold text-emerald-800 tracking-tight">
+              {data.fullName || "Your Full Name"}
+            </h2>
+            <p className="text-xs text-gray-700 font-semibold">{data.title}</p>
+          </div>
+          <div className="text-right text-[11px] text-gray-600">
+            <span>{data.email} {data.phone ? `· ${data.phone}` : ""}</span>
+            <p className="font-bold text-emerald-800 text-[10px]">Page 2 of 2</p>
+          </div>
+        </div>
+      )}
 
       {/* Career Objective */}
-      {data.objective && (
+      {showSection("objective") && data.objective && (
         <div>
           <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-800 mb-1">
             Career Objective
@@ -1438,7 +1724,7 @@ const TemplateAgriClean = ({ data }) => {
       )}
 
       {/* Education */}
-      {data.education?.some((e) => e.degree || e.institution) && (
+      {showSection("education") && data.education?.some((e) => e.degree || e.institution) && (
         <div>
           <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-800 mb-1.5">
             Education
@@ -1463,7 +1749,7 @@ const TemplateAgriClean = ({ data }) => {
       )}
 
       {/* Experience */}
-      {data.experience?.some((e) => e.role || e.company) && (
+      {showSection("experience") && data.experience?.some((e) => e.role || e.company) && (
         <div>
           <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-800 mb-1.5">
             Experience & Internships
@@ -1491,7 +1777,7 @@ const TemplateAgriClean = ({ data }) => {
       )}
 
       {/* Research Papers & Publications */}
-      {data.publications?.some((p) => p.title) && (
+      {showSection("publications") && data.publications?.some((p) => p.title) && (
         <div>
           <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-800 mb-1.5">
             Research Papers & Publications
@@ -1527,7 +1813,7 @@ const TemplateAgriClean = ({ data }) => {
       )}
 
       {/* Certifications & Trainings */}
-      {data.certificationsList?.some((c) => c.name) && (
+      {showSection("certifications") && data.certificationsList?.some((c) => c.name) && (
         <div>
           <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-800 mb-1.5">
             Certifications & Accreditations
@@ -1549,7 +1835,7 @@ const TemplateAgriClean = ({ data }) => {
       )}
 
       {/* Skills */}
-      {skillList.length > 0 && (
+      {showSection("skills") && skillList.length > 0 && (
         <div>
           <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-800 mb-1">
             Key Skills & Expertise
@@ -1559,7 +1845,7 @@ const TemplateAgriClean = ({ data }) => {
       )}
 
       {/* Projects */}
-      {data.projects?.some((p) => p.title) && (
+      {showSection("projects") && data.projects?.some((p) => p.title) && (
         <div>
           <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-800 mb-1.5">
             Projects & Practical Work
@@ -1578,7 +1864,7 @@ const TemplateAgriClean = ({ data }) => {
       )}
 
       {/* Dynamic Custom Sections */}
-      {(data.customSections || []).map((sec) =>
+      {showSection("customSections") && (data.customSections || []).map((sec) =>
         sec.items?.some((it) => it.title || it.description) ? (
           <div key={sec.id}>
             <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-800 mb-1.5">
@@ -1602,7 +1888,7 @@ const TemplateAgriClean = ({ data }) => {
       )}
 
       {/* Languages */}
-      {data.languages && (
+      {showSection("languages") && data.languages && (
         <div>
           <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-800 mb-1">
             Languages Known
@@ -1617,61 +1903,102 @@ const TemplateAgriClean = ({ data }) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 // TEMPLATE 2: MODERN GREEN
 // ═══════════════════════════════════════════════════════════════════════════════
-const TemplateModernGreen = ({ data }) => {
+const TemplateModernGreen = ({ data, page = "all", splitAfter = "experience" }) => {
   const skillList = data.skills
     ? data.skills.split(",").map((s) => s.trim()).filter(Boolean)
     : [];
 
+  const SECTION_KEYS = [
+    "objective",
+    "experience",
+    "education",
+    "publications",
+    "certifications",
+    "skills",
+    "projects",
+    "customSections",
+    "languages",
+  ];
+
+  const splitIdx = SECTION_KEYS.indexOf(splitAfter);
+  const effectiveSplitIdx = splitIdx === -1 ? SECTION_KEYS.indexOf("experience") : splitIdx;
+
+  const showSection = (key) => {
+    if (page === "all") return true;
+    const idx = SECTION_KEYS.indexOf(key);
+    if (page === 1) return idx <= effectiveSplitIdx;
+    if (page === 2) return idx > effectiveSplitIdx;
+    return true;
+  };
+
   return (
     <div className="font-sans text-[13px] leading-relaxed space-y-4">
-      {/* Header Banner */}
-      <div className="bg-emerald-900 text-white rounded-xl p-5 -mx-4 -mt-4 shadow-sm">
-        <h1 className="text-2xl font-bold tracking-wide text-white">
-          {data.fullName || "Your Full Name"}
-        </h1>
-        <p className="text-sm font-medium text-emerald-200 mt-0.5">
-          {data.title || "Professional Title"}
-        </p>
+      {/* Header Banner (Page 1 or All) */}
+      {(page === "all" || page === 1) && (
+        <div className="bg-emerald-900 text-white rounded-xl p-5 -mx-4 -mt-4 shadow-sm">
+          <h1 className="text-2xl font-bold tracking-wide text-white">
+            {data.fullName || "Your Full Name"}
+          </h1>
+          <p className="text-sm font-medium text-emerald-200 mt-0.5">
+            {data.title || "Professional Title"}
+          </p>
 
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-emerald-100/90 mt-3 pt-3 border-t border-emerald-800">
-          {data.email && (
-            <a
-              href={`mailto:${data.email.trim()}`}
-              className="text-emerald-100 underline hover:text-white"
-            >
-              {data.email}
-            </a>
-          )}
-          {data.phone && (
-            <span>
-              {data.email ? "· " : ""}
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-emerald-100/90 mt-3 pt-3 border-t border-emerald-800">
+            {data.email && (
               <a
-                href={`tel:${data.phone.trim().replace(/\s+/g, "")}`}
-                className="text-emerald-100 hover:text-white"
+                href={`mailto:${data.email.trim()}`}
+                className="text-emerald-100 underline hover:text-white"
               >
-                {data.phone}
+                {data.email}
               </a>
-            </span>
-          )}
-          {data.location && <span>{(data.email || data.phone) ? "· " : ""}{data.location}</span>}
-          {data.website && (
-            <span>
-              {(data.email || data.phone || data.location) ? "· " : ""}
-              <a
-                href={formatLink(data.website)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-emerald-200 underline font-semibold hover:text-white"
-              >
-                {data.website}
-              </a>
-            </span>
-          )}
+            )}
+            {data.phone && (
+              <span>
+                {data.email ? "· " : ""}
+                <a
+                  href={`tel:${data.phone.trim().replace(/\s+/g, "")}`}
+                  className="text-emerald-100 hover:text-white"
+                >
+                  {data.phone}
+                </a>
+              </span>
+            )}
+            {data.location && <span>{(data.email || data.phone) ? "· " : ""}{data.location}</span>}
+            {data.website && (
+              <span>
+                {(data.email || data.phone || data.location) ? "· " : ""}
+                <a
+                  href={formatLink(data.website)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-emerald-200 underline font-semibold hover:text-white"
+                >
+                  {data.website}
+                </a>
+              </span>
+            )}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Header Banner (Page 2 Compact) */}
+      {page === 2 && (
+        <div className="bg-emerald-900 text-white rounded-xl p-3.5 -mx-4 -mt-4 shadow-sm flex flex-wrap justify-between items-center gap-2 mb-3">
+          <div>
+            <h2 className="text-base font-bold text-white tracking-wide">
+              {data.fullName || "Your Full Name"}
+            </h2>
+            <p className="text-[11px] font-medium text-emerald-200">{data.title}</p>
+          </div>
+          <div className="text-right text-[11px] text-emerald-100">
+            <span>{data.email} {data.phone ? `· ${data.phone}` : ""}</span>
+            <p className="font-bold text-emerald-300 text-[10px]">Page 2 of 2</p>
+          </div>
+        </div>
+      )}
 
       {/* Career Objective */}
-      {data.objective && (
+      {showSection("objective") && data.objective && (
         <div>
           <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-900 border-l-3 border-emerald-600 pl-2 mb-1">
             Professional Summary
@@ -1681,7 +2008,7 @@ const TemplateModernGreen = ({ data }) => {
       )}
 
       {/* Experience */}
-      {data.experience?.some((e) => e.role || e.company) && (
+      {showSection("experience") && data.experience?.some((e) => e.role || e.company) && (
         <div>
           <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-900 border-l-3 border-emerald-600 pl-2 mb-2">
             Work Experience
@@ -1708,7 +2035,7 @@ const TemplateModernGreen = ({ data }) => {
       )}
 
       {/* Education */}
-      {data.education?.some((e) => e.degree || e.institution) && (
+      {showSection("education") && data.education?.some((e) => e.degree || e.institution) && (
         <div>
           <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-900 border-l-3 border-emerald-600 pl-2 mb-1.5">
             Education
@@ -1733,7 +2060,7 @@ const TemplateModernGreen = ({ data }) => {
       )}
 
       {/* Research Papers & Publications */}
-      {data.publications?.some((p) => p.title) && (
+      {showSection("publications") && data.publications?.some((p) => p.title) && (
         <div>
           <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-900 border-l-3 border-emerald-600 pl-2 mb-2">
             Research Publications
@@ -1769,7 +2096,7 @@ const TemplateModernGreen = ({ data }) => {
       )}
 
       {/* Certifications & Trainings */}
-      {data.certificationsList?.some((c) => c.name) && (
+      {showSection("certifications") && data.certificationsList?.some((c) => c.name) && (
         <div>
           <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-900 border-l-3 border-emerald-600 pl-2 mb-1.5">
             Certifications
@@ -1791,7 +2118,7 @@ const TemplateModernGreen = ({ data }) => {
       )}
 
       {/* Skills Pill Badges */}
-      {skillList.length > 0 && (
+      {showSection("skills") && skillList.length > 0 && (
         <div>
           <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-900 border-l-3 border-emerald-600 pl-2 mb-1.5">
             Core Competencies
@@ -1809,8 +2136,27 @@ const TemplateModernGreen = ({ data }) => {
         </div>
       )}
 
+      {/* Projects */}
+      {showSection("projects") && data.projects?.some((p) => p.title) && (
+        <div>
+          <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-900 border-l-3 border-emerald-600 pl-2 mb-1.5">
+            Projects & Practical Work
+          </h2>
+          <div className="space-y-1.5 pl-3">
+            {data.projects.map((proj, i) =>
+              proj.title ? (
+                <div key={i} className="text-xs">
+                  <p className="font-bold text-gray-900">{proj.title}</p>
+                  {proj.description && <p className="text-gray-700">{proj.description}</p>}
+                </div>
+              ) : null
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Custom Sections */}
-      {(data.customSections || []).map((sec) =>
+      {showSection("customSections") && (data.customSections || []).map((sec) =>
         sec.items?.some((it) => it.title || it.description) ? (
           <div key={sec.id}>
             <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-900 border-l-3 border-emerald-600 pl-2 mb-1.5">
@@ -1834,7 +2180,7 @@ const TemplateModernGreen = ({ data }) => {
       )}
 
       {/* Languages */}
-      {data.languages && (
+      {showSection("languages") && data.languages && (
         <div className="pt-2 border-t border-gray-200">
           <p className="text-xs text-gray-700">
             <span className="font-bold text-emerald-900">Languages: </span>
@@ -1849,64 +2195,103 @@ const TemplateModernGreen = ({ data }) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 // TEMPLATE 3: CLASSIC SERIF
 // ═══════════════════════════════════════════════════════════════════════════════
-const TemplateClassicSerif = ({ data }) => {
+const TemplateClassicSerif = ({ data, page = "all", splitAfter = "experience" }) => {
   const skillList = data.skills
     ? data.skills.split(",").map((s) => s.trim()).filter(Boolean)
     : [];
 
+  const SECTION_KEYS = [
+    "objective",
+    "education",
+    "experience",
+    "publications",
+    "certifications",
+    "skills",
+    "projects",
+    "customSections",
+    "languages",
+  ];
+
+  const splitIdx = SECTION_KEYS.indexOf(splitAfter);
+  const effectiveSplitIdx = splitIdx === -1 ? SECTION_KEYS.indexOf("experience") : splitIdx;
+
+  const showSection = (key) => {
+    if (page === "all") return true;
+    const idx = SECTION_KEYS.indexOf(key);
+    if (page === 1) return idx <= effectiveSplitIdx;
+    if (page === 2) return idx > effectiveSplitIdx;
+    return true;
+  };
+
   return (
     <div className="font-serif text-[13px] leading-relaxed text-gray-900 space-y-3.5">
-      {/* Centered Header */}
-      <div className="text-center pb-2 border-b-2 border-gray-900">
-        <h1 className="text-2xl font-bold tracking-tight text-black uppercase">
-          {data.fullName || "Your Full Name"}
-        </h1>
-        <p className="text-xs font-semibold italic text-gray-700 mt-0.5">
-          {data.title || "Professional Title"}
-        </p>
+      {/* Centered Header (Page 1 or All) */}
+      {(page === "all" || page === 1) && (
+        <div className="text-center pb-2 border-b-2 border-gray-900">
+          <h1 className="text-2xl font-bold tracking-tight text-black uppercase">
+            {data.fullName || "Your Full Name"}
+          </h1>
+          <p className="text-xs font-semibold italic text-gray-700 mt-0.5">
+            {data.title || "Professional Title"}
+          </p>
 
-        <div className="flex justify-center flex-wrap items-center gap-x-2 text-xs text-gray-700 mt-1.5 font-sans">
-          {data.location && <span>{data.location}</span>}
-          {data.phone && (
-            <span>
-              {data.location ? "| " : ""}
-              <a
-                href={`tel:${data.phone.trim().replace(/\s+/g, "")}`}
-                className="text-gray-800 hover:text-black"
-              >
-                {data.phone}
-              </a>
-            </span>
-          )}
-          {data.email && (
-            <span>
-              {(data.location || data.phone) ? "| " : ""}
-              <a
-                href={`mailto:${data.email.trim()}`}
-                className="text-gray-800 underline hover:text-black"
-              >
-                {data.email}
-              </a>
-            </span>
-          )}
-          {data.website && (
-            <span>
-              {(data.location || data.phone || data.email) ? "| " : ""}
-              <a
-                href={formatLink(data.website)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-black underline font-medium hover:text-gray-700"
-              >
-                {data.website}
-              </a>
-            </span>
-          )}
+          <div className="flex justify-center flex-wrap items-center gap-x-2 text-xs text-gray-700 mt-1.5 font-sans">
+            {data.location && <span>{data.location}</span>}
+            {data.phone && (
+              <span>
+                {data.location ? "| " : ""}
+                <a
+                  href={`tel:${data.phone.trim().replace(/\s+/g, "")}`}
+                  className="text-gray-800 hover:text-black"
+                >
+                  {data.phone}
+                </a>
+              </span>
+            )}
+            {data.email && (
+              <span>
+                {(data.location || data.phone) ? "| " : ""}
+                <a
+                  href={`mailto:${data.email.trim()}`}
+                  className="text-gray-800 underline hover:text-black"
+                >
+                  {data.email}
+                </a>
+              </span>
+            )}
+            {data.website && (
+              <span>
+                {(data.location || data.phone || data.email) ? "| " : ""}
+                <a
+                  href={formatLink(data.website)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-black underline font-medium hover:text-gray-700"
+                >
+                  {data.website}
+                </a>
+              </span>
+            )}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Page 2 Mini-Header */}
+      {page === 2 && (
+        <div className="pb-2 border-b-2 border-gray-900 flex justify-between items-baseline mb-3 font-sans text-xs">
+          <div>
+            <span className="font-serif font-bold text-sm text-black uppercase">{data.fullName || "Your Full Name"}</span>
+            <span className="text-gray-600 italic ml-2">· {data.title}</span>
+          </div>
+          <div className="text-right text-[11px] text-gray-500">
+            <span>{data.email}</span>
+            <span className="font-bold text-black ml-2">Page 2 of 2</span>
+          </div>
+        </div>
+      )}
 
       {/* Career Objective */}
-      {data.objective && (
+      {showSection("objective") && data.objective && (
         <div>
           <h2 className="text-xs font-bold uppercase tracking-widest text-black border-b border-gray-400 pb-0.5 mb-1">
             Career Objective
@@ -1916,7 +2301,7 @@ const TemplateClassicSerif = ({ data }) => {
       )}
 
       {/* Education */}
-      {data.education?.some((e) => e.degree || e.institution) && (
+      {showSection("education") && data.education?.some((e) => e.degree || e.institution) && (
         <div>
           <h2 className="text-xs font-bold uppercase tracking-widest text-black border-b border-gray-400 pb-0.5 mb-1">
             Education
@@ -1941,7 +2326,7 @@ const TemplateClassicSerif = ({ data }) => {
       )}
 
       {/* Experience */}
-      {data.experience?.some((e) => e.role || e.company) && (
+      {showSection("experience") && data.experience?.some((e) => e.role || e.company) && (
         <div>
           <h2 className="text-xs font-bold uppercase tracking-widest text-black border-b border-gray-400 pb-0.5 mb-1">
             Professional Experience
@@ -1969,7 +2354,7 @@ const TemplateClassicSerif = ({ data }) => {
       )}
 
       {/* Publications */}
-      {data.publications?.some((p) => p.title) && (
+      {showSection("publications") && data.publications?.some((p) => p.title) && (
         <div>
           <h2 className="text-xs font-bold uppercase tracking-widest text-black border-b border-gray-400 pb-0.5 mb-1">
             Publications & Research Papers
@@ -2005,7 +2390,7 @@ const TemplateClassicSerif = ({ data }) => {
       )}
 
       {/* Certifications */}
-      {data.certificationsList?.some((c) => c.name) && (
+      {showSection("certifications") && data.certificationsList?.some((c) => c.name) && (
         <div>
           <h2 className="text-xs font-bold uppercase tracking-widest text-black border-b border-gray-400 pb-0.5 mb-1">
             Certifications & Honors
@@ -2027,7 +2412,7 @@ const TemplateClassicSerif = ({ data }) => {
       )}
 
       {/* Skills */}
-      {skillList.length > 0 && (
+      {showSection("skills") && skillList.length > 0 && (
         <div>
           <h2 className="text-xs font-bold uppercase tracking-widest text-black border-b border-gray-400 pb-0.5 mb-1">
             Skills & Competencies
@@ -2036,8 +2421,27 @@ const TemplateClassicSerif = ({ data }) => {
         </div>
       )}
 
+      {/* Projects */}
+      {showSection("projects") && data.projects?.some((p) => p.title) && (
+        <div>
+          <h2 className="text-xs font-bold uppercase tracking-widest text-black border-b border-gray-400 pb-0.5 mb-1">
+            Projects & Practical Work
+          </h2>
+          <div className="space-y-1.5">
+            {data.projects.map((proj, i) =>
+              proj.title ? (
+                <div key={i} className="text-xs">
+                  <p className="font-bold text-black">{proj.title}</p>
+                  {proj.description && <p className="text-gray-700">{proj.description}</p>}
+                </div>
+              ) : null
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Custom Sections */}
-      {(data.customSections || []).map((sec) =>
+      {showSection("customSections") && (data.customSections || []).map((sec) =>
         sec.items?.some((it) => it.title || it.description) ? (
           <div key={sec.id}>
             <h2 className="text-xs font-bold uppercase tracking-widest text-black border-b border-gray-400 pb-0.5 mb-1">
@@ -2061,7 +2465,7 @@ const TemplateClassicSerif = ({ data }) => {
       )}
 
       {/* Languages */}
-      {data.languages && (
+      {showSection("languages") && data.languages && (
         <div>
           <h2 className="text-xs font-bold uppercase tracking-widest text-black border-b border-gray-400 pb-0.5 mb-1">
             Languages

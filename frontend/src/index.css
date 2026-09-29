@@ -154,6 +154,31 @@ h1, h2, h3, h4 {
     print-color-adjust: exact !important;
   }
 
+  .resume-page-sheet {
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    padding: 10mm 12mm !important;
+    min-height: auto !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .html2pdf__page-break,
+  .page-break {
+    page-break-before: always !important;
+    break-before: page !important;
+    display: block !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .html2pdf__ignore {
+    display: none !important;
+  }
+
   @page {
     size: A4 portrait;
     margin: 0;
