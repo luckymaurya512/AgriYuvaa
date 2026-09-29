@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar.jsx";
 import Footer from "./components/Footer.jsx";
 import ScrollToTop from "./components/ScrollToTop.jsx";
@@ -20,7 +20,6 @@ import GovtJobs from "./pages/GovtJobs.jsx";
 import GovtJobDetail from "./pages/GovtJobDetail.jsx";
 import BlogList from "./pages/BlogList.jsx";
 import BlogDetail from "./pages/BlogDetail.jsx";
-import WorkshopList from "./pages/WorkshopList.jsx";
 
 // Dashboard Pages
 import SeekerDashboard from "./pages/seeker/SeekerDashboard.jsx";
@@ -47,7 +46,7 @@ function App() {
           <Route path="/blog" element={<BlogList />} />
           <Route path="/blogs" element={<BlogList />} />
           <Route path="/blog/:slug" element={<BlogDetail />} />
-          <Route path="/workshops" element={<WorkshopList />} />
+          <Route path="/workshops" element={<Navigate to="/jobs" replace />} />
           <Route path="/employers" element={<Employers />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />

@@ -52,12 +52,11 @@ const whatWeOfferList = [
   },
   {
     icon: BookOpen,
-    emoji: "📚",
-    title: "Courses & Skill Development",
-    desc: "Explore hands-on courses, expert workshops, webinars, and specialized agri-skill training programs.",
-    link: "https://agriyuvaa.com/workshops",
-    isExternal: true,
-    linkText: "Explore Workshops →",
+    emoji: "📝",
+    title: "Resume & Profile Builder",
+    desc: "Create professional ATS-friendly agriculture resumes, highlight your crop specialties, and download for free.",
+    link: "/resume-builder",
+    linkText: "Build Free Resume →",
     color: "from-amber-500/10 to-amber-500/5 text-amber-800 border-amber-200",
   },
   {

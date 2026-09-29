@@ -1,29 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Search, Calendar, User, BookOpen, Tag, Sprout, Sparkles, Play, GraduationCap, Video, AlertCircle } from "lucide-react";
-import { fetchBlogs, fetchWorkshops } from "../services/landingService.js";
+import { fetchBlogs } from "../services/landingService.js";
 import SEO from "../components/SEO.jsx";
-import { getWorkshopThumbnail } from "../utils/fallbackData.js";
 
 const BlogList = () => {
   const [blogs, setBlogs] = useState([]);
   const [otherBlogs, setOtherBlogs] = useState([]);
-  const [workshops, setWorkshops] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [activeTag, setActiveTag] = useState("");
-
-  useEffect(() => {
-    fetchWorkshops()
-      .then((data) => {
-        const list = Array.isArray(data) ? data : data?.workshops || [];
-        setWorkshops(list.slice(0, 3));
-      })
-      .catch(() => setWorkshops([]));
-  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -403,80 +392,6 @@ const BlogList = () => {
               </div>
             )}
           </>
-        )}
-
-        {/* Practical Workshops & Masterclasses Section at Bottom */}
-        {workshops.length > 0 && (
-          <div className="mt-16 pt-10 border-t border-gray-200/80">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
-              <div>
-                <div className="inline-flex items-center gap-1.5 text-emerald-700 text-xs font-bold uppercase tracking-wider mb-1">
-                  <GraduationCap size={15} /> Practical Skills & Training
-                </div>
-                <h2 className="text-xl sm:text-2xl font-extrabold text-gray-900 tracking-tight">
-                  Agriculture Workshops & Video Masterclasses
-                </h2>
-              </div>
-              <Link
-                to="/workshops"
-                className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 hover:text-emerald-800 hover:underline"
-              >
-                All workshops <ArrowRight size={13} />
-              </Link>
-
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {workshops.map((w) => (
-                <a
-                  key={w._id || w.title}
-                  href={w.videoUrl || w.youtubeUrl || "https://agriyuvaa.com/workshops"}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-2xs hover:shadow-md hover:-translate-y-1 transition-all duration-200 flex flex-col group"
-                >
-                  <div className="relative aspect-[16/9] bg-gray-900 overflow-hidden">
-                    <img
-                      src={getWorkshopThumbnail(w)}
-                      alt={w.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 opacity-90 group-hover:opacity-100"
-                    />
-                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                      <div className="w-11 h-11 rounded-full bg-emerald-600/90 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                        <Play size={18} fill="currentColor" className="ml-0.5" />
-                      </div>
-                    </div>
-                    {w.duration && (
-                      <span className="absolute bottom-2 right-2 bg-black/80 text-white text-[10px] font-bold px-2 py-0.5 rounded">
-                        {w.duration}
-                      </span>
-                    )}
-                  </div>
-                  <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
-                    <div className="space-y-2">
-                      <span className="inline-block text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
-                        {w.category || "Workshop"}
-                      </span>
-                      <h3 className="font-bold text-sm text-gray-900 group-hover:text-emerald-700 transition-colors line-clamp-2">
-                        {w.title}
-                      </h3>
-                      {w.description && (
-                        <p className="text-xs text-gray-500 line-clamp-2">{w.description}</p>
-                      )}
-                    </div>
-                    <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs">
-                      <span className="text-gray-500 text-[11px] truncate max-w-[170px]">
-                        {w.instructor || "Expert Masterclass"}
-                      </span>
-                      <span className="font-bold text-emerald-700 inline-flex items-center gap-1">
-                        Watch <ArrowRight size={12} />
-                      </span>
-                    </div>
-                  </div>
-                </a>
-              ))}
-            </div>
-          </div>
         )}
 
       </div>
