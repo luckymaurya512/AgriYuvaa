@@ -24,6 +24,10 @@ import {
   Code2,
   Sparkles,
   RemoveFormatting,
+  Table as TableIcon,
+  Trash2,
+  Columns,
+  Rows,
 } from "lucide-react";
 import { uploadBlogImage } from "../../services/landingService.js";
 import RichTextRenderer from "./RichTextRenderer.jsx";
@@ -43,6 +47,7 @@ const RichTextEditor = ({
   const [searchTerm, setSearchTerm] = useState("");
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
+  const [showTableModal, setShowTableModal] = useState(false);
 
   // Link Dialog State
   const [linkUrl, setLinkUrl] = useState("");
@@ -56,6 +61,12 @@ const RichTextEditor = ({
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imageFilePreview, setImageFilePreview] = useState("");
 
+  // Table Dialog State
+  const [tableRows, setTableRows] = useState(3);
+  const [tableCols, setTableCols] = useState(3);
+  const [tableHasHeader, setTableHasHeader] = useState(true);
+  const [activeTableElement, setActiveTableElement] = useState(null);
+
   const editorRef = useRef(null);
   const fileInputRef = useRef(null);
   const inserterRef = useRef(null);
@@ -68,11 +79,9 @@ const RichTextEditor = ({
     if (!val) return "";
     const str = String(val).trim();
     if (!str) return "";
-    // If it already looks like HTML, return as-is
     if (/<[a-z][\s\S]*>/i.test(str)) {
       return str;
     }
-    // Convert plain text into paragraphs & line breaks
     return str
       .split(/\n\s*\n+/)
       .map((p) => `<p>${p.replace(/\n/g, "<br>")}</p>`)
@@ -119,7 +128,7 @@ const RichTextEditor = ({
     };
   }, [showInserter]);
 
-  // Save current cursor position / selection
+  // Save current cursor position / selection & check if inside table
   const saveSelection = () => {
     const sel = window.getSelection();
     if (sel && sel.rangeCount > 0) {
@@ -130,6 +139,11 @@ const RichTextEditor = ({
           editorRef.current === range.commonAncestorContainer)
       ) {
         savedRangeRef.current = range.cloneRange();
+
+        const node = sel.anchorNode;
+        const closestTable =
+          node?.nodeType === 1 ? node.closest("table") : node?.parentElement?.closest("table");
+        setActiveTableElement(closestTable || null);
       }
     }
   };
@@ -152,7 +166,6 @@ const RichTextEditor = ({
   const emitChange = () => {
     if (!editorRef.current) return;
     let html = editorRef.current.innerHTML;
-    // If empty or just a blank <p><br></p>, treat as empty
     if (html === "<p><br></p>" || html === "<p></p>" || html === "<br>") {
       html = "";
     }
@@ -186,7 +199,6 @@ const RichTextEditor = ({
         openLinkModal();
       }
     } else if (e.key === "/" && !e.ctrlKey && !e.metaKey) {
-      // Check if at the start of a block or line
       const sel = window.getSelection();
       if (sel && sel.isCollapsed) {
         saveSelection();
@@ -201,10 +213,10 @@ const RichTextEditor = ({
   };
 
   // Execute standard formatting commands
-  const execFormatting = (command, value = null) => {
+  const execFormatting = (command, val = null) => {
     restoreSelection();
     try {
-      document.execCommand(command, false, value);
+      document.execCommand(command, false, val);
     } catch (err) {
       console.warn("execCommand failed:", err);
     }
@@ -216,7 +228,6 @@ const RichTextEditor = ({
   const execFormatBlock = (tag) => {
     restoreSelection();
     try {
-      // Some browsers expect formatBlock with or without angle brackets
       const success = document.execCommand("formatBlock", false, `<${tag}>`);
       if (!success) {
         document.execCommand("formatBlock", false, tag);
@@ -263,13 +274,13 @@ const RichTextEditor = ({
       a.href = fullUrl;
       a.target = "_blank";
       a.rel = "noopener noreferrer";
-      a.className = "text-emerald-700 underline font-semibold hover:text-emerald-800 transition-colors inline-flex items-center gap-0.5";
+      a.className =
+        "text-emerald-700 underline font-semibold hover:text-emerald-800 transition-colors inline-flex items-center gap-0.5";
       a.textContent = text;
 
       range.deleteContents();
       range.insertNode(a);
 
-      // Place cursor right after the newly inserted link
       const newRange = document.createRange();
       newRange.setStartAfter(a);
       newRange.collapse(true);
@@ -300,7 +311,6 @@ const RichTextEditor = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Show local preview immediately
     const reader = new FileReader();
     reader.onload = () => setImageFilePreview(reader.result);
     reader.readAsDataURL(file);
@@ -312,11 +322,9 @@ const RichTextEditor = ({
       if (cloudUrl) {
         setImageUrl(cloudUrl);
       } else {
-        // Fallback to data URL if cloud response lacks URL
         setImageUrl(reader.result);
       }
     } catch {
-      // If server upload failed (e.g. offline or unauthorized), fallback to base64 data URL
       setImageUrl(reader.result);
     } finally {
       setUploadingImage(false);
@@ -334,14 +342,14 @@ const RichTextEditor = ({
     if (sel && sel.rangeCount > 0) {
       const range = sel.getRangeAt(0);
 
-      // Create responsive, styled figure or img
       const container = document.createElement("figure");
       container.className = "my-5 block text-center";
 
       const img = document.createElement("img");
       img.src = finalUrl;
       img.alt = imageAlt.trim() || "Uploaded illustration";
-      img.className = "rounded-xl max-w-full h-auto shadow-md mx-auto block max-h-[500px] object-cover";
+      img.className =
+        "rounded-xl max-w-full h-auto shadow-md mx-auto block max-h-[500px] object-cover";
 
       container.appendChild(img);
 
@@ -352,7 +360,6 @@ const RichTextEditor = ({
         container.appendChild(caption);
       }
 
-      // Add a blank paragraph after the image so user can effortlessly keep typing below
       const nextP = document.createElement("p");
       nextP.innerHTML = "<br>";
 
@@ -379,6 +386,164 @@ const RichTextEditor = ({
     setImageAlt("");
     setImageCaption("");
     setImageFilePreview("");
+  };
+
+  // Open Table Modal
+  const openTableModal = () => {
+    saveSelection();
+    setShowTableModal(true);
+    setShowInserter(false);
+  };
+
+  // Insert Data Table
+  const handleInsertTable = (e) => {
+    if (e?.preventDefault) e.preventDefault();
+    const rowsCount = Math.max(1, Math.min(15, Number(tableRows) || 3));
+    const colsCount = Math.max(1, Math.min(8, Number(tableCols) || 3));
+
+    restoreSelection();
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+      const range = sel.getRangeAt(0);
+
+      const container = document.createElement("div");
+      container.className = "table-responsive my-6";
+
+      const table = document.createElement("table");
+
+      if (tableHasHeader) {
+        const thead = document.createElement("thead");
+        const headerTr = document.createElement("tr");
+        for (let c = 1; c <= colsCount; c++) {
+          const th = document.createElement("th");
+          th.textContent = `Header ${c}`;
+          headerTr.appendChild(th);
+        }
+        thead.appendChild(headerTr);
+        table.appendChild(thead);
+      }
+
+      const tbody = document.createElement("tbody");
+      for (let r = 1; r <= rowsCount; r++) {
+        const tr = document.createElement("tr");
+        for (let c = 1; c <= colsCount; c++) {
+          const td = document.createElement("td");
+          td.textContent = `Data ${r}.${c}`;
+          tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+      }
+      table.appendChild(tbody);
+      container.appendChild(table);
+
+      const nextP = document.createElement("p");
+      nextP.innerHTML = "<br>";
+
+      range.deleteContents();
+      range.insertNode(container);
+
+      if (container.nextSibling) {
+        container.parentNode.insertBefore(nextP, container.nextSibling);
+      } else {
+        container.parentNode.appendChild(nextP);
+      }
+
+      // Select first cell so user can start typing immediately
+      const firstCell = table.querySelector("th, td");
+      if (firstCell) {
+        const newRange = document.createRange();
+        newRange.selectNodeContents(firstCell);
+        sel.removeAllRanges();
+        sel.addRange(newRange);
+        savedRangeRef.current = newRange.cloneRange();
+        setActiveTableElement(table);
+      }
+    }
+
+    emitChange();
+    setShowTableModal(false);
+  };
+
+  // Table Helpers: Add Row
+  const addTableRow = () => {
+    restoreSelection();
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount) return;
+    const node = sel.anchorNode;
+    const currentTr =
+      node?.nodeType === 1 ? node.closest("tr") : node?.parentElement?.closest("tr");
+    const currentTable =
+      node?.nodeType === 1 ? node.closest("table") : node?.parentElement?.closest("table");
+
+    if (currentTable) {
+      const colCount = currentTable.querySelector("tr")?.children?.length || 3;
+      const newTr = document.createElement("tr");
+      for (let i = 0; i < colCount; i++) {
+        const td = document.createElement("td");
+        td.textContent = "New cell";
+        newTr.appendChild(td);
+      }
+      if (currentTr && currentTr.parentNode) {
+        currentTr.parentNode.insertBefore(newTr, currentTr.nextSibling);
+      } else {
+        const tbody = currentTable.querySelector("tbody") || currentTable;
+        tbody.appendChild(newTr);
+      }
+      emitChange();
+    }
+  };
+
+  // Table Helpers: Add Column
+  const addTableCol = () => {
+    restoreSelection();
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount) return;
+    const node = sel.anchorNode;
+    const currentTable =
+      node?.nodeType === 1 ? node.closest("table") : node?.parentElement?.closest("table");
+
+    if (currentTable) {
+      const rowsList = currentTable.querySelectorAll("tr");
+      rowsList.forEach((tr, index) => {
+        const isHeader =
+          tr.parentElement?.tagName === "THEAD" || (index === 0 && tr.querySelector("th"));
+        const cell = document.createElement(isHeader ? "th" : "td");
+        cell.textContent = isHeader ? `Header ${tr.children.length + 1}` : "New cell";
+        tr.appendChild(cell);
+      });
+      emitChange();
+    }
+  };
+
+  // Table Helpers: Delete Row
+  const deleteTableRow = () => {
+    restoreSelection();
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount) return;
+    const node = sel.anchorNode;
+    const currentTr =
+      node?.nodeType === 1 ? node.closest("tr") : node?.parentElement?.closest("tr");
+    if (currentTr) {
+      currentTr.remove();
+      emitChange();
+    }
+  };
+
+  // Table Helpers: Delete Current Table
+  const deleteCurrentTable = () => {
+    restoreSelection();
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount) return;
+    const node = sel.anchorNode;
+    const container =
+      node?.nodeType === 1
+        ? node.closest(".table-responsive, table")
+        : node?.parentElement?.closest(".table-responsive, table");
+    if (container) {
+      container.remove();
+      setActiveTableElement(null);
+      emitChange();
+    }
   };
 
   // Insert Callout Box
@@ -459,6 +624,14 @@ const RichTextEditor = ({
       icon: <Heading3 size={16} className="text-brand-green font-bold" />,
       category: "Headings",
       action: () => execFormatBlock("h3"),
+    },
+    {
+      id: "table",
+      label: "Table",
+      desc: "Data grid with rows & columns",
+      icon: <TableIcon size={16} className="text-emerald-700 font-bold" />,
+      category: "Blocks",
+      action: openTableModal,
     },
     {
       id: "bold",
@@ -584,7 +757,7 @@ const RichTextEditor = ({
         <div className="flex flex-wrap items-center justify-between gap-1 p-2 bg-gray-50 border-b border-gray-200">
           {/* Left Actions: Gutenberg '+' Button & Quick Formatting Tools */}
           <div className="flex flex-wrap items-center gap-1 relative">
-            {/* The Main Gutenberg '+' Inserter Button (Matching WordPress screenshot) */}
+            {/* The Main Gutenberg '+' Inserter Button */}
             <div className="relative">
               <button
                 type="button"
@@ -606,7 +779,7 @@ const RichTextEditor = ({
                 <span>Add</span>
               </button>
 
-              {/* Gutenberg Style Floating Inserter Popover (Matches Screenshot) */}
+              {/* Gutenberg Style Floating Inserter Popover */}
               {showInserter && (
                 <div
                   ref={inserterRef}
@@ -622,7 +795,7 @@ const RichTextEditor = ({
                     <input
                       ref={searchInputRef}
                       type="text"
-                      placeholder="Search blocks (e.g. image, bold, heading)..."
+                      placeholder="Search blocks (e.g. table, image, bold)..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="w-full pl-9 pr-8 py-2 text-xs bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-brand-green focus:bg-white text-gray-800 transition-all"
@@ -676,7 +849,10 @@ const RichTextEditor = ({
 
                   {/* Footer hint */}
                   <div className="mt-3 pt-2.5 border-t border-gray-100 flex items-center justify-between text-[10px] text-gray-400">
-                    <span>Tip: Type <strong className="text-gray-600 font-mono">/</strong> in the editor to open this</span>
+                    <span>
+                      Tip: Type <strong className="text-gray-600 font-mono">/</strong> in the
+                      editor to open this
+                    </span>
                     <button
                       type="button"
                       onClick={() => setShowInserter(false)}
@@ -699,7 +875,7 @@ const RichTextEditor = ({
                   type="button"
                   onClick={() => execFormatting("bold")}
                   className="p-1.5 rounded-lg hover:bg-white hover:text-brand-black text-gray-700 hover:shadow-2xs transition-all cursor-pointer"
-                  title="Bold (Ctrl+B) — Changes selected text to bold"
+                  title="Bold (Ctrl+B)"
                 >
                   <Bold size={15} />
                 </button>
@@ -709,7 +885,7 @@ const RichTextEditor = ({
                   type="button"
                   onClick={() => execFormatting("italic")}
                   className="p-1.5 rounded-lg hover:bg-white hover:text-brand-black text-gray-700 hover:shadow-2xs transition-all cursor-pointer"
-                  title="Italic (Ctrl+I) — Changes selected text to italic"
+                  title="Italic (Ctrl+I)"
                 >
                   <Italic size={15} />
                 </button>
@@ -719,7 +895,7 @@ const RichTextEditor = ({
                   type="button"
                   onClick={() => execFormatting("underline")}
                   className="p-1.5 rounded-lg hover:bg-white hover:text-brand-black text-gray-700 hover:shadow-2xs transition-all cursor-pointer"
-                  title="Underline (Ctrl+U) — Underlines selected text"
+                  title="Underline (Ctrl+U)"
                 >
                   <Underline size={15} />
                 </button>
@@ -771,6 +947,18 @@ const RichTextEditor = ({
               </button>
             )}
 
+            {/* Insert Table Button */}
+            {mode !== "linkOnly" && (
+              <button
+                type="button"
+                onClick={openTableModal}
+                className="p-1.5 rounded-lg hover:bg-white hover:text-emerald-700 text-gray-700 hover:shadow-2xs transition-all cursor-pointer"
+                title="Insert Table (Rows & Columns)"
+              >
+                <TableIcon size={15} className="text-emerald-700" />
+              </button>
+            )}
+
             {mode !== "linkOnly" && (
               <>
                 <span className="w-px h-4 bg-gray-300 mx-1" />
@@ -817,7 +1005,7 @@ const RichTextEditor = ({
             )}
           </div>
 
-          {/* Right Mode Switch: Visual (WYSIWYG) vs HTML Source vs Live Preview */}
+          {/* Right Mode Switch: Visual vs HTML Source vs Live Preview */}
           <div className="flex items-center gap-1 bg-gray-200/80 p-0.5 rounded-lg text-xs font-semibold">
             <button
               type="button"
@@ -857,6 +1045,48 @@ const RichTextEditor = ({
             </button>
           </div>
         </div>
+
+        {/* ── Active Table Helper Bar (Shows when clicking inside a table) ── */}
+        {activeTableElement && viewMode === "visual" && (
+          <div className="flex flex-wrap items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border-b border-emerald-200 text-xs text-emerald-900 animate-in fade-in duration-100">
+            <TableIcon size={14} className="text-emerald-700 shrink-0" />
+            <span className="font-bold text-[11px] uppercase tracking-wider text-emerald-800">
+              Table Options:
+            </span>
+            <button
+              type="button"
+              onClick={addTableRow}
+              className="px-2 py-1 rounded-lg bg-white hover:bg-emerald-100 border border-emerald-200 text-emerald-800 font-semibold cursor-pointer text-[11px] flex items-center gap-1 shadow-2xs"
+              title="Insert row below"
+            >
+              <Rows size={12} /> + Row
+            </button>
+            <button
+              type="button"
+              onClick={addTableCol}
+              className="px-2 py-1 rounded-lg bg-white hover:bg-emerald-100 border border-emerald-200 text-emerald-800 font-semibold cursor-pointer text-[11px] flex items-center gap-1 shadow-2xs"
+              title="Insert column to the right"
+            >
+              <Columns size={12} /> + Column
+            </button>
+            <button
+              type="button"
+              onClick={deleteTableRow}
+              className="px-2 py-1 rounded-lg bg-white hover:bg-red-50 border border-gray-200 text-red-600 font-medium cursor-pointer text-[11px] flex items-center gap-1 shadow-2xs ml-auto"
+              title="Delete current row"
+            >
+              Delete Row
+            </button>
+            <button
+              type="button"
+              onClick={deleteCurrentTable}
+              className="px-2 py-1 rounded-lg bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 font-bold cursor-pointer text-[11px] flex items-center gap-1 shadow-2xs"
+              title="Delete whole table"
+            >
+              <Trash2 size={12} /> Delete Table
+            </button>
+          </div>
+        )}
 
         {/* ── Visual WYSIWYG Editable Area ── */}
         {viewMode === "visual" && (
@@ -906,6 +1136,160 @@ const RichTextEditor = ({
           </div>
         )}
       </div>
+
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/* ── MODAL: INSERT TABLE ─────────────────────────────────────────── */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {showTableModal && (
+        <div
+          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-2xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowTableModal(false);
+          }}
+        >
+          <div
+            className="bg-white rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl border border-gray-100"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+              <h3 className="text-sm font-bold text-brand-black flex items-center gap-1.5">
+                <TableIcon size={16} className="text-emerald-700" /> Insert Data Table
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowTableModal(false)}
+                className="text-gray-400 hover:text-gray-700 cursor-pointer"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Quick Presets */}
+            <div>
+              <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide block mb-1.5">
+                Quick Dimension Presets
+              </label>
+              <div className="grid grid-cols-4 gap-2">
+                {[
+                  { r: 2, c: 2, label: "2 x 2" },
+                  { r: 3, c: 3, label: "3 x 3" },
+                  { r: 4, c: 3, label: "4 x 3" },
+                  { r: 5, c: 4, label: "5 x 4" },
+                ].map((preset) => (
+                  <button
+                    key={preset.label}
+                    type="button"
+                    onClick={() => {
+                      setTableRows(preset.r);
+                      setTableCols(preset.c);
+                    }}
+                    className={`py-1.5 px-2 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
+                      tableRows === preset.r && tableCols === preset.c
+                        ? "bg-emerald-50 border-brand-green text-brand-green shadow-2xs"
+                        : "border-gray-200 text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Inputs: Columns & Rows */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-semibold text-brand-grey uppercase tracking-wide block mb-1">
+                  Columns (1 - 8)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="8"
+                  value={tableCols}
+                  onChange={(e) => setTableCols(Math.max(1, Math.min(8, Number(e.target.value))))}
+                  className="input-field text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-brand-grey uppercase tracking-wide block mb-1">
+                  Rows (1 - 15)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="15"
+                  value={tableRows}
+                  onChange={(e) => setTableRows(Math.max(1, Math.min(15, Number(e.target.value))))}
+                  className="input-field text-sm"
+                />
+              </div>
+            </div>
+
+            {/* Checkbox: Include Header Row */}
+            <label className="flex items-center gap-2 cursor-pointer select-none py-1">
+              <input
+                type="checkbox"
+                checked={tableHasHeader}
+                onChange={(e) => setTableHasHeader(e.target.checked)}
+                className="w-4 h-4 text-emerald-600 rounded border-gray-300 focus:ring-emerald-500"
+              />
+              <span className="text-xs font-medium text-gray-700">
+                Include Styled Header Row (Recommended)
+              </span>
+            </label>
+
+            {/* Live Visual Grid Preview */}
+            <div className="p-3 bg-gray-50 rounded-xl border border-gray-200/80">
+              <div className="text-[10px] text-gray-400 uppercase tracking-wide font-bold mb-1.5">
+                Preview ({tableCols} Columns × {tableRows} Rows)
+              </div>
+              <div className="overflow-x-auto max-h-28">
+                <table className="w-full border-collapse border border-gray-200 text-[10px] bg-white">
+                  {tableHasHeader && (
+                    <thead>
+                      <tr className="bg-emerald-50">
+                        {Array.from({ length: tableCols }).map((_, i) => (
+                          <th key={i} className="border border-gray-200 p-1 text-emerald-900 font-bold">
+                            Header {i + 1}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                  )}
+                  <tbody>
+                    {Array.from({ length: Math.min(4, tableRows) }).map((_, r) => (
+                      <tr key={r}>
+                        {Array.from({ length: tableCols }).map((_, c) => (
+                          <td key={c} className="border border-gray-200 p-1 text-gray-400">
+                            Cell
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
+              <button
+                type="button"
+                onClick={() => setShowTableModal(false)}
+                className="btn-secondary text-xs py-2 px-3.5 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleInsertTable}
+                className="btn-primary text-xs py-2 px-4 flex items-center gap-1 font-bold cursor-pointer"
+              >
+                <Check size={14} /> Insert Table
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ═══════════════════════════════════════════════════════════════════ */}
       {/* ── MODAL: INSERT LINK ──────────────────────────────────────────── */}
@@ -1064,7 +1448,9 @@ const RichTextEditor = ({
                   </div>
                   <div>
                     <span className="text-xs font-bold text-brand-black group-hover:text-brand-green">
-                      {uploadingImage ? "Uploading image to server..." : "Click to choose image file"}
+                      {uploadingImage
+                        ? "Uploading image to server..."
+                        : "Click to choose image file"}
                     </span>
                     <p className="text-[11px] text-gray-400 mt-0.5">PNG, JPG, WEBP up to 5MB</p>
                   </div>

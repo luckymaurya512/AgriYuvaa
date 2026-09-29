@@ -49,8 +49,8 @@ const formatRichText = (content) => {
   );
 
   // 8. Ensure clean spacing around block tags so splitting doesn't merge text with blocks
-  html = html.replace(/([^\n])\s*(<(?:ul|ol|h[1-6]|blockquote|table|hr|pre)[^>]*>)/gi, "$1\n\n$2");
-  html = html.replace(/(<\/(?:ul|ol|h[1-6]|blockquote|table|pre)>)\s*([^\n])/gi, "$1\n\n$2");
+  html = html.replace(/([^\n])\s*(<(?:ul|ol|h[1-6]|blockquote|table|div|figure|hr|pre)[^>]*>)/gi, "$1\n\n$2");
+  html = html.replace(/(<\/(?:ul|ol|h[1-6]|blockquote|table|div|figure|pre)>)\s*([^\n])/gi, "$1\n\n$2");
 
   // 9. Handle paragraphs and line breaks:
   const hasPTags = /<\/?p[^>]*>/i.test(html);
@@ -66,7 +66,7 @@ const formatRichText = (content) => {
         const trimmed = block.trim();
         if (!trimmed) return "";
         // If the block is already a block-level HTML element, keep it without wrapping in <p>
-        const isBlockLevel = /^<(?:ul|ol|li|h[1-6]|blockquote|div|table|hr|pre|img|figure)[^>]*>/i.test(trimmed);
+        const isBlockLevel = /^<(?:ul|ol|li|h[1-6]|blockquote|div|table|thead|tbody|tr|th|td|hr|pre|img|figure)[^>]*>/i.test(trimmed);
         if (isBlockLevel) {
           return trimmed.replace(/([^>\r\n])\n([^<\r\n])/g, "$1<br />$2");
         }
