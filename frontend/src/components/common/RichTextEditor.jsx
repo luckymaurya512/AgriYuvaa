@@ -552,6 +552,38 @@ const RichTextEditor = ({
     }
   };
 
+  // Table Helpers: Delete Column
+  const deleteTableCol = () => {
+    restoreSelection();
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount) return;
+    const node = sel.anchorNode;
+    const currentCell =
+      node?.nodeType === 1 ? node.closest("th, td") : node?.parentElement?.closest("th, td");
+    const currentTable =
+      node?.nodeType === 1 ? node.closest("table") : node?.parentElement?.closest("table");
+
+    if (currentTable) {
+      let colIndex = -1;
+      if (currentCell) {
+        colIndex = Array.from(currentCell.parentElement?.children || []).indexOf(currentCell);
+      }
+
+      const rowsList = currentTable.querySelectorAll("tr");
+      rowsList.forEach((tr) => {
+        const cells = tr.children;
+        if (cells.length > 1) {
+          if (colIndex >= 0 && colIndex < cells.length) {
+            cells[colIndex].remove();
+          } else {
+            cells[cells.length - 1].remove();
+          }
+        }
+      });
+      emitChange();
+    }
+  };
+
   // Table Helpers: Delete Current Table
   const deleteCurrentTable = () => {
     restoreSelection();
@@ -1108,22 +1140,32 @@ const RichTextEditor = ({
             >
               <Columns size={12} /> + Column
             </button>
-            <button
-              type="button"
-              onClick={deleteTableRow}
-              className="px-2 py-1 rounded-lg bg-white hover:bg-red-50 border border-gray-200 text-red-600 font-medium cursor-pointer text-[11px] flex items-center gap-1 shadow-xs ml-auto"
-              title="Delete current row"
-            >
-              Delete Row
-            </button>
-            <button
-              type="button"
-              onClick={deleteCurrentTable}
-              className="px-2 py-1 rounded-lg bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 font-bold cursor-pointer text-[11px] flex items-center gap-1 shadow-xs"
-              title="Delete whole table"
-            >
-              <Trash2 size={12} /> Delete Table
-            </button>
+            <div className="flex items-center gap-1.5 ml-auto">
+              <button
+                type="button"
+                onClick={deleteTableRow}
+                className="px-2 py-1 rounded-lg bg-white hover:bg-red-50 border border-gray-200 text-red-600 font-medium cursor-pointer text-[11px] flex items-center gap-1 shadow-xs"
+                title="Delete current row"
+              >
+                Delete Row
+              </button>
+              <button
+                type="button"
+                onClick={deleteTableCol}
+                className="px-2 py-1 rounded-lg bg-white hover:bg-red-50 border border-gray-200 text-red-600 font-medium cursor-pointer text-[11px] flex items-center gap-1 shadow-xs"
+                title="Delete current column"
+              >
+                Delete Column
+              </button>
+              <button
+                type="button"
+                onClick={deleteCurrentTable}
+                className="px-2 py-1 rounded-lg bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 font-bold cursor-pointer text-[11px] flex items-center gap-1 shadow-xs"
+                title="Delete whole table"
+              >
+                <Trash2 size={12} /> Delete Table
+              </button>
+            </div>
           </div>
         )}
 
