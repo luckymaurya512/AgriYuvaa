@@ -222,9 +222,10 @@ const BlogList = () => {
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         onError={(e) => {
                           e.target.style.display = "none";
-                          e.target.nextSibling.style.display = "flex";
+                          if (e.target.nextSibling) e.target.nextSibling.style.display = "flex";
                         }}
                       />
+                    ) : null}
                     <div
                       className="w-full h-full flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-stone-50 to-emerald-50 text-emerald-800/40"
                       style={{ display: blog.coverImage ? "none" : "flex" }}
