@@ -21,6 +21,7 @@ import govtJobRoutes from "./routes/govtJobRoutes.js";
 import blogRoutes from "./routes/blogRoutes.js";
 import workshopRoutes from "./routes/workshopRoutes.js";
 import testimonialRoutes from "./routes/testimonialRoutes.js";
+import pageSeoRoutes from "./routes/pageSeoRoutes.js";
 
 import fs from "fs";
 import path from "path";
@@ -148,6 +149,7 @@ app.use("/api/govt-jobs", govtJobRoutes);
 app.use("/api/blogs", blogRoutes);
 app.use("/api/workshops", workshopRoutes);
 app.use("/api/testimonials", testimonialRoutes);
+app.use("/api/page-seo", pageSeoRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

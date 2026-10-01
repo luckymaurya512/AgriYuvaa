@@ -24,6 +24,12 @@ import {
   Edit3,
   FileSpreadsheet,
   Eye,
+  Globe,
+  Sparkles,
+  RotateCcw,
+  Check,
+  Settings,
+  Link2,
 } from "lucide-react";
 import ResumePreviewModal from "../../components/ResumePreviewModal.jsx";
 import {
@@ -34,6 +40,9 @@ import {
   updateUserStatus,
   createAdmin,
   updateUserRole,
+  fetchPageSeoConfigs,
+  upsertPageSeoConfig,
+  deletePageSeoConfig,
 } from "../../services/adminService.js";
 import SEO from "../../components/SEO.jsx";
 
@@ -93,6 +102,24 @@ const SuperAdminDashboard = () => {
   const [appViewMode, setAppViewMode] = useState("by_job");
   const [expandedJobIds, setExpandedJobIds] = useState(new Set());
   const [previewApp, setPreviewApp] = useState(null);
+
+  // ── Page SEO Management State ──
+  const [pageSeoList, setPageSeoList] = useState([]);
+  const [loadingSeo, setLoadingSeo] = useState(false);
+  const [seoSearch, setSeoSearch] = useState("");
+  const [seoFilter, setSeoFilter] = useState("all"); // "all" | "customized" | "default"
+  const [editingSeoItem, setEditingSeoItem] = useState(null);
+  const [seoForm, setSeoForm] = useState({
+    route: "",
+    pageName: "",
+    metaTitle: "",
+    metaDescription: "",
+    metaKeywords: "",
+    ogImage: "",
+    noindex: false,
+  });
+  const [savingSeo, setSavingSeo] = useState(false);
+  const [seoError, setSeoError] = useState("");
 
   const handleExportCSV = (customList = null, filenamePrefix = "all_applications") => {
     const listToExport = customList || applications;
@@ -248,6 +275,77 @@ const SuperAdminDashboard = () => {
     fetchUsers().then(setUsers).catch(() => {});
     fetchAllPlatformJobs().then(setAllJobs).catch(() => setAllJobs([]));
     loadPlatformApplications();
+    loadPageSeo();
+  };
+
+  const loadPageSeo = () => {
+    setLoadingSeo(true);
+    fetchPageSeoConfigs()
+      .then((data) => setPageSeoList(Array.isArray(data) ? data : []))
+      .catch(() => setPageSeoList([]))
+      .finally(() => setLoadingSeo(false));
+  };
+
+  const handleOpenEditSeo = (item) => {
+    setEditingSeoItem(item);
+    setSeoForm({
+      route: item.route || "",
+      pageName: item.pageName || "",
+      metaTitle: item.metaTitle || item.defaultTitle || "",
+      metaDescription: item.metaDescription || item.defaultDescription || "",
+      metaKeywords: Array.isArray(item.metaKeywords)
+        ? item.metaKeywords.join(", ")
+        : item.metaKeywords || (Array.isArray(item.defaultKeywords) ? item.defaultKeywords.join(", ") : ""),
+      ogImage: item.ogImage || "",
+      noindex: Boolean(item.noindex),
+    });
+    setSeoError("");
+  };
+
+  const handleOpenCreateCustomSeo = () => {
+    setEditingSeoItem({ isNew: true });
+    setSeoForm({
+      route: "/",
+      pageName: "",
+      metaTitle: "",
+      metaDescription: "",
+      metaKeywords: "",
+      ogImage: "",
+      noindex: false,
+    });
+    setSeoError("");
+  };
+
+  const handleSaveSeo = async (e) => {
+    e.preventDefault();
+    setSavingSeo(true);
+    setSeoError("");
+    try {
+      await upsertPageSeoConfig(seoForm);
+      setSuccessMsg(`SEO configuration for ${seoForm.route} saved successfully!`);
+      setTimeout(() => setSuccessMsg(""), 4000);
+      setEditingSeoItem(null);
+      loadPageSeo();
+      window.dispatchEvent(new Event("agriyuvaa_page_seo_updated"));
+    } catch (err) {
+      setSeoError(err.response?.data?.message || "Failed to save page SEO settings");
+    } finally {
+      setSavingSeo(false);
+    }
+  };
+
+  const handleResetSeo = async (item) => {
+    if (!item._id) return;
+    if (!window.confirm(`Reset SEO for "${item.route}" back to platform default?`)) return;
+    try {
+      await deletePageSeoConfig(item._id);
+      setSuccessMsg(`Reset SEO for ${item.route} to default.`);
+      setTimeout(() => setSuccessMsg(""), 4000);
+      loadPageSeo();
+      window.dispatchEvent(new Event("agriyuvaa_page_seo_updated"));
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to reset page SEO");
+    }
   };
 
   const loadPlatformApplications = () => {
@@ -413,6 +511,27 @@ const SuperAdminDashboard = () => {
           >
             {allJobs.length}
           </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setTab("seo")}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl transition-all whitespace-nowrap ${
+            activeTab === "seo"
+              ? "bg-emerald-950 text-white shadow-2xs"
+              : "text-gray-600 hover:text-black hover:bg-gray-100"
+          }`}
+        >
+          <Globe size={15} /> Page SEO Suite
+          {pageSeoList.some((p) => p.isCustomized) && (
+            <span
+              className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                activeTab === "seo" ? "bg-emerald-800 text-white" : "bg-emerald-100 text-emerald-800"
+              }`}
+            >
+              {pageSeoList.filter((p) => p.isCustomized).length} Active
+            </span>
+          )}
         </button>
 
         <Link
@@ -616,6 +735,33 @@ const SuperAdminDashboard = () => {
                   <ArrowRight size={14} />
                 </div>
               </Link>
+
+              {/* Card 6: Page SEO & Metadata Manager */}
+              <div
+                onClick={() => setTab("seo")}
+                className="card p-6 cursor-pointer hover:border-emerald-400 hover:shadow-md transition-all group flex flex-col justify-between border-2 border-emerald-100/70 bg-gradient-to-br from-white via-white to-emerald-50/25"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center justify-center group-hover:scale-105 transition-transform">
+                      <Globe size={22} />
+                    </div>
+                    <span className="text-xs font-bold text-emerald-900 bg-emerald-100/80 border border-emerald-300 px-2.5 py-1 rounded-full flex items-center gap-1">
+                      <Sparkles size={11} className="text-emerald-700" /> Google Ranking
+                    </span>
+                  </div>
+                  <h3 className="font-display font-bold text-base text-brand-black group-hover:text-brand-green-dark transition-colors">
+                    Page SEO & Metadata Manager
+                  </h3>
+                  <p className="text-xs text-brand-grey mt-1 leading-relaxed">
+                    Set Google search titles, descriptions, and focus keywords for all job portal routes to maximize organic search rankings.
+                  </p>
+                </div>
+                <div className="mt-5 pt-4 border-t border-brand-border flex items-center justify-between text-xs font-bold text-emerald-800 group-hover:translate-x-0.5 transition-transform">
+                  <span>Open SEO Command Suite</span>
+                  <ArrowRight size={14} />
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1459,6 +1605,466 @@ const SuperAdminDashboard = () => {
                 </table>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/* ── TAB 4: GLOBAL PAGE SEO & METADATA SUITE ── */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {activeTab === "seo" && (
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-display font-bold text-brand-black flex items-center gap-2">
+                  <Globe size={20} className="text-emerald-700" /> Global Page SEO & Search Metadata Suite
+                </h2>
+                <span className="text-xs font-bold text-emerald-900 bg-emerald-100 border border-emerald-300 px-2.5 py-0.5 rounded-full">
+                  Rank Booster
+                </span>
+              </div>
+              <p className="text-xs text-brand-grey mt-1">
+                Customize Google search titles, click-through descriptions, focus keywords, and WhatsApp/LinkedIn social cards for all portal pages.
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={handleOpenCreateCustomSeo}
+                className="btn-primary text-xs flex items-center gap-1.5 py-2 px-3.5 shadow-2xs cursor-pointer"
+              >
+                <PlusCircle size={14} /> + Add Custom Page Route
+              </button>
+              <button
+                onClick={() => setTab("overview")}
+                className="text-xs font-semibold text-brand-grey hover:text-black underline cursor-pointer"
+              >
+                ← Back to Hub
+              </button>
+            </div>
+          </div>
+
+          {/* Metrics summary banner */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="p-4 bg-white rounded-2xl border border-brand-border flex items-center justify-between">
+              <div>
+                <p className="text-[11px] font-semibold text-brand-grey uppercase">Total Portal Pages</p>
+                <p className="text-2xl font-display font-bold text-brand-black mt-1">{pageSeoList.length}</p>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-700">
+                <Globe size={18} />
+              </div>
+            </div>
+
+            <div className="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-200 flex items-center justify-between">
+              <div>
+                <p className="text-[11px] font-semibold text-emerald-900 uppercase">Google Optimized</p>
+                <p className="text-2xl font-display font-bold text-emerald-950 mt-1">
+                  {pageSeoList.filter((p) => p.isCustomized).length}
+                </p>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center">
+                <Sparkles size={18} />
+              </div>
+            </div>
+
+            <div className="p-4 bg-white rounded-2xl border border-brand-border flex items-center justify-between">
+              <div>
+                <p className="text-[11px] font-semibold text-brand-grey uppercase">Using Default Fallback</p>
+                <p className="text-2xl font-display font-bold text-gray-700 mt-1">
+                  {pageSeoList.filter((p) => !p.isCustomized).length}
+                </p>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-500">
+                <RotateCcw size={18} />
+              </div>
+            </div>
+          </div>
+
+          {/* Filter Bar & Search */}
+          <div className="card p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="inline-flex bg-gray-100 p-1 rounded-xl text-xs font-semibold">
+              <button
+                type="button"
+                onClick={() => setSeoFilter("all")}
+                className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                  seoFilter === "all" ? "bg-white text-brand-black shadow-2xs font-bold" : "text-gray-500 hover:text-black"
+                }`}
+              >
+                All Pages ({pageSeoList.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setSeoFilter("customized")}
+                className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                  seoFilter === "customized" ? "bg-white text-emerald-900 shadow-2xs font-bold" : "text-gray-500 hover:text-black"
+                }`}
+              >
+                Optimized ({pageSeoList.filter((p) => p.isCustomized).length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setSeoFilter("default")}
+                className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                  seoFilter === "default" ? "bg-white text-gray-900 shadow-2xs font-bold" : "text-gray-500 hover:text-black"
+                }`}
+              >
+                Default ({pageSeoList.filter((p) => !p.isCustomized).length})
+              </button>
+            </div>
+
+            <div className="relative flex-1 sm:max-w-xs">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search page name or route..."
+                value={seoSearch}
+                onChange={(e) => setSeoSearch(e.target.value)}
+                className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 bg-white"
+              />
+            </div>
+          </div>
+
+          {/* Pages Grid */}
+          {loadingSeo ? (
+            <div className="card p-12 text-center text-brand-grey text-xs">
+              Loading platform page metadata...
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {pageSeoList
+                .filter((item) => {
+                  if (seoFilter === "customized" && !item.isCustomized) return false;
+                  if (seoFilter === "default" && item.isCustomized) return false;
+                  if (!seoSearch.trim()) return true;
+                  const q = seoSearch.trim().toLowerCase();
+                  return (
+                    item.pageName?.toLowerCase().includes(q) ||
+                    item.route?.toLowerCase().includes(q) ||
+                    item.metaTitle?.toLowerCase().includes(q) ||
+                    item.defaultTitle?.toLowerCase().includes(q)
+                  );
+                })
+                .map((item) => {
+                  const activeTitle = item.metaTitle || item.defaultTitle || "AgriYuvaa";
+                  const activeDesc = item.metaDescription || item.defaultDescription || "";
+                  const activeKeywords = Array.isArray(item.metaKeywords) && item.metaKeywords.length > 0
+                    ? item.metaKeywords
+                    : item.defaultKeywords || [];
+
+                  return (
+                    <div
+                      key={item.route}
+                      className={`card p-5 transition-all flex flex-col justify-between ${
+                        item.isCustomized
+                          ? "border-emerald-200/90 bg-emerald-50/10 shadow-2xs"
+                          : "hover:border-gray-300"
+                      }`}
+                    >
+                      <div>
+                        {/* Top Route & Status */}
+                        <div className="flex items-center justify-between gap-2 mb-3">
+                          <span className="font-mono text-xs font-bold text-gray-800 bg-gray-100 border border-gray-200 px-2.5 py-1 rounded-lg">
+                            {item.route}
+                          </span>
+                          {item.isCustomized ? (
+                            <span className="text-[11px] font-bold text-emerald-900 bg-emerald-100 border border-emerald-300 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                              <Sparkles size={11} className="text-emerald-700" /> Google Optimized
+                            </span>
+                          ) : (
+                            <span className="text-[11px] font-medium text-gray-500 bg-gray-100 border border-gray-200 px-2.5 py-0.5 rounded-full">
+                              System Default
+                            </span>
+                          )}
+                        </div>
+
+                        <h3 className="font-display font-bold text-base text-brand-black mb-1">
+                          {item.pageName}
+                        </h3>
+
+                        {/* Mini Google SERP Preview Box */}
+                        <div className="mt-3 p-3 bg-white rounded-xl border border-gray-200/90 shadow-2xs space-y-1">
+                          <div className="flex items-center gap-1.5 text-[11px] text-gray-500">
+                            <span className="font-medium text-emerald-800">jobs.agriyuvaa.com</span>
+                            <span>›</span>
+                            <span className="truncate">{item.route === "/" ? "home" : item.route.replace(/^\//, "")}</span>
+                          </div>
+                          <p className="text-xs font-semibold text-blue-700 line-clamp-1 hover:underline cursor-pointer">
+                            {activeTitle}
+                          </p>
+                          <p className="text-[11px] text-gray-600 line-clamp-2 leading-relaxed">
+                            {activeDesc || "No description specified. Google will generate an automated snippet from page content."}
+                          </p>
+                        </div>
+
+                        {/* Keywords Preview */}
+                        {activeKeywords.length > 0 && (
+                          <div className="mt-3 flex flex-wrap gap-1.5 items-center">
+                            <span className="text-[10px] uppercase font-bold text-gray-400">Keywords:</span>
+                            {activeKeywords.slice(0, 3).map((kw, idx) => (
+                              <span
+                                key={idx}
+                                className="text-[10px] font-medium bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md"
+                              >
+                                {kw}
+                              </span>
+                            ))}
+                            {activeKeywords.length > 3 && (
+                              <span className="text-[10px] text-gray-400 font-medium">
+                                +{activeKeywords.length - 3} more
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Actions */}
+                      <div className="mt-4 pt-3 border-t border-brand-border flex items-center justify-between gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditSeo(item)}
+                          className="btn-primary text-xs py-1.5 px-3.5 flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <Edit3 size={13} /> {item.isCustomized ? "Edit Custom SEO" : "Customize SEO"}
+                        </button>
+
+                        <div className="flex items-center gap-2">
+                          {item.isCustomized && (
+                            <button
+                              type="button"
+                              onClick={() => handleResetSeo(item)}
+                              className="text-xs font-semibold text-gray-500 hover:text-red-700 px-2 py-1 rounded-lg hover:bg-red-50 transition-colors flex items-center gap-1 cursor-pointer"
+                              title="Reset to system defaults"
+                            >
+                              <RotateCcw size={12} /> Reset
+                            </button>
+                          )}
+                          <a
+                            href={item.route}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-gray-400 hover:text-black p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                            title="Visit page live"
+                          >
+                            <ExternalLink size={14} />
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Page SEO Edit & Google Live Preview Modal ── */}
+      {editingSeoItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 max-w-2xl w-full max-h-[92vh] overflow-hidden flex flex-col">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-emerald-950 via-emerald-900 to-gray-900 text-white">
+              <div>
+                <h3 className="font-display font-bold text-base flex items-center gap-2">
+                  <Globe size={18} className="text-emerald-400" />
+                  {editingSeoItem.isNew ? "Add Custom Page SEO Route" : `SEO Settings: ${editingSeoItem.pageName || editingSeoItem.route}`}
+                </h3>
+                <p className="text-xs text-emerald-200/80 mt-0.5 font-mono">
+                  {seoForm.route || "/"}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingSeoItem(null)}
+                className="text-white/60 hover:text-white p-1 rounded-lg transition-colors text-lg cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Content with Live Google SERP Simulator */}
+            <form onSubmit={handleSaveSeo} className="p-6 overflow-y-auto space-y-5 flex-1">
+              {seoError && (
+                <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl flex items-center gap-2">
+                  <AlertCircle size={15} /> {seoError}
+                </div>
+              )}
+
+              {/* LIVE GOOGLE SERP SIMULATOR */}
+              <div className="p-4 bg-gray-50 border border-gray-200 rounded-2xl space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
+                    <Sparkles size={12} className="text-amber-500" /> Live Google Search Result Simulator
+                  </span>
+                  <span className="text-[10px] text-gray-400 font-medium">Desktop Preview</span>
+                </div>
+                <div className="p-3 bg-white rounded-xl border border-gray-200 shadow-2xs space-y-1">
+                  <div className="flex items-center gap-1.5 text-xs text-gray-600">
+                    <div className="w-4 h-4 rounded-full bg-emerald-700 text-white flex items-center justify-center text-[10px] font-bold">
+                      A
+                    </div>
+                    <span className="font-medium text-gray-800">AgriYuvaa Jobs</span>
+                    <span className="text-gray-400">›</span>
+                    <span className="text-gray-500 text-[11px] font-mono">
+                      https://jobs.agriyuvaa.com{seoForm.route || "/"}
+                    </span>
+                  </div>
+                  <h4 className="text-base font-semibold text-blue-700 hover:underline leading-snug cursor-pointer">
+                    {seoForm.metaTitle || editingSeoItem.defaultTitle || "Enter Meta Title..."}
+                  </h4>
+                  <p className="text-xs text-gray-600 leading-relaxed line-clamp-2">
+                    {seoForm.metaDescription || editingSeoItem.defaultDescription || "Enter meta description so Google users will be attracted to click your page..."}
+                  </p>
+                </div>
+              </div>
+
+              {/* Form Input Fields */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-gray-700">Page Name / Title</label>
+                  <input
+                    required
+                    type="text"
+                    value={seoForm.pageName}
+                    onChange={(e) => setSeoForm({ ...seoForm, pageName: e.target.value })}
+                    placeholder="e.g. Job Search & Vacancies"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 bg-white"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-gray-700">Route Path</label>
+                  <input
+                    required
+                    type="text"
+                    disabled={!editingSeoItem.isNew}
+                    value={seoForm.route}
+                    onChange={(e) => setSeoForm({ ...seoForm, route: e.target.value })}
+                    placeholder="e.g. /jobs"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 bg-gray-50 disabled:text-gray-500 font-mono"
+                  />
+                </div>
+              </div>
+
+              {/* Meta Title with Character Counter */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-gray-700">Google Meta Title</label>
+                  <span
+                    className={`text-[11px] font-mono px-2 py-0.5 rounded-full ${
+                      (seoForm.metaTitle || "").length >= 45 && (seoForm.metaTitle || "").length <= 60
+                        ? "bg-emerald-100 text-emerald-800 font-bold"
+                        : (seoForm.metaTitle || "").length > 60
+                        ? "bg-amber-100 text-amber-800 font-bold"
+                        : "bg-gray-100 text-gray-600"
+                    }`}
+                  >
+                    {(seoForm.metaTitle || "").length} / 60 chars
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  value={seoForm.metaTitle}
+                  onChange={(e) => setSeoForm({ ...seoForm, metaTitle: e.target.value })}
+                  placeholder={editingSeoItem.defaultTitle || "Custom Google clickable headline..."}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 bg-white"
+                />
+                <p className="text-[11px] text-gray-400">
+                  Recommended: 50–60 characters. Appears as the main clickable headline in search results.
+                </p>
+              </div>
+
+              {/* Meta Description with Character Counter */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-gray-700">Google Meta Description</label>
+                  <span
+                    className={`text-[11px] font-mono px-2 py-0.5 rounded-full ${
+                      (seoForm.metaDescription || "").length >= 120 && (seoForm.metaDescription || "").length <= 160
+                        ? "bg-emerald-100 text-emerald-800 font-bold"
+                        : (seoForm.metaDescription || "").length > 160
+                        ? "bg-amber-100 text-amber-800 font-bold"
+                        : "bg-gray-100 text-gray-600"
+                    }`}
+                  >
+                    {(seoForm.metaDescription || "").length} / 160 chars
+                  </span>
+                </div>
+                <textarea
+                  rows={2}
+                  value={seoForm.metaDescription}
+                  onChange={(e) => setSeoForm({ ...seoForm, metaDescription: e.target.value })}
+                  placeholder={editingSeoItem.defaultDescription || "Short 150-160 character description that entices users to click..."}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 bg-white"
+                />
+                <p className="text-[11px] text-gray-400">
+                  Recommended: 150–160 characters. Appears directly under your headline in search results.
+                </p>
+              </div>
+
+              {/* Focus Keywords */}
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-gray-700">Focus Keywords (comma-separated)</label>
+                <input
+                  type="text"
+                  value={seoForm.metaKeywords}
+                  onChange={(e) => setSeoForm({ ...seoForm, metaKeywords: e.target.value })}
+                  placeholder="e.g. agriculture jobs, agronomy salary, icar exam 2026"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 bg-white"
+                />
+                <p className="text-[11px] text-gray-400">
+                  Target search queries you want this specific page to rank for on Google.
+                </p>
+              </div>
+
+              {/* Social Share Image (OG Image) */}
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-gray-700">Custom Social Share Image (OG Image)</label>
+                <input
+                  type="text"
+                  value={seoForm.ogImage}
+                  onChange={(e) => setSeoForm({ ...seoForm, ogImage: e.target.value })}
+                  placeholder="https://... (Leave blank to use default AgriYuvaa logo preview)"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 bg-white"
+                />
+                <p className="text-[11px] text-gray-400">
+                  Preview card image when sharing this page on WhatsApp, LinkedIn, or Twitter.
+                </p>
+              </div>
+
+              {/* Noindex Checkbox */}
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="checkbox"
+                  id="seoNoindex"
+                  checked={seoForm.noindex}
+                  onChange={(e) => setSeoForm({ ...seoForm, noindex: e.target.checked })}
+                  className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-gray-300"
+                />
+                <label htmlFor="seoNoindex" className="text-xs text-gray-700 font-medium cursor-pointer">
+                  Do not index this page on Google search engines (<code className="text-xs font-mono bg-gray-100 px-1 py-0.5 rounded">noindex</code>)
+                </label>
+              </div>
+
+              {/* Modal Buttons */}
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setEditingSeoItem(null)}
+                  className="px-4 py-2 border border-gray-200 rounded-xl text-xs font-semibold text-gray-600 hover:text-black cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  disabled={savingSeo}
+                  type="submit"
+                  className="btn-primary text-xs py-2 px-5 flex items-center gap-2 cursor-pointer shadow-sm"
+                >
+                  {savingSeo ? "Saving SEO..." : "Save SEO Settings"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

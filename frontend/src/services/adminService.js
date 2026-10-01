@@ -24,3 +24,9 @@ export const fetchAllApplications = (params) => api.get("/admin/applications", {
 export const reviewJob = (id, decision, rejectionReason, isFeatured) =>
   api.post(`/admin/jobs/${id}/review`, { decision, rejectionReason, isFeatured }).then((r) => r.data);
 export const toggleJobFeatured = (id) => api.post(`/admin/jobs/${id}/featured`).then((r) => r.data);
+
+// Page SEO Management
+export const fetchPageSeoConfigs = () => api.get("/page-seo").then((r) => r.data);
+export const upsertPageSeoConfig = (data) => api.post("/page-seo", data).then((r) => r.data);
+export const deletePageSeoConfig = (id) => api.delete(`/page-seo/${id}`).then((r) => r.data);
+
