@@ -100,7 +100,7 @@ const BlogDetail = () => {
     },
     mainEntityOfPage: {
       "@type": "WebPage",
-      "@id": blog.canonicalUrl || `https://agriyuvaa.com/blog/${slug}`,
+      "@id": `https://agriyuvaa.com/blog/${slug}`,
     },
   };
 
@@ -110,7 +110,7 @@ const BlogDetail = () => {
         title={seoTitle}
         description={seoDescription}
         image={seoImage}
-        canonical={blog.canonicalUrl || `https://agriyuvaa.com/blog/${slug}`}
+        canonical={`https://agriyuvaa.com/blog/${slug}`}
         keywords={seoKeywords}
         type="article"
         jsonLd={articleSchema}

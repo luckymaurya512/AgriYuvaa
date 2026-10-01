@@ -23,6 +23,7 @@ import {
   LayoutDashboard,
   Clock,
   ArrowRight,
+  ArrowUpRight,
   MapPin,
   ShieldCheck,
   FileSpreadsheet,
@@ -666,10 +667,29 @@ const AdminDashboard = () => {
           {/* Key Metric Numbers */}
           {stats && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <StatCard label="Total Platform Users" value={stats.totalUsers} />
-              <StatCard label="Active Platform Jobs" value={stats.totalJobs} />
-              <StatCard label="Pending Job Moderation" value={stats.pendingJobs} />
-              <StatCard label="Candidate Applications" value={stats.totalApplications} />
+              <StatCard
+                label="Total Platform Users"
+                value={stats.totalUsers}
+                hint="Platform members"
+              />
+              <StatCard
+                label="Active Platform Jobs"
+                value={stats.totalJobs}
+                onClick={() => setTab("jobs")}
+                hint="View active jobs"
+              />
+              <StatCard
+                label="Pending Job Moderation"
+                value={stats.pendingJobs}
+                onClick={() => setTab("approvals")}
+                hint="Review moderation queue"
+              />
+              <StatCard
+                label="Candidate Applications"
+                value={stats.totalApplications}
+                onClick={() => setTab("applications")}
+                hint="View all applications"
+              />
             </div>
           )}
 
@@ -2258,10 +2278,42 @@ const AdminDashboard = () => {
   );
 };
 
-const StatCard = ({ label, value }) => (
-  <div className="card p-5">
-    <p className="text-xs text-brand-grey uppercase font-semibold">{label}</p>
-    <p className="text-3xl font-display font-bold mt-2">{value}</p>
+const StatCard = ({ label, value, onClick, hint }) => (
+  <div
+    onClick={onClick}
+    role={onClick ? "button" : undefined}
+    tabIndex={onClick ? 0 : undefined}
+    onKeyDown={(e) => {
+      if (onClick && (e.key === "Enter" || e.key === " ")) {
+        e.preventDefault();
+        onClick();
+      }
+    }}
+    className={`card p-5 transition-all duration-200 select-none ${
+      onClick
+        ? "cursor-pointer hover:border-emerald-400 hover:shadow-lg hover:-translate-y-1 hover:bg-emerald-50/20 active:translate-y-0 group"
+        : ""
+    }`}
+  >
+    <div className="flex items-center justify-between">
+      <p className="text-xs text-brand-grey uppercase font-semibold group-hover:text-emerald-900 transition-colors">
+        {label}
+      </p>
+      {onClick && (
+        <span className="p-1 rounded-lg text-gray-300 group-hover:text-emerald-700 group-hover:bg-emerald-100/60 transition-all">
+          <ArrowUpRight size={15} />
+        </span>
+      )}
+    </div>
+    <p className="text-3xl font-display font-bold mt-2 text-brand-black group-hover:text-emerald-950 transition-colors">
+      {value}
+    </p>
+    {hint && (
+      <p className="text-[11px] font-medium text-gray-400 group-hover:text-emerald-700 mt-1.5 transition-colors flex items-center gap-1">
+        <span>{hint}</span>
+        <span className="inline-block transition-transform group-hover:translate-x-0.5">→</span>
+      </p>
+    )}
   </div>
 );
 
@@ -2635,7 +2687,7 @@ const CmsPanel = ({ type, items, loading, onLoad, onDelete, onSave, fields, colu
                 </div>
 
                 {/* Focus Keywords */}
-                <div className="space-y-1">
+                <div className="space-y-1 md:col-span-2">
                   <label className="text-xs font-semibold text-gray-700">
                     Focus Keywords (comma-separated)
                   </label>
@@ -2648,23 +2700,6 @@ const CmsPanel = ({ type, items, loading, onLoad, onDelete, onSave, fields, colu
                   />
                   <p className="text-[11px] text-gray-400">
                     Target queries you want this article to rank for on Google.
-                  </p>
-                </div>
-
-                {/* Canonical URL */}
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-gray-700">
-                    Canonical URL Override (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={form.canonicalUrl || ""}
-                    onChange={(e) => setForm({ ...form, canonicalUrl: e.target.value })}
-                    placeholder="https://agriyuvaa.com/blog/..."
-                    className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 bg-white"
-                  />
-                  <p className="text-[11px] text-gray-400">
-                    Leave blank to use the official AgriYuvaa URL automatically.
                   </p>
                 </div>
 

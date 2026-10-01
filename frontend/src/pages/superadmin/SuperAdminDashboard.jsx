@@ -19,6 +19,7 @@ import {
   Briefcase,
   LayoutDashboard,
   ArrowRight,
+  ArrowUpRight,
   Landmark,
   Edit3,
   FileSpreadsheet,
@@ -50,7 +51,32 @@ const SuperAdminDashboard = () => {
 
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
+  const [userRoleFilter, setUserRoleFilter] = useState("all");
+  const [userSearch, setUserSearch] = useState("");
   const [showAdminForm, setShowAdminForm] = useState(false);
+
+  const filteredUsers = useMemo(() => {
+    return users.filter((u) => {
+      const role = (u.role || "").toLowerCase();
+      const matchesRole =
+        userRoleFilter === "all"
+          ? true
+          : userRoleFilter === "employer"
+          ? role === "employer" || u.hasEmployerProfile
+          : userRoleFilter === "seeker"
+          ? role === "seeker" || role === "user"
+          : role === userRoleFilter;
+
+      const q = userSearch.trim().toLowerCase();
+      const matchesSearch =
+        !q ||
+        (u.name && u.name.toLowerCase().includes(q)) ||
+        (u.email && u.email.toLowerCase().includes(q)) ||
+        (u.role && u.role.toLowerCase().includes(q));
+
+      return matchesRole && matchesSearch;
+    });
+  }, [users, userRoleFilter, userSearch]);
   const [adminEmail, setAdminEmail] = useState("");
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
@@ -410,10 +436,39 @@ const SuperAdminDashboard = () => {
           {/* Metrics */}
           {stats && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <StatCard label="Total Registered Users" value={stats.totalUsers} />
-              <StatCard label="Employer Accounts" value={stats.totalEmployers} />
-              <StatCard label="Job Seekers" value={stats.totalSeekers} />
-              <StatCard label="Platform Applications" value={stats.totalApplications} />
+              <StatCard
+                label="Total Registered Users"
+                value={stats.totalUsers}
+                onClick={() => {
+                  setTab("users");
+                  setUserRoleFilter("all");
+                }}
+                hint="View all users"
+              />
+              <StatCard
+                label="Employer Accounts"
+                value={stats.totalEmployers}
+                onClick={() => {
+                  setTab("users");
+                  setUserRoleFilter("employer");
+                }}
+                hint="View employers"
+              />
+              <StatCard
+                label="Job Seekers"
+                value={stats.totalSeekers}
+                onClick={() => {
+                  setTab("users");
+                  setUserRoleFilter("seeker");
+                }}
+                hint="View seekers"
+              />
+              <StatCard
+                label="Platform Applications"
+                value={stats.totalApplications}
+                onClick={() => setTab("applications")}
+                hint="View applications"
+              />
             </div>
           )}
 
@@ -638,8 +693,114 @@ const SuperAdminDashboard = () => {
           )}
 
           <div className="card overflow-hidden">
-            <div className="px-5 py-4 border-b border-brand-border font-semibold text-sm flex items-center justify-between">
-              <span>All Registered Users ({users.length})</span>
+            <div className="px-5 py-4 border-b border-brand-border flex flex-col md:flex-row md:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span className="font-semibold text-sm text-brand-black">
+                  {userRoleFilter === "all"
+                    ? "All Registered Users"
+                    : userRoleFilter === "employer"
+                    ? "Employer Accounts"
+                    : userRoleFilter === "seeker"
+                    ? "Job Seekers"
+                    : `${userRoleFilter.toUpperCase()} Accounts`}{" "}
+                  <span className="text-brand-grey font-normal">
+                    ({filteredUsers.length} of {users.length})
+                  </span>
+                </span>
+                {userRoleFilter !== "all" && (
+                  <button
+                    type="button"
+                    onClick={() => setUserRoleFilter("all")}
+                    className="text-xs text-brand-green font-bold hover:underline"
+                  >
+                    Clear Filter
+                  </button>
+                )}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Role Filter Pills */}
+                <div className="inline-flex bg-gray-100 p-1 rounded-xl text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setUserRoleFilter("all")}
+                    className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                      userRoleFilter === "all"
+                        ? "bg-white text-brand-black shadow-2xs font-bold"
+                        : "text-gray-500 hover:text-black"
+                    }`}
+                  >
+                    All ({users.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setUserRoleFilter("employer")}
+                    className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                      userRoleFilter === "employer"
+                        ? "bg-white text-emerald-900 shadow-2xs font-bold"
+                        : "text-gray-500 hover:text-black"
+                    }`}
+                  >
+                    Employers (
+                    {
+                      users.filter(
+                        (u) => (u.role || "").toLowerCase() === "employer" || u.hasEmployerProfile
+                      ).length
+                    }
+                    )
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setUserRoleFilter("seeker")}
+                    className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                      userRoleFilter === "seeker"
+                        ? "bg-white text-emerald-900 shadow-2xs font-bold"
+                        : "text-gray-500 hover:text-black"
+                    }`}
+                  >
+                    Seekers (
+                    {
+                      users.filter(
+                        (u) =>
+                          (u.role || "").toLowerCase() === "seeker" ||
+                          (u.role || "").toLowerCase() === "user"
+                      ).length
+                    }
+                    )
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setUserRoleFilter("admin")}
+                    className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                      userRoleFilter === "admin"
+                        ? "bg-white text-emerald-900 shadow-2xs font-bold"
+                        : "text-gray-500 hover:text-black"
+                    }`}
+                  >
+                    Admins (
+                    {
+                      users.filter(
+                        (u) =>
+                          (u.role || "").toLowerCase() === "admin" ||
+                          (u.role || "").toLowerCase() === "superadmin"
+                      ).length
+                    }
+                    )
+                  </button>
+                </div>
+
+                {/* Quick Search */}
+                <div className="relative">
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search name or email..."
+                    value={userSearch}
+                    onChange={(e) => setUserSearch(e.target.value)}
+                    className="pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 bg-white"
+                  />
+                </div>
+              </div>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -654,7 +815,14 @@ const SuperAdminDashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map((u) => (
+                  {filteredUsers.length === 0 ? (
+                    <tr>
+                      <td colSpan="6" className="text-center py-12 text-brand-grey text-xs">
+                        No registered users match your selected filter or search term.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredUsers.map((u) => (
                     <tr key={u._id} className="border-t border-brand-border hover:bg-gray-50/50 transition-colors">
                       <td className="px-5 py-3 font-medium text-brand-black">{u.name}</td>
                       <td className="px-5 py-3 text-brand-grey">{u.email}</td>
@@ -726,7 +894,7 @@ const SuperAdminDashboard = () => {
                         )}
                       </td>
                     </tr>
-                  ))}
+                  )))}
                 </tbody>
               </table>
             </div>
@@ -1306,10 +1474,42 @@ const SuperAdminDashboard = () => {
   );
 };
 
-const StatCard = ({ label, value }) => (
-  <div className="card p-5">
-    <p className="text-xs text-brand-grey uppercase font-semibold">{label}</p>
-    <p className="text-3xl font-display font-bold mt-2">{value}</p>
+const StatCard = ({ label, value, onClick, hint }) => (
+  <div
+    onClick={onClick}
+    role={onClick ? "button" : undefined}
+    tabIndex={onClick ? 0 : undefined}
+    onKeyDown={(e) => {
+      if (onClick && (e.key === "Enter" || e.key === " ")) {
+        e.preventDefault();
+        onClick();
+      }
+    }}
+    className={`card p-5 transition-all duration-200 select-none ${
+      onClick
+        ? "cursor-pointer hover:border-emerald-400 hover:shadow-lg hover:-translate-y-1 hover:bg-emerald-50/20 active:translate-y-0 group"
+        : ""
+    }`}
+  >
+    <div className="flex items-center justify-between">
+      <p className="text-xs text-brand-grey uppercase font-semibold group-hover:text-emerald-900 transition-colors">
+        {label}
+      </p>
+      {onClick && (
+        <span className="p-1 rounded-lg text-gray-300 group-hover:text-emerald-700 group-hover:bg-emerald-100/60 transition-all">
+          <ArrowUpRight size={15} />
+        </span>
+      )}
+    </div>
+    <p className="text-3xl font-display font-bold mt-2 text-brand-black group-hover:text-emerald-950 transition-colors">
+      {value}
+    </p>
+    {hint && (
+      <p className="text-[11px] font-medium text-gray-400 group-hover:text-emerald-700 mt-1.5 transition-colors flex items-center gap-1">
+        <span>{hint}</span>
+        <span className="inline-block transition-transform group-hover:translate-x-0.5">→</span>
+      </p>
+    )}
   </div>
 );
 
