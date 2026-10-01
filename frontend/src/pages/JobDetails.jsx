@@ -334,8 +334,8 @@ const JobDetails = () => {
     : "";
 
   const currentJobUrl = typeof window !== "undefined" && window.location.origin
-    ? `${window.location.origin}/jobs/${job._id}`
-    : `https://job.agriyuvaa.com/jobs/${job._id}`;
+    ? `${window.location.origin}/jobs/${job.slug || job._id}`
+    : `https://jobs.agriyuvaa.com/jobs/${job.slug || job._id}`;
 
   const emailBody = `Dear Hiring Team at ${companyDisplayName},\n\nI am writing to apply for the "${job.title}" position at ${companyDisplayName}.\n\nPlease find attached my resume for your review and consideration.\n\nApplicant Details:\n- Name: ${user?.name || "Candidate"}\n- Email: ${user?.email || ""}${candidatePhone}${resumeRef}\n\nThank you for your time and consideration.\n\nBest regards,\n${user?.name || "Candidate"}\nApplied through Agriyuvaa job portal (${currentJobUrl})\n\n🌱 AgriYuvaa — India's Agriculture Career Platform (https://job.agriyuvaa.com)`;
 
@@ -464,7 +464,7 @@ const JobDetails = () => {
       <SEO
         title={seoTitle}
         description={seoDesc}
-        canonical={`/jobs/${job._id || id}`}
+        canonical={`/jobs/${job.slug || job._id || id}`}
         image={job.companyLogo || "https://jobs.agriyuvaa.com/logo.png"}
         keywords={seoKeywords}
         jsonLd={jobPostingSchema}
@@ -892,7 +892,7 @@ const JobDetails = () => {
                         {similarJobs.map((simJob) => (
                           <Link
                             key={simJob._id}
-                            to={`/jobs/${simJob._id}`}
+                            to={`/jobs/${simJob.slug || simJob._id}`}
                             className="p-2.5 bg-white rounded-xl border border-emerald-100 hover:border-emerald-400 flex items-start justify-between gap-2 transition-all block group shadow-2xs"
                           >
                             <div className="min-w-0">
@@ -1112,7 +1112,7 @@ const JobDetails = () => {
                       }`
                     : "";
                 const company = companyDisplayName;
-                const text = `🌾 *Agriculture Hiring Alert on AgriYuvaa Job Portal*:\n\n📌 *${job.title}*\n🏢 *Company:* ${company}\n📍 *Location:* ${job.location || "India"}\n💼 *Type:* ${job.employmentType || "Full-time"}${salaryInfo}\n\n👉 *View & Apply:* ${window.location.href}`;
+                const text = `🌾 *Agriculture Hiring Alert on AgriYuvaa Job Portal*:\n\n📌 *${job.title}*\n🏢 *Company:* ${company}\n📍 *Location:* ${job.location || "India"}\n💼 *Type:* ${job.employmentType || "Full-time"}${salaryInfo}\n\n👉 *View & Apply:* ${currentJobUrl}`;
                 window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank");
               }}
               className="w-full py-2.5 px-4 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-2 transition-colors"
@@ -1136,7 +1136,7 @@ const JobDetails = () => {
               )}
 
               <button
-                onClick={() => handleCopy(window.location.href, "share")}
+                onClick={() => handleCopy(currentJobUrl, "share")}
                 className={`btn-secondary text-xs py-2 flex items-center justify-center gap-1.5 ${
                   user?.role !== "seeker" ? "col-span-2" : ""
                 }`}

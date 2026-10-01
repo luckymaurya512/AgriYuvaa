@@ -62,9 +62,43 @@ const jobSchema = new mongoose.Schema(
     views: { type: Number, default: 0 },
     applicationDeadline: { type: Date },
     expiresAt: { type: Date },
+    slug: {
+      type: String,
+      lowercase: true,
+      trim: true,
+      index: true,
+      sparse: true,
+    },
   },
   { timestamps: true }
 );
+
+// Auto-generate unique readable slug if not provided
+jobSchema.pre("validate", function (next) {
+  if (!this.slug && this.title) {
+    const company = (this.companyName || "").trim();
+    const loc = (this.location || "").trim();
+    const parts = [this.title, company, loc].filter(Boolean).join(" ");
+    let baseSlug = parts
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
+      .trim();
+
+    if (!baseSlug) baseSlug = "agriculture-job";
+    const suffix = this._id ? this._id.toString().slice(-5) : Math.random().toString(36).substring(2, 7);
+    this.slug = `${baseSlug}-${suffix}`;
+  } else if (this.slug) {
+    this.slug = this.slug
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
+      .trim();
+  }
+  next();
+});
 
 jobSchema.index({ title: "text", description: "text", location: "text", cropTags: "text" });
 

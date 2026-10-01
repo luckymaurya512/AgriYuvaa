@@ -58,7 +58,7 @@ const JobCard = ({ job, isSavedInitial = false, onBookmarkChange }) => {
   const deadlineDate = job.applicationDeadline || job.expiresAt;
 
   return (
-    <Link to={`/jobs/${job._id}`} className="card p-4 sm:p-5 flex flex-col gap-3 h-full relative group">
+    <Link to={`/jobs/${job.slug || job._id}`} className="card p-4 sm:p-5 flex flex-col gap-3 h-full relative group">
       {/* Top row: Badges & Bookmark Icon */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex flex-wrap items-center gap-1.5">
@@ -82,8 +82,8 @@ const JobCard = ({ job, isSavedInitial = false, onBookmarkChange }) => {
               e.stopPropagation();
               const salaryInfo = job.salaryMin || job.salaryMax ? `\n💰 *Salary:* ${formatSalary(job.salaryMin, job.salaryMax)}` : "";
               const company = job.companyName || job.employer?.name || "Agri Company";
-              const shareBase = typeof window !== "undefined" && window.location.origin ? window.location.origin : "https://job.agriyuvaa.com";
-              const text = `🌾 *Agriculture Hiring Alert on AgriYuvaa Job Portal*:\n\n📌 *${job.title}*\n🏢 *Company:* ${company}\n📍 *Location:* ${job.location || "India"}\n💼 *Type:* ${job.employmentType || "Full-time"}${salaryInfo}\n\n👉 *View & Apply:* ${shareBase}/jobs/${job._id}`;
+              const shareBase = typeof window !== "undefined" && window.location.origin ? window.location.origin : "https://jobs.agriyuvaa.com";
+              const text = `🌾 *Agriculture Hiring Alert on AgriYuvaa Job Portal*:\n\n📌 *${job.title}*\n🏢 *Company:* ${company}\n📍 *Location:* ${job.location || "India"}\n💼 *Type:* ${job.employmentType || "Full-time"}${salaryInfo}\n\n👉 *View & Apply:* ${shareBase}/jobs/${job.slug || job._id}`;
               window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
             }}
             className="p-1.5 rounded-lg border border-brand-border/60 bg-white text-brand-grey hover:text-[#25D366] hover:border-emerald-300 hover:bg-emerald-50/50 transition-colors flex items-center justify-center cursor-pointer"

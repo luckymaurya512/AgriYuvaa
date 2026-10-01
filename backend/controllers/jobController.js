@@ -1,4 +1,5 @@
 import asyncHandler from "express-async-handler";
+import mongoose from "mongoose";
 import Job from "../models/Job.js";
 import User from "../models/User.js";
 import EmployerProfile from "../models/EmployerProfile.js";
@@ -273,16 +274,30 @@ export const getJobs = asyncHandler(async (req, res) => {
   res.json({ jobs, total, page: Number(page), pages: Math.ceil(total / Number(limit)) });
 });
 
-// @desc  Get single job by id (increments view count)
+// @desc  Get single job by id or slug (increments view count)
 // @route GET /api/jobs/:id
 export const getJobById = asyncHandler(async (req, res) => {
-  const job = await Job.findById(req.params.id)
+  const { id } = req.params;
+  const isObjectId = mongoose.Types.ObjectId.isValid(id);
+  const query = isObjectId ? { $or: [{ _id: id }, { slug: id }] } : { slug: id };
+
+  const job = await Job.findOne(query)
     .populate("category", "name slug icon")
     .populate("employer", "name");
 
   if (!job) {
     res.status(404);
     throw new Error("Job not found");
+  }
+
+  // Auto-generate slug on the fly if this is an older job without a slug
+  if (!job.slug && job.title) {
+    const company = (job.companyName || "").trim();
+    const loc = (job.location || "").trim();
+    const parts = [job.title, company, loc].filter(Boolean).join(" ");
+    let base = parts.toLowerCase().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-").trim() || "job";
+    const suffix = job._id.toString().slice(-5);
+    job.slug = `${base}-${suffix}`;
   }
 
   job.views += 1;
