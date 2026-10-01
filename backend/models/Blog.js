@@ -77,11 +77,6 @@ const blogSchema = new mongoose.Schema(
         trim: true,
       },
     ],
-    canonicalUrl: {
-      type: String,
-      trim: true,
-      default: "",
-    },
     ogImage: {
       type: String,
       trim: true,
