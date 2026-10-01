@@ -214,14 +214,41 @@ const GovtJobDetail = () => {
     );
   }
 
+  const cleanDescription = (job.description || "").replace(/<[^>]+>/g, " ").trim();
+  const vacanciesText = job.vacancies && job.vacancies !== "Not Specified" ? ` (${job.vacancies})` : "";
+
+  const seoTitle = `${job.title} - ${job.organization}${vacanciesText} Recruitment | AgriYuvaa Govt Jobs`;
+
+  const seoDesc = `Apply for ${job.title} at ${job.organization}.${vacanciesText ? ` Total Vacancies: ${job.vacancies}.` : ''} Salary: ${job.salary}. Eligibility: ${job.qualification}. Last Date: ${job.applicationDeadline}. Official notification & apply online.`;
+
+  const seoKeywords = [
+    job.title,
+    job.organization,
+    job.qualification,
+    job.category,
+    job.state || "All India",
+    "agriculture govt jobs",
+    "sarkari naukri agriculture",
+    "icar recruitment",
+    "nabard recruitment",
+    "krishi vibhag bharti",
+    "agriyuvaa govt jobs",
+  ].filter(Boolean);
+
   const jobSchema = {
     "@context": "https://schema.org/",
     "@type": "JobPosting",
-    title: job.title,
-    description: job.description,
+    title: `${job.title} - ${job.organization}`,
+    description: cleanDescription || seoDesc,
+    identifier: {
+      "@type": "PropertyValue",
+      name: job.organization,
+      value: (job.slug || job._id || id).toString(),
+    },
     hiringOrganization: {
       "@type": "Organization",
       name: job.organization,
+      logo: "https://job.agriyuvaa.com/logo.png",
     },
     employmentType: "FULL_TIME",
     jobLocation: {
@@ -240,15 +267,19 @@ const GovtJobDetail = () => {
         value: job.salary,
       },
     },
-    validThrough: job.applicationDeadline,
+    qualifications: job.qualification,
+    industry: "Government Agriculture & Rural Development",
+    directApply: true,
   };
 
   return (
     <div className="min-h-screen bg-gray-50/50 pb-20">
       <SEO
-        title={`${job.title} - ${job.organization} Recruitment | AgriYuvaa`}
-        description={`${job.title} at ${job.organization}. Total Vacancies: ${job.vacancies}. Salary: ${job.salary}. Last Date to apply: ${job.applicationDeadline}.`}
+        title={seoTitle}
+        description={seoDesc}
         canonical={`/govt-jobs/${job.slug || job._id}`}
+        image="https://job.agriyuvaa.com/og-banner.png"
+        keywords={seoKeywords}
         jsonLd={jobSchema}
       />
 

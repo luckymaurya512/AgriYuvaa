@@ -395,19 +395,46 @@ const JobDetails = () => {
     }
   };
 
+  const salaryText = (job.salaryMin || job.salaryMax)
+    ? `₹${job.salaryMin ? job.salaryMin.toLocaleString('en-IN') : ''}${job.salaryMin && job.salaryMax ? ' - ₹' : ''}${job.salaryMax ? job.salaryMax.toLocaleString('en-IN') : ''}/mo`
+    : "";
+
+  const seoTitle = `${job.title} at ${companyDisplayName} in ${job.location || "India"}${salaryText ? ` (${salaryText})` : ''} | AgriYuvaa Jobs`;
+
+  const seoDesc = `Apply for ${job.title} vacancy at ${companyDisplayName} in ${job.location || "India"}. Employment: ${formatEmploymentType(job.employmentType)}${salaryText ? `, Salary: ${salaryText}` : ''}, Exp: ${job.experienceLevel || "Any"}. Apply directly on AgriYuvaa.`;
+
+  const seoKeywords = [
+    job.title,
+    companyDisplayName,
+    job.location,
+    job.category?.name,
+    ...(job.cropTags || []),
+    "agriculture jobs",
+    "agri careers India",
+    "farming recruitment",
+  ].filter(Boolean);
+
+  const cleanDescription = (job.description || "").replace(/<[^>]+>/g, " ").trim();
+  const validThroughDate = job.applicationDeadline || job.expiresAt || new Date(new Date(job.createdAt || Date.now()).getTime() + 60 * 24 * 60 * 60 * 1000).toISOString();
+
   const jobPostingSchema = {
     "@context": "https://schema.org",
     "@type": "JobPosting",
     title: job.title,
-    description: (job.description || "").replace(/<[^>]+>/g, " ").slice(0, 500),
-    datePosted: job.createdAt,
-    validThrough: job.applicationDeadline || job.expiresAt,
+    description: cleanDescription || seoDesc,
+    identifier: {
+      "@type": "PropertyValue",
+      name: companyDisplayName,
+      value: (job._id || id).toString(),
+    },
+    datePosted: job.createdAt || new Date().toISOString(),
+    validThrough: validThroughDate,
     employmentType: job.employmentType ? job.employmentType.toUpperCase().replace("-", "_") : "FULL_TIME",
     hiringOrganization: {
       "@type": "Organization",
       name: companyDisplayName,
       sameAs: job.companyWebsite || undefined,
-      logo: job.companyLogo || undefined,
+      logo: job.companyLogo || "https://job.agriyuvaa.com/logo.png",
     },
     jobLocation: {
       "@type": "Place",
@@ -424,20 +451,22 @@ const JobDetails = () => {
         "@type": "QuantitativeValue",
         minValue: job.salaryMin || undefined,
         maxValue: job.salaryMax || undefined,
-        unitText: "YEAR",
+        unitText: "MONTH",
       },
     } : undefined,
+    experienceRequirements: job.experienceLevel || "Not specified",
+    industry: "Agriculture & Allied Sectors",
+    directApply: true,
   };
-
-  const plainDesc = (job.description || "").replace(/<[^>]+>/g, " ").trim().slice(0, 160);
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10 grid md:grid-cols-3 gap-8 w-full min-w-0">
       <SEO
-        title={`${job.title} at ${companyDisplayName}`}
-        description={plainDesc || `Apply for ${job.title} at ${companyDisplayName} in ${job.location || "India"}. Agriculture jobs on AgriYuvaa.`}
+        title={seoTitle}
+        description={seoDesc}
         canonical={`/jobs/${job._id || id}`}
-        image={job.companyLogo}
+        image={job.companyLogo || "https://job.agriyuvaa.com/og-banner.png"}
+        keywords={seoKeywords}
         jsonLd={jobPostingSchema}
       />
       {/* Left Column: Job Info */}
