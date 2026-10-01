@@ -89,7 +89,7 @@ const BlogDetail = () => {
     blog.metaDescription ||
     blog.excerpt ||
     (blog.content ? blog.content.substring(0, 155).replace(/<[^>]+>/g, "").trim() : blog.title);
-  const seoImage = blog.ogImage || blog.coverImage || "https://job.agriyuvaa.com/og-banner.png";
+  const seoImage = blog.ogImage || blog.coverImage || "https://jobs.agriyuvaa.com/logo.png";
   const seoKeywords =
     blog.metaKeywords?.length > 0
       ? blog.metaKeywords

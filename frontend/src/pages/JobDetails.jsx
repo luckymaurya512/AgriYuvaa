@@ -434,7 +434,7 @@ const JobDetails = () => {
       "@type": "Organization",
       name: companyDisplayName,
       sameAs: job.companyWebsite || undefined,
-      logo: job.companyLogo || "https://job.agriyuvaa.com/logo.png",
+      logo: job.companyLogo || "https://jobs.agriyuvaa.com/logo.png",
     },
     jobLocation: {
       "@type": "Place",
@@ -465,7 +465,7 @@ const JobDetails = () => {
         title={seoTitle}
         description={seoDesc}
         canonical={`/jobs/${job._id || id}`}
-        image={job.companyLogo || "https://job.agriyuvaa.com/og-banner.png"}
+        image={job.companyLogo || "https://jobs.agriyuvaa.com/logo.png"}
         keywords={seoKeywords}
         jsonLd={jobPostingSchema}
       />

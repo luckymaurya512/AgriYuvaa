@@ -248,7 +248,7 @@ const GovtJobDetail = () => {
     hiringOrganization: {
       "@type": "Organization",
       name: job.organization,
-      logo: "https://job.agriyuvaa.com/logo.png",
+      logo: "https://jobs.agriyuvaa.com/logo.png",
     },
     employmentType: "FULL_TIME",
     jobLocation: {
@@ -278,7 +278,7 @@ const GovtJobDetail = () => {
         title={seoTitle}
         description={seoDesc}
         canonical={`/govt-jobs/${job.slug || job._id}`}
-        image="https://job.agriyuvaa.com/og-banner.png"
+        image="https://jobs.agriyuvaa.com/logo.png"
         keywords={seoKeywords}
         jsonLd={jobSchema}
       />

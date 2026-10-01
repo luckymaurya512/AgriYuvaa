@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet-async";
 
 const SITE_NAME = "AgriYuvaa";
 const BASE_URL = "https://agriyuvaa.com";
-const DEFAULT_IMAGE = `${BASE_URL}/og-banner.png`;
+const DEFAULT_IMAGE = `${BASE_URL}/logo.png`;
 const DEFAULT_DESCRIPTION =
   "India's premier platform for agriculture students. Workshops, blogs, career guidance & community for the next generation of agricultural leaders.";
 
@@ -60,12 +60,11 @@ const SEO = ({
       <meta property="og:description" content={description} />
       <meta property="og:url" content={canonicalUrl} />
       <meta property="og:image" content={image} />
-      <meta property="og:image:width" content="1200" />
-      <meta property="og:image:height" content="630" />
+      <meta property="og:image:secure_url" content={image} />
       <meta property="og:locale" content="en_IN" />
 
       {/* Twitter */}
-      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:card" content="summary" />
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={image} />
