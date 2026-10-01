@@ -58,6 +58,35 @@ const blogSchema = new mongoose.Schema(
     publishedAt: {
       type: Date,
     },
+    // Dedicated SEO Metadata
+    metaTitle: {
+      type: String,
+      trim: true,
+      maxlength: 100,
+      default: "",
+    },
+    metaDescription: {
+      type: String,
+      trim: true,
+      maxlength: 300,
+      default: "",
+    },
+    metaKeywords: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+    canonicalUrl: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    ogImage: {
+      type: String,
+      trim: true,
+      default: "",
+    },
   },
   { timestamps: true }
 );
@@ -79,6 +108,18 @@ blogSchema.pre("validate", function (next) {
   // Set publishedAt when publishing
   if (this.isPublished && !this.publishedAt) {
     this.publishedAt = new Date();
+  }
+  // Auto-generate metaTitle from title if not set
+  if (this.title && !this.metaTitle) {
+    this.metaTitle = this.title.substring(0, 100);
+  }
+  // Auto-generate metaDescription from excerpt or content if not set
+  if (!this.metaDescription) {
+    if (this.excerpt) {
+      this.metaDescription = this.excerpt.substring(0, 160);
+    } else if (this.content) {
+      this.metaDescription = this.content.replace(/<[^>]*>/g, "").substring(0, 160);
+    }
   }
   next();
 });

@@ -64,34 +64,54 @@ const BlogDetail = () => {
     );
   }
 
+  const seoTitle = blog.metaTitle || blog.title;
+  const seoDescription =
+    blog.metaDescription ||
+    blog.excerpt ||
+    (blog.content ? blog.content.substring(0, 155).replace(/<[^>]+>/g, "").trim() : blog.title);
+  const seoImage = blog.ogImage || blog.coverImage || blog.image || "https://agriyuvaa.com/og-banner.png";
+  const seoKeywords =
+    blog.metaKeywords?.length > 0
+      ? blog.metaKeywords
+      : blog.tags?.length > 0
+      ? blog.tags
+      : ["Agriculture", "AgriYuvaa", "Agri Careers"];
+
   const articleSchema = {
     "@context": "https://schema.org",
     "@type": "Article",
-    headline: blog.title,
-    description: blog.excerpt || blog.title,
-    image: blog.coverImage || blog.image || "https://agriyuvaa.com/og-banner.png",
-    datePublished: blog.createdAt,
+    headline: seoTitle,
+    description: seoDescription,
+    image: seoImage,
+    keywords: Array.isArray(seoKeywords) ? seoKeywords.join(", ") : seoKeywords,
+    datePublished: blog.publishedAt || blog.createdAt,
+    dateModified: blog.updatedAt || blog.publishedAt || blog.createdAt,
     author: {
       "@type": "Person",
-      name: blog.author || "AgriYuvaa Team"
+      name: blog.author || "AgriYuvaa Team",
     },
     publisher: {
       "@type": "Organization",
       name: "AgriYuvaa",
       logo: {
         "@type": "ImageObject",
-        url: "https://agriyuvaa.com/logo.svg"
-      }
-    }
+        url: "https://agriyuvaa.com/logo.svg",
+      },
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": blog.canonicalUrl || `https://agriyuvaa.com/blog/${slug}`,
+    },
   };
 
   return (
     <div className="pt-24 pb-20">
       <SEO
-        title={blog.title}
-        description={blog.excerpt || (blog.content ? blog.content.substring(0, 150).replace(/<[^>]+>/g, "") : blog.title)}
-        image={blog.coverImage || blog.image}
-        canonical={`/blog/${slug}`}
+        title={seoTitle}
+        description={seoDescription}
+        image={seoImage}
+        canonical={blog.canonicalUrl || `https://agriyuvaa.com/blog/${slug}`}
+        keywords={seoKeywords}
         type="article"
         jsonLd={articleSchema}
       />

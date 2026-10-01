@@ -84,13 +84,28 @@ const BlogDetail = () => {
     );
   }
 
+  const seoTitle = blog.metaTitle || blog.title;
+  const seoDescription =
+    blog.metaDescription ||
+    blog.excerpt ||
+    (blog.content ? blog.content.substring(0, 155).replace(/<[^>]+>/g, "").trim() : blog.title);
+  const seoImage = blog.ogImage || blog.coverImage || "https://job.agriyuvaa.com/og-banner.png";
+  const seoKeywords =
+    blog.metaKeywords?.length > 0
+      ? blog.metaKeywords
+      : blog.tags?.length > 0
+      ? blog.tags
+      : ["Agriculture Jobs", "AgriYuvaa", "Career Insights"];
+
   const articleSchema = {
     "@context": "https://schema.org",
     "@type": "Article",
-    headline: blog.title,
-    description: blog.excerpt || blog.title,
-    image: blog.coverImage || "https://job.agriyuvaa.com/og-banner.png",
+    headline: seoTitle,
+    description: seoDescription,
+    image: seoImage,
+    keywords: Array.isArray(seoKeywords) ? seoKeywords.join(", ") : seoKeywords,
     datePublished: blog.publishedAt || blog.createdAt,
+    dateModified: blog.updatedAt || blog.publishedAt || blog.createdAt,
     author: {
       "@type": "Person",
       name: blog.author || "AgriYuvaa Team",
@@ -100,18 +115,20 @@ const BlogDetail = () => {
       name: "AgriYuvaa Jobs",
       url: "https://job.agriyuvaa.com",
     },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": blog.canonicalUrl || `https://job.agriyuvaa.com/blog/${slug}`,
+    },
   };
 
   return (
     <div className="min-h-screen bg-gray-50/50 pb-20">
       <SEO
-        title={`${blog.title} | AgriYuvaa Blog`}
-        description={
-          blog.excerpt ||
-          (blog.content ? blog.content.substring(0, 160).replace(/<[^>]+>/g, "") : blog.title)
-        }
-        image={blog.coverImage}
-        canonical={`/blog/${slug}`}
+        title={seoTitle}
+        description={seoDescription}
+        image={seoImage}
+        canonical={blog.canonicalUrl || `https://job.agriyuvaa.com/blog/${slug}`}
+        keywords={seoKeywords}
         type="article"
         jsonLd={articleSchema}
       />

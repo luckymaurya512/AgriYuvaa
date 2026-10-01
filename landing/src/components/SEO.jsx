@@ -26,19 +26,28 @@ const SEO = ({
   type = "website",
   noindex = false,
   jsonLd = null,
+  keywords = "",
+  canonical = "",
 }) => {
   const fullTitle = title
     ? title.includes(SITE_NAME)
       ? title
       : `${title} | ${SITE_NAME}`
     : `${SITE_NAME} — Where Youth Meets Agriculture`;
-  const canonicalUrl = `${BASE_URL}${path}`;
+  const canonicalUrl = canonical || `${BASE_URL}${path}`;
+
+  const keywordsString = Array.isArray(keywords)
+    ? keywords.filter(Boolean).join(", ")
+    : typeof keywords === "string"
+    ? keywords
+    : "";
 
   return (
     <Helmet>
       {/* Core */}
       <title>{fullTitle}</title>
       <meta name="description" content={description} />
+      {keywordsString && <meta name="keywords" content={keywordsString} />}
       <link rel="canonical" href={canonicalUrl} />
 
       {/* Robots */}

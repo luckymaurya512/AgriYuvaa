@@ -35,6 +35,7 @@ import {
   Upload,
   Image as ImageIcon,
   Loader2,
+  Globe,
 } from "lucide-react";
 import ResumePreviewModal from "../../components/ResumePreviewModal.jsx";
 import {
@@ -2306,6 +2307,9 @@ const CmsPanel = ({ type, items, loading, onLoad, onDelete, onSave, fields, colu
     fields.forEach(f => {
       if (f.type === "tags" && Array.isArray(data[f.key])) data[f.key] = data[f.key].join(", ");
     });
+    if (type === "blog" && Array.isArray(data.metaKeywords)) {
+      data.metaKeywords = data.metaKeywords.join(", ");
+    }
     setForm(data);
     setEditing(item._id);
   };
@@ -2320,6 +2324,9 @@ const CmsPanel = ({ type, items, loading, onLoad, onDelete, onSave, fields, colu
         }
         if (f.type === "number") payload[f.key] = Number(payload[f.key]) || 0;
       });
+      if (type === "blog" && typeof payload.metaKeywords === "string") {
+        payload.metaKeywords = payload.metaKeywords.split(",").map(t => t.trim()).filter(Boolean);
+      }
       await onSave(payload, editing === "new");
       setEditing(null);
       setForm({});
@@ -2476,6 +2483,211 @@ const CmsPanel = ({ type, items, loading, onLoad, onDelete, onSave, fields, colu
               )}
             </div>
           ))}
+
+          {/* ── Specialized SEO & Google Search Snippet Card (for Blogs) ── */}
+          {type === "blog" && (
+            <div className="mt-6 border border-emerald-200/90 rounded-2xl bg-gradient-to-br from-emerald-50/40 via-white to-gray-50/50 p-5 sm:p-6 shadow-xs space-y-6">
+              {/* Header with Auto-Generate button */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-emerald-100 pb-4">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs">
+                    <Globe size={18} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm text-gray-900 flex items-center gap-2">
+                      Search Engine Optimization (SEO) & Social Sharing
+                      <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full uppercase">
+                        Google Ready
+                      </span>
+                    </h3>
+                    <p className="text-xs text-gray-500">
+                      Customize how your blog appears in Google search results, WhatsApp, and LinkedIn shares.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const cleanTitle = (form.title || "").trim();
+                    const cleanExcerpt =
+                      (form.excerpt || "")
+                        .replace(/<[^>]*>/g, "")
+                        .trim() ||
+                      (form.content || "")
+                        .replace(/<[^>]*>/g, "")
+                        .trim()
+                        .substring(0, 155);
+                    const tagString = Array.isArray(form.tags)
+                      ? form.tags.join(", ")
+                      : typeof form.tags === "string"
+                      ? form.tags
+                      : "";
+
+                    setForm((prev) => ({
+                      ...prev,
+                      metaTitle: cleanTitle.substring(0, 60),
+                      metaDescription: cleanExcerpt.substring(0, 155),
+                      metaKeywords: tagString || "agriculture, agriyuvaa, career",
+                    }));
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-emerald-300 text-emerald-800 text-xs font-bold hover:bg-emerald-50 transition-colors shadow-2xs cursor-pointer self-start sm:self-auto"
+                >
+                  <Sparkles size={13} className="text-emerald-600" />
+                  <span>⚡ Auto-Generate from Content</span>
+                </button>
+              </div>
+
+              {/* Live Google Search Snippet Preview */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
+                    <Search size={13} /> Live Google Search Result Preview
+                  </label>
+                  <span className="text-[11px] text-gray-400">Desktop & Mobile snippet view</span>
+                </div>
+                <div className="p-4 sm:p-5 rounded-xl bg-white border border-gray-200/90 shadow-2xs font-sans max-w-2xl">
+                  {/* Google site info line */}
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <div className="w-5 h-5 rounded-full bg-emerald-700 text-white text-[10px] font-bold flex items-center justify-center">
+                      A
+                    </div>
+                    <div className="flex flex-col text-[11px] leading-tight text-gray-700">
+                      <span className="font-semibold text-gray-900">AgriYuvaa</span>
+                      <span className="text-gray-500 text-[10px] truncate max-w-[280px] sm:max-w-md">
+                        https://agriyuvaa.com/blog/{form.slug || (form.title ? form.title.toLowerCase().replace(/[^a-z0-9]+/g, "-") : "article-slug")}
+                      </span>
+                    </div>
+                  </div>
+                  {/* Google blue link title */}
+                  <h4 className="text-base sm:text-lg font-medium text-[#1a0dab] hover:underline cursor-pointer leading-snug mb-1 line-clamp-2">
+                    {form.metaTitle || form.title || "Your Blog Post Title Will Appear Here"} | AgriYuvaa
+                  </h4>
+                  {/* Google snippet description */}
+                  <p className="text-xs sm:text-sm text-[#4d5156] leading-relaxed line-clamp-2">
+                    {form.metaDescription ||
+                      form.excerpt ||
+                      (form.content ? form.content.replace(/<[^>]*>/g, "").substring(0, 155) : "") ||
+                      "Add a compelling meta description here so users on Google are encouraged to click and read your article..."}
+                  </p>
+                </div>
+              </div>
+
+              {/* Form Input Fields for SEO */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                {/* Meta Title */}
+                <div className="space-y-1 md:col-span-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold text-gray-700">
+                      SEO Meta Title (Google Search Title)
+                    </label>
+                    <span
+                      className={`text-[11px] font-mono px-2 py-0.5 rounded-full ${
+                        (form.metaTitle || "").length >= 45 && (form.metaTitle || "").length <= 60
+                          ? "bg-emerald-100 text-emerald-800 font-bold"
+                          : (form.metaTitle || "").length > 60
+                          ? "bg-amber-100 text-amber-800 font-bold"
+                          : "bg-gray-100 text-gray-600"
+                      }`}
+                    >
+                      {(form.metaTitle || "").length} / 60 chars
+                    </span>
+                  </div>
+                  <input
+                    type="text"
+                    value={form.metaTitle || ""}
+                    onChange={(e) => setForm({ ...form, metaTitle: e.target.value })}
+                    placeholder={form.title ? `Default: ${form.title.substring(0, 60)}` : "Enter custom SEO title..."}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 bg-white"
+                  />
+                  <p className="text-[11px] text-gray-400">
+                    Recommended: 50–60 characters. Appears as the main clickable headline in search results.
+                  </p>
+                </div>
+
+                {/* Meta Description */}
+                <div className="space-y-1 md:col-span-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold text-gray-700">
+                      SEO Meta Description (Search Snippet)
+                    </label>
+                    <span
+                      className={`text-[11px] font-mono px-2 py-0.5 rounded-full ${
+                        (form.metaDescription || "").length >= 120 && (form.metaDescription || "").length <= 160
+                          ? "bg-emerald-100 text-emerald-800 font-bold"
+                          : (form.metaDescription || "").length > 160
+                          ? "bg-amber-100 text-amber-800 font-bold"
+                          : "bg-gray-100 text-gray-600"
+                      }`}
+                    >
+                      {(form.metaDescription || "").length} / 160 chars
+                    </span>
+                  </div>
+                  <textarea
+                    rows={2}
+                    value={form.metaDescription || ""}
+                    onChange={(e) => setForm({ ...form, metaDescription: e.target.value })}
+                    placeholder={form.excerpt ? `Default: ${form.excerpt.substring(0, 160)}` : "Write a 150-160 character summary that entices Google users to click..."}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 bg-white"
+                  />
+                  <p className="text-[11px] text-gray-400">
+                    Recommended: 150–160 characters. Appears directly under your headline in search results.
+                  </p>
+                </div>
+
+                {/* Focus Keywords */}
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-gray-700">
+                    Focus Keywords (comma-separated)
+                  </label>
+                  <input
+                    type="text"
+                    value={form.metaKeywords || ""}
+                    onChange={(e) => setForm({ ...form, metaKeywords: e.target.value })}
+                    placeholder="e.g. icar exam 2026, agriculture jobs, agronomy salary"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 bg-white"
+                  />
+                  <p className="text-[11px] text-gray-400">
+                    Target queries you want this article to rank for on Google.
+                  </p>
+                </div>
+
+                {/* Canonical URL */}
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-gray-700">
+                    Canonical URL Override (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={form.canonicalUrl || ""}
+                    onChange={(e) => setForm({ ...form, canonicalUrl: e.target.value })}
+                    placeholder="https://agriyuvaa.com/blog/..."
+                    className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 bg-white"
+                  />
+                  <p className="text-[11px] text-gray-400">
+                    Leave blank to use the official AgriYuvaa URL automatically.
+                  </p>
+                </div>
+
+                {/* Social Share Image (OG Image) */}
+                <div className="space-y-1 md:col-span-2">
+                  <label className="text-xs font-semibold text-gray-700">
+                    Custom Social Share Image (OG Image)
+                  </label>
+                  <input
+                    type="text"
+                    value={form.ogImage || ""}
+                    onChange={(e) => setForm({ ...form, ogImage: e.target.value })}
+                    placeholder={form.coverImage ? `Default: Uses Cover Image (${form.coverImage.substring(0, 40)}...)` : "https://... (Leave blank to use Cover Image)"}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 bg-white"
+                  />
+                  <p className="text-[11px] text-gray-400">
+                    Preview image for WhatsApp, LinkedIn, and Twitter shares. Defaults to the cover image if blank.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center gap-3 pt-2">
             <button
               onClick={handleSave}
