@@ -57,7 +57,7 @@ const SuperAdminDashboard = () => {
 
   const filteredUsers = useMemo(() => {
     return users.filter((u) => {
-      const role = (u.role || "").toLowerCase();
+      const role = (u.role || "").trim().toLowerCase();
       const matchesRole =
         userRoleFilter === "all"
           ? true
@@ -745,7 +745,7 @@ const SuperAdminDashboard = () => {
                   >
                     Employers (
                     {
-                      users.filter((u) => (u.role || "").toLowerCase() === "employer").length
+                      users.filter((u) => (u.role || "").trim().toLowerCase() === "employer").length
                     }
                     )
                   </button>
@@ -762,8 +762,8 @@ const SuperAdminDashboard = () => {
                     {
                       users.filter(
                         (u) =>
-                          (u.role || "").toLowerCase() === "seeker" ||
-                          (u.role || "").toLowerCase() === "user"
+                          (u.role || "").trim().toLowerCase() === "seeker" ||
+                          (u.role || "").trim().toLowerCase() === "user"
                       ).length
                     }
                     )
@@ -781,8 +781,8 @@ const SuperAdminDashboard = () => {
                     {
                       users.filter(
                         (u) =>
-                          (u.role || "").toLowerCase() === "admin" ||
-                          (u.role || "").toLowerCase() === "superadmin"
+                          (u.role || "").trim().toLowerCase() === "admin" ||
+                          (u.role || "").trim().toLowerCase() === "superadmin"
                       ).length
                     }
                     )
