@@ -62,9 +62,11 @@ const SuperAdminDashboard = () => {
         userRoleFilter === "all"
           ? true
           : userRoleFilter === "employer"
-          ? role === "employer" || u.hasEmployerProfile
+          ? role === "employer"
           : userRoleFilter === "seeker"
           ? role === "seeker" || role === "user"
+          : userRoleFilter === "admin"
+          ? role === "admin" || role === "superadmin"
           : role === userRoleFilter;
 
       const q = userSearch.trim().toLowerCase();
@@ -743,9 +745,7 @@ const SuperAdminDashboard = () => {
                   >
                     Employers (
                     {
-                      users.filter(
-                        (u) => (u.role || "").toLowerCase() === "employer" || u.hasEmployerProfile
-                      ).length
+                      users.filter((u) => (u.role || "").toLowerCase() === "employer").length
                     }
                     )
                   </button>

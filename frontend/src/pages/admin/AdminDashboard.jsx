@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext.jsx";
 import {
   PlusCircle,
   Star,
@@ -44,6 +45,7 @@ import {
   fetchPendingJobs,
   fetchAllPlatformJobs,
   fetchAllApplications,
+  fetchUsers,
   reviewJob,
   toggleJobFeatured,
 } from "../../services/adminService.js";
@@ -90,6 +92,8 @@ const slugify = (text) =>
     .trim();
 
 const AdminDashboard = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get("tab") || "overview";
 
@@ -102,6 +106,34 @@ const AdminDashboard = () => {
   };
 
   const [stats, setStats] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [userRoleFilter, setUserRoleFilter] = useState("all");
+  const [userSearch, setUserSearch] = useState("");
+
+  const filteredUsers = useMemo(() => {
+    return users.filter((u) => {
+      const role = (u.role || "").toLowerCase();
+      const matchesRole =
+        userRoleFilter === "all"
+          ? true
+          : userRoleFilter === "employer"
+          ? role === "employer"
+          : userRoleFilter === "seeker"
+          ? role === "seeker" || role === "user"
+          : userRoleFilter === "admin"
+          ? role === "admin" || role === "superadmin"
+          : role === userRoleFilter;
+
+      const q = userSearch.trim().toLowerCase();
+      const matchesSearch =
+        !q ||
+        (u.name && u.name.toLowerCase().includes(q)) ||
+        (u.email && u.email.toLowerCase().includes(q)) ||
+        (u.role && u.role.toLowerCase().includes(q));
+
+      return matchesRole && matchesSearch;
+    });
+  }, [users, userRoleFilter, userSearch]);
   const [pendingJobs, setPendingJobs] = useState([]);
   const [allJobs, setAllJobs] = useState([]);
   const [jobSearch, setJobSearch] = useState("");
@@ -299,6 +331,7 @@ const AdminDashboard = () => {
     loadPlatformJobs();
     loadPlatformApplications();
     loadGovtJobsData();
+    fetchUsers().then(setUsers).catch(() => {});
   };
 
   const loadPlatformJobs = () => {
@@ -644,12 +677,48 @@ const AdminDashboard = () => {
           <MessageSquare size={15} /> Testimonials
         </button>
 
+        <button
+          type="button"
+          onClick={() => {
+            if (user?.role === "superadmin") {
+              navigate("/superadmin?tab=users");
+            } else {
+              setTab("users");
+            }
+          }}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl transition-all whitespace-nowrap ${
+            activeTab === "users"
+              ? "bg-emerald-950 text-white shadow-2xs"
+              : "text-gray-600 hover:text-black hover:bg-gray-100"
+          }`}
+        >
+          <ShieldCheck size={15} /> Users Directory
+          {users.length > 0 && (
+            <span
+              className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                activeTab === "users" ? "bg-emerald-800 text-white" : "bg-gray-200 text-gray-700"
+              }`}
+            >
+              {users.length}
+            </span>
+          )}
+        </button>
+
         <Link
           to="/employers"
           className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold text-emerald-900 hover:bg-emerald-50 rounded-xl transition-all whitespace-nowrap ml-auto"
         >
           <Building2 size={14} className="text-emerald-700" /> Employers Directory ↗
         </Link>
+
+        {user?.role === "superadmin" && (
+          <Link
+            to="/superadmin"
+            className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold text-purple-900 bg-purple-50 hover:bg-purple-100 rounded-xl transition-all whitespace-nowrap border border-purple-200"
+          >
+            <ShieldCheck size={14} className="text-purple-700" /> Super Admin Hub ↗
+          </Link>
+        )}
 
         <Link
           to="/govt-jobs"
@@ -670,7 +739,14 @@ const AdminDashboard = () => {
               <StatCard
                 label="Total Platform Users"
                 value={stats.totalUsers}
-                hint="Platform members"
+                onClick={() => {
+                  if (user?.role === "superadmin") {
+                    navigate("/superadmin?tab=users");
+                  } else {
+                    setTab("users");
+                  }
+                }}
+                hint={user?.role === "superadmin" ? "Open User & Admin Access" : "View registered users"}
               />
               <StatCard
                 label="Active Platform Jobs"
@@ -951,6 +1027,189 @@ const AdminDashboard = () => {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/* ── TAB: USERS & MEMBERS DIRECTORY ── */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {activeTab === "users" && (
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-display font-bold text-brand-black">Platform Users Directory</h2>
+              <p className="text-xs text-brand-grey">
+                Browse registered job seekers and employers across AgriYuvaa.
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              {user?.role === "superadmin" && (
+                <Link
+                  to="/superadmin?tab=users"
+                  className="btn-primary text-xs flex items-center gap-1.5 py-2 px-3.5 shadow-2xs"
+                >
+                  <ShieldCheck size={14} /> Open Super Admin Roles Hub ↗
+                </Link>
+              )}
+              <button
+                onClick={() => setTab("overview")}
+                className="text-xs font-semibold text-brand-grey hover:text-black underline"
+              >
+                ← Back to Hub
+              </button>
+            </div>
+          </div>
+
+          <div className="card overflow-hidden">
+            <div className="px-5 py-4 border-b border-brand-border flex flex-col md:flex-row md:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span className="font-semibold text-sm text-brand-black">
+                  {userRoleFilter === "all"
+                    ? "All Users"
+                    : userRoleFilter === "employer"
+                    ? "Employer Accounts"
+                    : userRoleFilter === "seeker"
+                    ? "Job Seekers"
+                    : `${userRoleFilter.toUpperCase()} Accounts`}{" "}
+                  <span className="text-brand-grey font-normal">
+                    ({filteredUsers.length} of {users.length})
+                  </span>
+                </span>
+                {userRoleFilter !== "all" && (
+                  <button
+                    type="button"
+                    onClick={() => setUserRoleFilter("all")}
+                    className="text-xs text-brand-green font-bold hover:underline"
+                  >
+                    Clear Filter
+                  </button>
+                )}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Role Filter Pills */}
+                <div className="inline-flex bg-gray-100 p-1 rounded-xl text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setUserRoleFilter("all")}
+                    className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                      userRoleFilter === "all"
+                        ? "bg-white text-brand-black shadow-2xs font-bold"
+                        : "text-gray-500 hover:text-black"
+                    }`}
+                  >
+                    All ({users.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setUserRoleFilter("employer")}
+                    className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                      userRoleFilter === "employer"
+                        ? "bg-white text-emerald-900 shadow-2xs font-bold"
+                        : "text-gray-500 hover:text-black"
+                    }`}
+                  >
+                    Employers ({users.filter((u) => (u.role || "").toLowerCase() === "employer").length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setUserRoleFilter("seeker")}
+                    className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                      userRoleFilter === "seeker"
+                        ? "bg-white text-emerald-900 shadow-2xs font-bold"
+                        : "text-gray-500 hover:text-black"
+                    }`}
+                  >
+                    Seekers ({users.filter((u) => (u.role || "").toLowerCase() === "seeker" || (u.role || "").toLowerCase() === "user").length})
+                  </button>
+                  {users.some((u) => (u.role || "").toLowerCase() === "admin" || (u.role || "").toLowerCase() === "superadmin") && (
+                    <button
+                      type="button"
+                      onClick={() => setUserRoleFilter("admin")}
+                      className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                        userRoleFilter === "admin"
+                          ? "bg-white text-emerald-900 shadow-2xs font-bold"
+                          : "text-gray-500 hover:text-black"
+                      }`}
+                    >
+                      Admins ({users.filter((u) => (u.role || "").toLowerCase() === "admin" || (u.role || "").toLowerCase() === "superadmin").length})
+                    </button>
+                  )}
+                </div>
+
+                {/* Quick Search */}
+                <div className="relative">
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search name or email..."
+                    value={userSearch}
+                    onChange={(e) => setUserSearch(e.target.value)}
+                    className="pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 bg-white"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-brand-surface text-xs uppercase text-brand-grey">
+                  <tr>
+                    <th className="text-left px-5 py-3">Name</th>
+                    <th className="text-left px-5 py-3">Email</th>
+                    <th className="text-left px-5 py-3">Role</th>
+                    <th className="text-left px-5 py-3">Status</th>
+                    <th className="text-right px-5 py-3">Registered On</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredUsers.length === 0 ? (
+                    <tr>
+                      <td colSpan="5" className="text-center py-12 text-brand-grey text-xs">
+                        No registered users match your selected filter or search term.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredUsers.map((u) => (
+                      <tr key={u._id} className="border-t border-brand-border hover:bg-gray-50/50 transition-colors">
+                        <td className="px-5 py-3 font-medium text-brand-black">{u.name}</td>
+                        <td className="px-5 py-3 text-brand-grey">{u.email}</td>
+                        <td className="px-5 py-3">
+                          <span
+                            className={`text-[11px] font-bold px-2.5 py-0.5 rounded-md capitalize ${
+                              u.role === "superadmin"
+                                ? "bg-purple-100 text-purple-900 border border-purple-200"
+                                : u.role === "admin"
+                                ? "bg-emerald-100 text-emerald-900 border border-emerald-200"
+                                : u.role === "employer"
+                                ? "bg-blue-50 text-blue-800 border border-blue-200"
+                                : "bg-gray-100 text-gray-700"
+                            }`}
+                          >
+                            {u.role}
+                          </span>
+                        </td>
+                        <td className="px-5 py-3">
+                          <span
+                            className={`text-xs font-semibold px-2.5 py-1 rounded-full capitalize ${
+                              u.status === "active"
+                                ? "bg-brand-green-light text-brand-green-dark"
+                                : "bg-red-100 text-red-700"
+                            }`}
+                          >
+                            {u.status || "active"}
+                          </span>
+                        </td>
+                        <td className="px-5 py-3 text-right text-xs text-brand-grey">
+                          {u.createdAt ? new Date(u.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "N/A"}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
