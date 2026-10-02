@@ -88,85 +88,25 @@ export const checkIsLongResume = (data) => {
 
 export const getEffectiveSplit = (data, splitSetting = "auto", template = "agri_clean") => {
   if (splitSetting && splitSetting !== "auto") return splitSetting;
-  if (!data) return "experience";
+  if (!data) return template === "modern_green" ? "education" : "experience";
 
-  // Template section sequence
-  const order =
-    template === "modern_green"
-      ? ["objective", "experience", "education", "publications", "certifications", "skills", "projects"]
-      : ["objective", "education", "experience", "publications", "certifications", "skills", "projects"];
+  const validExp = (data.experience || []).filter((e) => e.role || e.company);
 
-  const sectionScores = {
-    objective: () => {
-      if (!data.objective || !data.objective.trim()) return 0;
-      return 1.5 + Math.ceil(data.objective.trim().length / 70);
-    },
-    education: () => {
-      const valid = (data.education || []).filter((e) => e.degree || e.institution);
-      if (valid.length === 0) return 0;
-      return 1.5 + valid.length * 2.2;
-    },
-    experience: () => {
-      const valid = (data.experience || []).filter((e) => e.role || e.company);
-      if (valid.length === 0) return 0;
-      let s = 1.5 + valid.length * 2.5;
-      valid.forEach((e) => {
-        if (e.description) s += Math.ceil(e.description.length / 90);
-      });
-      return s;
-    },
-    publications: () => {
-      const valid = (data.publications || []).filter((p) => p.title);
-      if (valid.length === 0) return 0;
-      let s = 1.5 + valid.length * 2.2;
-      valid.forEach((p) => {
-        if (p.description) s += Math.ceil(p.description.length / 90);
-      });
-      return s;
-    },
-    certifications: () => {
-      const valid = (data.certificationsList || []).filter((c) => c.name);
-      if (valid.length === 0) return 0;
-      return 1.0 + valid.length * 1.5;
-    },
-    skills: () => {
-      return data.skills && data.skills.trim() ? 2.5 : 0;
-    },
-    projects: () => {
-      const valid = (data.projects || []).filter((p) => p.title);
-      if (valid.length === 0) return 0;
-      let s = 1.5;
-      valid.forEach((p) => {
-        s += 2.0;
-        if (p.description) s += Math.ceil(p.description.length / 80);
-      });
-      return s;
-    },
-  };
-
-  // Standard A4 sheet can comfortably hold sections totaling up to ~19 points
-  const PAGE_1_CAPACITY = 19;
-  let cumScore = 0;
-  let lastFitSection = order[0];
-
-  for (let i = 0; i < order.length; i++) {
-    const sec = order[i];
-    const scoreFn = sectionScores[sec];
-    const score = scoreFn ? scoreFn() : 0;
-    if (score === 0) continue;
-
-    if (cumScore + score <= PAGE_1_CAPACITY) {
-      cumScore += score;
-      lastFitSection = sec;
-    } else {
-      if (cumScore === 0) {
-        lastFitSection = sec;
-      }
-      break;
-    }
+  if (validExp.length > 0) {
+    // Professional 2-page balance:
+    // Page 1 comfortably holds Contact Header, Career Objective, Education, and Experience.
+    // Page 2 displays the remaining credentials: Publications, Certifications, Skills, Projects, etc.
+    return template === "modern_green" ? "education" : "experience";
   }
 
-  return lastFitSection || "experience";
+  const validEdu = (data.education || []).filter((e) => e.degree || e.institution);
+  if (validEdu.length > 0) {
+    const validPubs = (data.publications || []).filter((p) => p.title);
+    if (validPubs.length > 0) return "publications";
+    return "education";
+  }
+
+  return "objective";
 };
 
 const sampleData = {
@@ -1457,15 +1397,8 @@ const ResumeBuilder = () => {
                     </div>
                   </div>
 
-                  {/* ── VISUAL PAGE BREAK SEPARATOR ── */}
-                  <div className="no-print html2pdf__ignore my-4 flex items-center justify-center gap-3">
-                    <div className="h-px bg-gray-300 flex-1 border-dashed border-t border-gray-400" />
-                    <div className="px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-bold flex items-center gap-2 shadow-2xs">
-                      <span>✂️</span>
-                      <span>A4 Page Break • Page 2 Starts Below</span>
-                    </div>
-                    <div className="h-px bg-gray-300 flex-1 border-dashed border-t border-gray-400" />
-                  </div>
+                  {/* ── PAGE BREAK SEPARATOR (NO TEXT) ── */}
+                  <div className="no-print html2pdf__ignore my-6 border-t-2 border-dashed border-gray-300 w-full" />
 
                   {/* PDF/Print Break Marker */}
                   <div
@@ -1703,21 +1636,6 @@ const TemplateAgriClean = ({ data, page = "all", splitAfter = "experience" }) =>
         </div>
       )}
 
-      {/* Header (Page 2 Mini-Header) */}
-      {page === 2 && (
-        <div className="pb-3 border-b-2 border-emerald-700 flex flex-wrap justify-between items-baseline gap-2 mb-2">
-          <div>
-            <h2 className="text-lg font-bold text-emerald-800 tracking-tight">
-              {data.fullName || "Your Full Name"}
-            </h2>
-            <p className="text-xs text-gray-700 font-semibold">{data.title}</p>
-          </div>
-          <div className="text-right text-[11px] text-gray-600">
-            <span>{data.email} {data.phone ? `· ${data.phone}` : ""}</span>
-            <p className="font-bold text-emerald-800 text-[10px]">Page 2 of 2</p>
-          </div>
-        </div>
-      )}
 
       {/* Career Objective */}
       {showSection("objective") && data.objective && (
@@ -1987,21 +1905,6 @@ const TemplateModernGreen = ({ data, page = "all", splitAfter = "experience" }) 
         </div>
       )}
 
-      {/* Header Banner (Page 2 Compact) */}
-      {page === 2 && (
-        <div className="bg-emerald-900 text-white rounded-xl p-3.5 -mx-4 -mt-4 shadow-sm flex flex-wrap justify-between items-center gap-2 mb-3">
-          <div>
-            <h2 className="text-base font-bold text-white tracking-wide">
-              {data.fullName || "Your Full Name"}
-            </h2>
-            <p className="text-[11px] font-medium text-emerald-200">{data.title}</p>
-          </div>
-          <div className="text-right text-[11px] text-emerald-100">
-            <span>{data.email} {data.phone ? `· ${data.phone}` : ""}</span>
-            <p className="font-bold text-emerald-300 text-[10px]">Page 2 of 2</p>
-          </div>
-        </div>
-      )}
 
       {/* Career Objective */}
       {showSection("objective") && data.objective && (
@@ -2282,19 +2185,6 @@ const TemplateClassicSerif = ({ data, page = "all", splitAfter = "experience" })
         </div>
       )}
 
-      {/* Page 2 Mini-Header */}
-      {page === 2 && (
-        <div className="pb-2 border-b-2 border-gray-900 flex justify-between items-baseline mb-3 font-sans text-xs">
-          <div>
-            <span className="font-serif font-bold text-sm text-black uppercase">{data.fullName || "Your Full Name"}</span>
-            <span className="text-gray-600 italic ml-2">· {data.title}</span>
-          </div>
-          <div className="text-right text-[11px] text-gray-500">
-            <span>{data.email}</span>
-            <span className="font-bold text-black ml-2">Page 2 of 2</span>
-          </div>
-        </div>
-      )}
 
       {/* Career Objective */}
       {showSection("objective") && data.objective && (
