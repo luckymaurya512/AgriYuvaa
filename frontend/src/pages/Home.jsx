@@ -28,10 +28,10 @@ import CommunityBanner from "../components/CommunityBanner.jsx";
 import SEO from "../components/SEO.jsx";
 
 const stats = [
-  { label: "Active Jobs", value: "5,000+" },
-  { label: "Employers", value: "1,200+" },
-  { label: "Regions Covered", value: "30+" },
-  { label: "Youth Hired", value: "18,000+" },
+  { label: "Active Jobs", value: "500+" },
+  { label: "Employers", value: "120+" },
+  { label: "Regions Covered", value: "20+" },
+  { label: "Youth Hired", value: "1,800+" },
 ];
 
 const steps = [
@@ -151,7 +151,7 @@ const Home = () => {
     <div>
       <SEO
         title="Agriculture Jobs in India — Farming, AgriTech, Agribusiness"
-        description="Search & apply for 5,000+ agricultural jobs in India. Verified openings in agronomy, drone piloting, farm management, agrochemical, and research."
+        description="Search & apply for 500+ agricultural jobs in India. Verified openings in agronomy, drone piloting, farm management, agrochemical, and research."
         canonical="/"
         jsonLd={websiteSchema}
       />

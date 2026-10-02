@@ -6,7 +6,7 @@ const SITE_NAME = "AgriYuvaa Jobs";
 const BASE_URL = "https://jobs.agriyuvaa.com";
 const DEFAULT_IMAGE = `${BASE_URL}/logo.png`;
 const DEFAULT_DESCRIPTION =
-  "Find 5,000+ agriculture jobs across India. Search farm manager, agronomist, agri-tech & more roles. India's #1 agriculture job portal.";
+  "Find 500+ agriculture jobs across India. Search farm manager, agronomist, agri-tech & more roles. India's #1 agriculture job portal.";
 
 // Module-level cache so we only fetch the page SEO list once per session
 let pageSeoCache = null;
