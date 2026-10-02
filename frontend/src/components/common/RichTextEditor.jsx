@@ -28,6 +28,8 @@ import {
   Trash2,
   Columns,
   Rows,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
 import { uploadBlogImage } from "../../services/landingService.js";
 import RichTextRenderer from "./RichTextRenderer.jsx";
@@ -48,6 +50,8 @@ const RichTextEditor = ({
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
   const [showTableModal, setShowTableModal] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [selectionToolbar, setSelectionToolbar] = useState(null);
 
   // Link Dialog State
   const [linkUrl, setLinkUrl] = useState("");
@@ -151,6 +155,70 @@ const RichTextEditor = ({
     };
   }, [showInserter]);
 
+  // Floating Selection Toolbar (Elementor/Medium style)
+  const updateFloatingToolbar = () => {
+    if (viewMode !== "visual") {
+      setSelectionToolbar(null);
+      return;
+    }
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed || !sel.rangeCount) {
+      setSelectionToolbar(null);
+      return;
+    }
+    const text = sel.toString().trim();
+    if (text.length === 0) {
+      setSelectionToolbar(null);
+      return;
+    }
+    const range = sel.getRangeAt(0);
+    if (
+      !editorRef.current ||
+      (!editorRef.current.contains(range.commonAncestorContainer) &&
+        editorRef.current !== range.commonAncestorContainer)
+    ) {
+      setSelectionToolbar(null);
+      return;
+    }
+
+    const rect = range.getBoundingClientRect();
+    if (rect.width === 0 && rect.height === 0) {
+      setSelectionToolbar(null);
+      return;
+    }
+
+    const top = Math.max(12, rect.top - 48);
+    const left = Math.max(130, Math.min(window.innerWidth - 130, rect.left + rect.width / 2));
+
+    setSelectionToolbar({ top, left });
+  };
+
+  // Listen for selection changes and dismissed selections
+  useEffect(() => {
+    const handleDocumentSelectionChange = () => {
+      const sel = window.getSelection();
+      if (!sel || sel.isCollapsed) {
+        setSelectionToolbar(null);
+      }
+    };
+    document.addEventListener("selectionchange", handleDocumentSelectionChange);
+    return () => {
+      document.removeEventListener("selectionchange", handleDocumentSelectionChange);
+    };
+  }, []);
+
+  // Lock body scroll in fullscreen mode
+  useEffect(() => {
+    if (isFullscreen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isFullscreen]);
+
   // Save current cursor position / selection & check if inside table
   const saveSelection = () => {
     const sel = window.getSelection();
@@ -167,7 +235,13 @@ const RichTextEditor = ({
         const closestTable =
           node?.nodeType === 1 ? node.closest("table") : node?.parentElement?.closest("table");
         setActiveTableElement(closestTable || null);
+
+        updateFloatingToolbar();
+      } else {
+        setSelectionToolbar(null);
       }
+    } else {
+      setSelectionToolbar(null);
     }
   };
 
@@ -230,8 +304,10 @@ const RichTextEditor = ({
           setSearchTerm("");
         }, 10);
       }
-    } else if (e.key === "Escape" && showInserter) {
-      setShowInserter(false);
+    } else if (e.key === "Escape") {
+      if (isFullscreen) setIsFullscreen(false);
+      if (showInserter) setShowInserter(false);
+      setSelectionToolbar(null);
     }
   };
 
@@ -823,9 +899,19 @@ const RichTextEditor = ({
       )}
 
       {/* Editor Main Container */}
-      <div className="relative border border-brand-border rounded-xl bg-white shadow-2xs focus-within:border-brand-green focus-within:ring-2 focus-within:ring-brand-green/20 transition-all">
-        {/* Top Control Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-1 p-2 bg-gray-50 border-b border-gray-200">
+      <div
+        className={`relative border border-brand-border bg-white shadow-2xs focus-within:border-brand-green focus-within:ring-2 focus-within:ring-brand-green/20 transition-all ${
+          isFullscreen
+            ? "fixed inset-0 z-50 rounded-none border-none p-4 sm:p-6 flex flex-col bg-white overflow-hidden shadow-2xl"
+            : "rounded-xl"
+        }`}
+      >
+        {/* Top Control Bar (Always visible with sticky positioning) */}
+        <div
+          className={`sticky ${isFullscreen ? "top-0" : "top-16"} z-30 flex flex-wrap items-center justify-between gap-1 p-2 bg-gray-50/95 backdrop-blur-md border-b border-gray-200 ${
+            isFullscreen ? "rounded-none shadow-xs" : "rounded-t-xl shadow-xs"
+          } transition-all`}
+        >
           {/* Left Actions: Gutenberg '+' Button & Quick Formatting Tools */}
           <div className="flex flex-wrap items-center gap-1 relative">
             {/* The Main Gutenberg '+' Inserter Button */}
@@ -1114,12 +1200,28 @@ const RichTextEditor = ({
             >
               <Eye size={12} /> Preview
             </button>
+            <span className="w-px h-3.5 bg-gray-300 mx-0.5" />
+            <button
+              type="button"
+              onClick={() => setIsFullscreen(!isFullscreen)}
+              className={`px-2 py-1 rounded-md transition-all flex items-center gap-1 cursor-pointer text-xs font-semibold ${
+                isFullscreen
+                  ? "bg-brand-black text-white shadow-xs"
+                  : "text-gray-600 hover:text-brand-black hover:bg-white"
+              }`}
+              title={isFullscreen ? "Exit Fullscreen (Esc)" : "Distraction-Free Fullscreen Editor"}
+            >
+              {isFullscreen ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
+              <span className="hidden sm:inline">{isFullscreen ? "Exit" : "Expand"}</span>
+            </button>
           </div>
         </div>
 
-        {/* ── Active Table Helper Bar (Shows when clicking inside a table) ── */}
+        {/* ── Active Table Helper Bar (Shows when clicking inside a table, sticky below toolbar) ── */}
         {activeTableElement && viewMode === "visual" && (
-          <div className="flex flex-wrap items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border-b border-emerald-200 text-xs text-emerald-900 animate-in fade-in duration-100">
+          <div
+            className={`sticky ${isFullscreen ? "top-[49px]" : "top-[112px]"} z-20 flex flex-wrap items-center gap-1.5 px-3 py-1.5 bg-emerald-50/95 backdrop-blur-md border-b border-emerald-200 text-xs text-emerald-900 animate-in fade-in duration-100`}
+          >
             <TableIcon size={14} className="text-emerald-700 shrink-0" />
             <span className="font-bold text-[11px] uppercase tracking-wider text-emerald-800">
               Table Options:
@@ -1179,10 +1281,12 @@ const RichTextEditor = ({
           onMouseUp={saveSelection}
           onKeyUp={saveSelection}
           onFocus={saveSelection}
-          style={{ minHeight: `${rows * 28}px` }}
-          className={`rich-text-content p-4 text-sm focus:outline-none leading-relaxed text-gray-800 bg-white min-h-[160px] overflow-y-auto ${
-            viewMode !== "visual" ? "hidden" : "block"
-          }`}
+          style={{ minHeight: isFullscreen ? undefined : `${rows * 28}px` }}
+          className={`rich-text-content p-4 text-sm focus:outline-none leading-relaxed text-gray-800 bg-white ${
+            isFullscreen
+              ? "flex-1 overflow-y-auto max-w-4xl mx-auto w-full min-h-0"
+              : "min-h-[160px] overflow-y-auto"
+          } ${viewMode !== "visual" ? "hidden" : "block"}`}
           data-placeholder={placeholder}
         />
 
@@ -1197,15 +1301,21 @@ const RichTextEditor = ({
               if (onChange) onChange(html);
             }}
             placeholder="Edit raw HTML source code here..."
-            className="w-full p-4 font-mono text-xs text-gray-800 focus:outline-none resize-y bg-gray-900 text-emerald-300 min-h-[160px]"
+            className={`w-full p-4 font-mono text-xs focus:outline-none resize-y bg-gray-900 text-emerald-300 ${
+              isFullscreen ? "flex-1 min-h-0 max-w-4xl mx-auto" : "min-h-[160px]"
+            }`}
           />
         )}
 
         {/* ── Reader Preview Mode ── */}
         {viewMode === "preview" && (
           <div
-            style={{ minHeight: `${rows * 28}px` }}
-            className="w-full p-5 text-sm bg-gray-50/50 min-h-[160px] overflow-y-auto"
+            style={{ minHeight: isFullscreen ? undefined : `${rows * 28}px` }}
+            className={`w-full p-5 text-sm bg-gray-50/50 ${
+              isFullscreen
+                ? "flex-1 overflow-y-auto min-h-0 max-w-4xl mx-auto"
+                : "min-h-[160px] overflow-y-auto"
+            }`}
           >
             {value ? (
               <RichTextRenderer content={value} />
@@ -1217,6 +1327,145 @@ const RichTextEditor = ({
           </div>
         )}
       </div>
+
+      {/* ── ELEMENTOR / MEDIUM STYLE FLOATING SELECTION BUBBLE TOOLBAR ── */}
+      {selectionToolbar && viewMode === "visual" && (
+        <div
+          style={{
+            top: `${selectionToolbar.top}px`,
+            left: `${selectionToolbar.left}px`,
+          }}
+          className="fixed z-50 -translate-x-1/2 flex items-center gap-0.5 p-1 bg-gray-900/95 text-white rounded-xl shadow-2xl border border-gray-700/80 backdrop-blur-md animate-in fade-in zoom-in-95 duration-100 select-none"
+          onMouseDown={(e) => e.preventDefault()}
+        >
+          {/* Bold */}
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={(e) => {
+              e.preventDefault();
+              execFormatting("bold");
+              setTimeout(updateFloatingToolbar, 20);
+            }}
+            className="p-1.5 rounded-lg hover:bg-gray-800 text-gray-200 hover:text-white transition-colors cursor-pointer"
+            title="Bold (Ctrl+B)"
+          >
+            <Bold size={13} className="stroke-[2.5]" />
+          </button>
+
+          {/* Italic */}
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={(e) => {
+              e.preventDefault();
+              execFormatting("italic");
+              setTimeout(updateFloatingToolbar, 20);
+            }}
+            className="p-1.5 rounded-lg hover:bg-gray-800 text-gray-200 hover:text-white transition-colors cursor-pointer"
+            title="Italic (Ctrl+I)"
+          >
+            <Italic size={13} />
+          </button>
+
+          {/* Underline */}
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={(e) => {
+              e.preventDefault();
+              execFormatting("underline");
+              setTimeout(updateFloatingToolbar, 20);
+            }}
+            className="p-1.5 rounded-lg hover:bg-gray-800 text-gray-200 hover:text-white transition-colors cursor-pointer"
+            title="Underline (Ctrl+U)"
+          >
+            <Underline size={13} />
+          </button>
+
+          <span className="w-px h-3.5 bg-gray-700 mx-0.5" />
+
+          {/* H2 */}
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={(e) => {
+              e.preventDefault();
+              execFormatBlock("h2");
+              setSelectionToolbar(null);
+            }}
+            className="px-1.5 py-1 rounded-lg hover:bg-gray-800 text-gray-200 hover:text-emerald-400 font-bold text-xs transition-colors cursor-pointer"
+            title="Heading 2"
+          >
+            H2
+          </button>
+
+          {/* H3 */}
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={(e) => {
+              e.preventDefault();
+              execFormatBlock("h3");
+              setSelectionToolbar(null);
+            }}
+            className="px-1.5 py-1 rounded-lg hover:bg-gray-800 text-gray-200 hover:text-emerald-400 font-bold text-xs transition-colors cursor-pointer"
+            title="Heading 3"
+          >
+            H3
+          </button>
+
+          <span className="w-px h-3.5 bg-gray-700 mx-0.5" />
+
+          {/* Link */}
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={(e) => {
+              e.preventDefault();
+              openLinkModal();
+              setSelectionToolbar(null);
+            }}
+            className="p-1.5 rounded-lg hover:bg-gray-800 text-emerald-400 hover:text-emerald-300 transition-colors cursor-pointer"
+            title="Insert Link (Ctrl+K)"
+          >
+            <Link2 size={13} />
+          </button>
+
+          {/* Quote */}
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={(e) => {
+              e.preventDefault();
+              execFormatBlock("blockquote");
+              setSelectionToolbar(null);
+            }}
+            className="p-1.5 rounded-lg hover:bg-gray-800 text-amber-400 hover:text-amber-300 transition-colors cursor-pointer"
+            title="Quote"
+          >
+            <Quote size={13} />
+          </button>
+
+          {/* Clear Format */}
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={(e) => {
+              e.preventDefault();
+              execFormatting("removeFormat");
+              setTimeout(updateFloatingToolbar, 20);
+            }}
+            className="p-1.5 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-gray-200 transition-colors cursor-pointer"
+            title="Clear formatting"
+          >
+            <RemoveFormatting size={13} />
+          </button>
+
+          {/* Little Caret Pointing Down */}
+          <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-[1px] border-4 border-transparent border-t-gray-900/95" />
+        </div>
+      )}
 
       {/* ═══════════════════════════════════════════════════════════════════ */}
       {/* ── MODAL: INSERT TABLE ─────────────────────────────────────────── */}
