@@ -4,6 +4,8 @@ export const fetchPlatformStats = () => api.get("/admin/stats").then((r) => r.da
 export const fetchUsers = (params) => api.get("/admin/users", { params }).then((r) => r.data);
 export const updateUserStatus = (id, status) =>
   api.post(`/admin/users/${id}/status`, { status }).then((r) => r.data);
+export const deleteUserAccount = (id) =>
+  api.delete(`/admin/users/${id}`).then((r) => r.data);
 export const createAdmin = (payload) => api.post("/admin/admins", payload).then((r) => r.data);
 export const updateUserRole = (id, role) =>
   api

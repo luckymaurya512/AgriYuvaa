@@ -41,6 +41,7 @@ import {
   fetchAllApplications,
   fetchAllPlatformJobs,
   updateUserStatus,
+  deleteUserAccount,
   createAdmin,
   updateUserRole,
   fetchPageSeoConfigs,
@@ -445,6 +446,60 @@ const SuperAdminDashboard = () => {
           loadAll();
         } catch (err) {
           setError(err.response?.data?.message || "Failed to change user status");
+        } finally {
+          closeConfirmModal();
+        }
+      },
+    });
+  };
+
+  const handleDeleteUser = (user) => {
+    if (user.status !== "suspended") {
+      setError("User account must be suspended before it can be deleted.");
+      return;
+    }
+
+    setConfirmConfig({
+      isOpen: true,
+      title: "Permanently Delete User Account?",
+      subtitle: "This action is irreversible. All platform data associated with this user will be completely wiped.",
+      message: (
+        <div className="space-y-3 text-xs text-gray-600 text-left">
+          <p>
+            Are you sure you want to permanently delete the account for{" "}
+            <strong className="text-brand-black">{user.name}</strong> ({user.email})?
+          </p>
+          <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-900 space-y-1.5">
+            <p className="font-bold uppercase tracking-wider text-[10px] text-red-700">
+              ⚠️ Permanent Data Removal Includes:
+            </p>
+            <ul className="list-disc list-inside space-y-0.5 text-[11px] text-red-800">
+              <li>User account, authentication credentials, and contact details</li>
+              <li>Job seeker / employer profile, resumes, and portfolio data</li>
+              <li>All job applications submitted by this user</li>
+              <li>Job postings and candidate applications (if employer)</li>
+              <li>Saved jobs, following records, and notifications</li>
+            </ul>
+          </div>
+          <p className="text-[11px] text-amber-800 bg-amber-50 p-2 rounded-lg border border-amber-200">
+            Note: The account is currently <strong>Suspended</strong>. Proceeding will wipe all associated data from the platform.
+          </p>
+        </div>
+      ),
+      itemName: `${user.name} (${user.email})`,
+      itemType: "User Account & All Related Data",
+      confirmText: "Yes, Delete Everything",
+      cancelText: "Cancel",
+      variant: "danger",
+      onConfirm: async () => {
+        setConfirmConfig((prev) => ({ ...prev, loading: true }));
+        try {
+          await deleteUserAccount(user._id);
+          setSuccessMsg(`User account "${user.name}" and all associated data have been permanently deleted.`);
+          setTimeout(() => setSuccessMsg(""), 5000);
+          loadAll();
+        } catch (err) {
+          setError(err.response?.data?.message || "Failed to delete user account");
         } finally {
           closeConfirmModal();
         }
@@ -1098,12 +1153,13 @@ const SuperAdminDashboard = () => {
                     <th className="text-left px-5 py-3">Status</th>
                     <th className="text-right px-5 py-3">Role Actions</th>
                     <th className="text-right px-5 py-3">Account Status</th>
+                    <th className="text-right px-5 py-3">Delete Account</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredUsers.length === 0 ? (
                     <tr>
-                      <td colSpan="7" className="text-center py-12 text-brand-grey text-xs">
+                      <td colSpan="8" className="text-center py-12 text-brand-grey text-xs">
                         No registered users match your selected filter or search term.
                       </td>
                     </tr>
@@ -1190,6 +1246,30 @@ const SuperAdminDashboard = () => {
                             }`}
                           >
                             {u.status === "active" ? "Suspend" : "Reactivate"}
+                          </button>
+                        )}
+                      </td>
+                      <td className="px-5 py-3 text-right">
+                        {u.role === "superadmin" ? (
+                          <span className="text-xs text-gray-400 italic">Protected</span>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled={u.status !== "suspended"}
+                            onClick={() => handleDeleteUser(u)}
+                            className={`text-xs font-bold px-2.5 py-1 rounded-lg border transition-all inline-flex items-center gap-1.5 ${
+                              u.status === "suspended"
+                                ? "text-red-700 bg-red-50 border-red-200 hover:bg-red-600 hover:text-white hover:border-red-600 shadow-2xs cursor-pointer active:scale-95"
+                                : "text-gray-400 bg-gray-50 border-gray-200 cursor-not-allowed opacity-50"
+                            }`}
+                            title={
+                              u.status === "suspended"
+                                ? `Permanently delete account and all data for ${u.name}`
+                                : "Account must be suspended before deletion"
+                            }
+                          >
+                            <Trash2 size={12} />
+                            <span>Delete</span>
                           </button>
                         )}
                       </td>

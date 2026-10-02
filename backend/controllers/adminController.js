@@ -5,6 +5,7 @@ import Job from "../models/Job.js";
 import Application from "../models/Application.js";
 import AuditLog from "../models/AuditLog.js";
 import SeekerProfile from "../models/SeekerProfile.js";
+import Notification from "../models/Notification.js";
 import { broadcastNewJobAlert } from "../utils/webPush.js";
 
 import sendEmail from "../utils/sendEmail.js";
@@ -474,6 +475,103 @@ export const deleteEmployer = asyncHandler(async (req, res) => {
   res.json({
     success: true,
     message: `Employer "${companyName}" and associated data deleted successfully.`,
+  });
+});
+
+// @desc  Delete a user account and all related data (cascade)
+// @route DELETE /api/admin/users/:id
+export const deleteUser = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const user = await User.findById(id);
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  }
+
+  // Prevent deleting superadmin
+  if (user.role === "superadmin") {
+    res.status(403);
+    throw new Error("Super Admin accounts cannot be deleted");
+  }
+
+  // Admins cannot delete other admins or superadmins
+  if (req.user.role === "admin" && ["admin", "superadmin"].includes(user.role)) {
+    res.status(403);
+    throw new Error("Admins cannot delete admin or superadmin accounts");
+  }
+
+  // Account must be suspended before deletion
+  if (user.status !== "suspended") {
+    res.status(400);
+    throw new Error("User account must be suspended before it can be deleted. Please suspend the account first.");
+  }
+
+  const userId = user._id;
+  let deletedJobsCount = 0;
+  let deletedApplicationsCount = 0;
+
+  // 1. If user is an Employer or has an EmployerProfile
+  const employerProfile = await EmployerProfile.findOne({ user: userId });
+  const companyName = employerProfile?.companyName;
+
+  const jobConditions = [{ employer: userId }];
+  if (companyName) jobConditions.push({ companyName });
+
+  const employerJobs = await Job.find({ $or: jobConditions });
+  const jobIds = employerJobs.map((j) => j._id);
+
+  if (jobIds.length > 0) {
+    // Delete all applications submitted to these jobs
+    const jobApps = await Application.deleteMany({ job: { $in: jobIds } });
+    deletedApplicationsCount += jobApps.deletedCount || 0;
+
+    // Pull these jobs from seekers' savedJobs
+    await SeekerProfile.updateMany(
+      { savedJobs: { $in: jobIds } },
+      { $pull: { savedJobs: { $in: jobIds } } }
+    );
+
+    // Delete the jobs themselves
+    const delJobs = await Job.deleteMany({ _id: { $in: jobIds } });
+    deletedJobsCount += delJobs.deletedCount || 0;
+  }
+
+  if (employerProfile) {
+    // Remove employer reference from seekers' followedEmployers
+    await SeekerProfile.updateMany(
+      { followedEmployers: employerProfile._id },
+      { $pull: { followedEmployers: employerProfile._id } }
+    );
+    // Delete EmployerProfile document
+    await EmployerProfile.findByIdAndDelete(employerProfile._id);
+  }
+
+  // 2. If user is a Seeker or has submitted applications
+  const seekerApps = await Application.deleteMany({ seeker: userId });
+  deletedApplicationsCount += seekerApps.deletedCount || 0;
+
+  // Delete SeekerProfile document
+  await SeekerProfile.deleteMany({ user: userId });
+
+  // 3. Delete any notifications sent to this user
+  await Notification.deleteMany({ recipient: userId });
+
+  // 4. Delete the User document
+  await User.findByIdAndDelete(userId);
+
+  // 5. Log audit trail
+  await logAction(req.user, "delete_user_account", "User", userId, {
+    userName: user.name,
+    userEmail: user.email,
+    userRole: user.role,
+    deletedJobsCount,
+    deletedApplicationsCount,
+  });
+
+  res.json({
+    success: true,
+    message: `Account for "${user.name}" (${user.email}) and all associated data have been permanently deleted.`,
   });
 });
 

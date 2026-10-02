@@ -9,6 +9,7 @@ import {
   verifyEmployer,
   getAllEmployers,
   deleteEmployer,
+  deleteUser,
   listAllJobs,
   listAllApplications,
   getPendingJobs,
@@ -28,6 +29,7 @@ router.use(authenticate, authorize("admin", "superadmin"));
 router.get("/stats", getPlatformStats);
 router.get("/users", listUsers);
 router.route("/users/:id/status").patch(updateUserStatus).post(updateUserStatus);
+router.delete("/users/:id", deleteUser);
 
 router.get("/employers", getAllEmployers);
 router.get("/employers/pending", getPendingEmployers);
