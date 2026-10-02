@@ -52,6 +52,8 @@ const RichTextEditor = ({
   const [showTableModal, setShowTableModal] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [selectionToolbar, setSelectionToolbar] = useState(null);
+  const [inlineLinkUrl, setInlineLinkUrl] = useState("");
+  const inlineLinkInputRef = useRef(null);
 
   // Link Dialog State
   const [linkUrl, setLinkUrl] = useState("");
@@ -163,12 +165,12 @@ const RichTextEditor = ({
     }
     const sel = window.getSelection();
     if (!sel || sel.isCollapsed || !sel.rangeCount) {
-      setSelectionToolbar(null);
+      setSelectionToolbar((prev) => (prev?.mode === "link" ? prev : null));
       return;
     }
     const text = sel.toString().trim();
     if (text.length === 0) {
-      setSelectionToolbar(null);
+      setSelectionToolbar((prev) => (prev?.mode === "link" ? prev : null));
       return;
     }
     const range = sel.getRangeAt(0);
@@ -188,24 +190,134 @@ const RichTextEditor = ({
     }
 
     const top = Math.max(12, rect.top - 48);
-    const left = Math.max(130, Math.min(window.innerWidth - 130, rect.left + rect.width / 2));
+    const left = Math.max(160, Math.min(window.innerWidth - 160, rect.left + rect.width / 2));
 
-    setSelectionToolbar({ top, left });
+    const node = sel.anchorNode;
+    const closestA =
+      node?.nodeType === 1 ? node.closest("a") : node?.parentElement?.closest("a");
+    const existingHref =
+      closestA && editorRef.current?.contains(closestA) ? closestA.getAttribute("href") : "";
+
+    setSelectionToolbar((prev) => {
+      if (prev?.mode === "link") {
+        return { ...prev, top, left };
+      }
+      return { top, left, mode: "bubble", isExistingLink: !!existingHref, existingHref };
+    });
   };
 
-  // Listen for selection changes and dismissed selections
+  const handleOpenInlineLink = (e) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+    saveSelection();
+    const sel = window.getSelection();
+    const node = sel?.anchorNode;
+    const closestA =
+      node?.nodeType === 1 ? node.closest("a") : node?.parentElement?.closest("a");
+    const href = closestA ? closestA.getAttribute("href") : "";
+    setInlineLinkUrl(href || "");
+    setSelectionToolbar((prev) => ({
+      ...prev,
+      mode: "link",
+      isExistingLink: !!href,
+    }));
+    setTimeout(() => inlineLinkInputRef.current?.focus(), 50);
+  };
+
+  const applyInlineLink = (e) => {
+    e?.preventDefault();
+    if (!inlineLinkUrl.trim()) return;
+
+    let fullUrl = inlineLinkUrl.trim();
+    if (!/^https?:\/\//i.test(fullUrl) && !/^mailto:/i.test(fullUrl)) {
+      fullUrl = `https://${fullUrl}`;
+    }
+
+    restoreSelection();
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+      const node = sel.anchorNode;
+      const closestA =
+        node?.nodeType === 1 ? node.closest("a") : node?.parentElement?.closest("a");
+
+      if (closestA && editorRef.current?.contains(closestA)) {
+        closestA.href = fullUrl;
+      } else {
+        try {
+          const success = document.execCommand("createLink", false, fullUrl);
+          if (success) {
+            const parent = sel.anchorNode?.parentElement;
+            const aTag = parent?.closest("a") || parent?.querySelector(`a[href="${fullUrl}"]`);
+            if (aTag) {
+              aTag.target = "_blank";
+              aTag.rel = "noopener noreferrer";
+              aTag.className = "text-emerald-700 underline font-medium hover:text-emerald-900";
+            }
+          } else {
+            const range = sel.getRangeAt(0);
+            const contents = range.extractContents();
+            const a = document.createElement("a");
+            a.href = fullUrl;
+            a.target = "_blank";
+            a.rel = "noopener noreferrer";
+            a.className = "text-emerald-700 underline font-medium hover:text-emerald-900";
+            a.appendChild(contents);
+            range.insertNode(a);
+          }
+        } catch (err) {
+          console.warn("createLink failed:", err);
+        }
+      }
+    }
+
+    saveSelection();
+    emitChange();
+    setSelectionToolbar(null);
+    setInlineLinkUrl("");
+  };
+
+  const removeInlineLink = (e) => {
+    e?.preventDefault();
+    restoreSelection();
+    try {
+      document.execCommand("unlink", false, null);
+    } catch (err) {
+      console.warn("unlink failed:", err);
+    }
+    saveSelection();
+    emitChange();
+    setSelectionToolbar(null);
+    setInlineLinkUrl("");
+  };
+
+  // Listen for selection changes and mouseup/keyup to keep floating toolbar reactive
   useEffect(() => {
     const handleDocumentSelectionChange = () => {
       const sel = window.getSelection();
       if (!sel || sel.isCollapsed) {
-        setSelectionToolbar(null);
+        setSelectionToolbar((prev) => (prev?.mode === "link" ? prev : null));
       }
     };
+    const handleMouseUp = () => {
+      setTimeout(updateFloatingToolbar, 20);
+    };
+    const handleKeyUp = (e) => {
+      if (e.key === "Escape") {
+        setSelectionToolbar(null);
+      } else {
+        setTimeout(updateFloatingToolbar, 20);
+      }
+    };
+
     document.addEventListener("selectionchange", handleDocumentSelectionChange);
+    document.addEventListener("mouseup", handleMouseUp);
+    document.addEventListener("keyup", handleKeyUp);
     return () => {
       document.removeEventListener("selectionchange", handleDocumentSelectionChange);
+      document.removeEventListener("mouseup", handleMouseUp);
+      document.removeEventListener("keyup", handleKeyUp);
     };
-  }, []);
+  }, [viewMode]);
 
   // Lock body scroll in fullscreen mode
   useEffect(() => {
@@ -293,7 +405,13 @@ const RichTextEditor = ({
         execFormatting("underline");
       } else if (e.key === "k" || e.key === "K") {
         e.preventDefault();
-        openLinkModal();
+        const sel = window.getSelection();
+        if (sel && !sel.isCollapsed && sel.toString().trim()) {
+          saveSelection();
+          handleOpenInlineLink(e);
+        } else {
+          openLinkModal();
+        }
       }
     } else if (e.key === "/" && !e.ctrlKey && !e.metaKey) {
       const sel = window.getSelection();
@@ -1285,7 +1403,7 @@ const RichTextEditor = ({
           className={`rich-text-content p-4 text-sm focus:outline-none leading-relaxed text-gray-800 bg-white ${
             isFullscreen
               ? "flex-1 overflow-y-auto max-w-4xl mx-auto w-full min-h-0"
-              : "min-h-[160px] overflow-y-auto"
+              : "min-h-[220px] max-h-[520px] overflow-y-auto"
           } ${viewMode !== "visual" ? "hidden" : "block"}`}
           data-placeholder={placeholder}
         />
@@ -1302,7 +1420,7 @@ const RichTextEditor = ({
             }}
             placeholder="Edit raw HTML source code here..."
             className={`w-full p-4 font-mono text-xs focus:outline-none resize-y bg-gray-900 text-emerald-300 ${
-              isFullscreen ? "flex-1 min-h-0 max-w-4xl mx-auto" : "min-h-[160px]"
+              isFullscreen ? "flex-1 min-h-0 max-w-4xl mx-auto" : "min-h-[220px] max-h-[520px]"
             }`}
           />
         )}
@@ -1314,7 +1432,7 @@ const RichTextEditor = ({
             className={`w-full p-5 text-sm bg-gray-50/50 ${
               isFullscreen
                 ? "flex-1 overflow-y-auto min-h-0 max-w-4xl mx-auto"
-                : "min-h-[160px] overflow-y-auto"
+                : "min-h-[220px] max-h-[520px] overflow-y-auto"
             }`}
           >
             {value ? (
@@ -1326,145 +1444,213 @@ const RichTextEditor = ({
             )}
           </div>
         )}
+
+        {/* ── Editor Footer Status Bar ── */}
+        <div className="flex items-center justify-between px-3 py-1.5 bg-gray-50/90 border-t border-gray-200 text-[11px] text-gray-500 rounded-b-xl">
+          <span className="flex items-center gap-1.5 font-medium">
+            <span>{value ? value.replace(/<[^>]+>/g, " ").trim().split(/\s+/).filter(Boolean).length : 0} words</span>
+            <span>•</span>
+            <span>{value ? value.replace(/<[^>]+>/g, "").length : 0} chars</span>
+          </span>
+          <span className="hidden sm:inline text-gray-400">
+            💡 Highlight text to format or insert link inline (<kbd className="font-mono bg-gray-200 px-1 py-0.5 rounded text-[10px] text-gray-700">Ctrl+K</kbd>)
+          </span>
+        </div>
       </div>
 
       {/* ── ELEMENTOR / MEDIUM STYLE FLOATING SELECTION BUBBLE TOOLBAR ── */}
       {selectionToolbar && viewMode === "visual" && (
-        <div
-          style={{
-            top: `${selectionToolbar.top}px`,
-            left: `${selectionToolbar.left}px`,
-          }}
-          className="fixed z-50 -translate-x-1/2 flex items-center gap-0.5 p-1 bg-gray-900/95 text-white rounded-xl shadow-2xl border border-gray-700/80 backdrop-blur-md animate-in fade-in zoom-in-95 duration-100 select-none"
-          onMouseDown={(e) => e.preventDefault()}
-        >
-          {/* Bold */}
-          <button
-            type="button"
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={(e) => {
-              e.preventDefault();
-              execFormatting("bold");
-              setTimeout(updateFloatingToolbar, 20);
+        selectionToolbar.mode === "link" ? (
+          <div
+            style={{
+              top: `${selectionToolbar.top}px`,
+              left: `${selectionToolbar.left}px`,
             }}
-            className="p-1.5 rounded-lg hover:bg-gray-800 text-gray-200 hover:text-white transition-colors cursor-pointer"
-            title="Bold (Ctrl+B)"
+            className="fixed z-50 -translate-x-1/2 flex items-center gap-1.5 p-1.5 bg-gray-900 text-white rounded-xl shadow-2xl border border-gray-700/80 backdrop-blur-md animate-in fade-in zoom-in-95 duration-100 select-none"
+            onMouseDown={(e) => e.stopPropagation()}
           >
-            <Bold size={13} className="stroke-[2.5]" />
-          </button>
-
-          {/* Italic */}
-          <button
-            type="button"
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={(e) => {
-              e.preventDefault();
-              execFormatting("italic");
-              setTimeout(updateFloatingToolbar, 20);
+            <div className="flex items-center gap-1 pl-1 text-emerald-400">
+              <Link2 size={13} className="shrink-0" />
+            </div>
+            <input
+              ref={inlineLinkInputRef}
+              type="text"
+              placeholder="Paste URL (e.g. https://example.com)..."
+              value={inlineLinkUrl}
+              onChange={(e) => setInlineLinkUrl(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  applyInlineLink(e);
+                } else if (e.key === "Escape") {
+                  e.preventDefault();
+                  setSelectionToolbar(null);
+                }
+              }}
+              autoFocus
+              className="w-52 sm:w-64 px-2 py-1 text-xs bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+            />
+            <button
+              type="button"
+              onClick={applyInlineLink}
+              className="px-2.5 py-1 text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors cursor-pointer flex items-center gap-1 shadow-xs"
+            >
+              <Check size={12} /> Apply
+            </button>
+            {selectionToolbar.isExistingLink && (
+              <button
+                type="button"
+                onClick={removeInlineLink}
+                className="p-1 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-lg transition-colors cursor-pointer"
+                title="Remove Link"
+              >
+                <Trash2 size={13} />
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setSelectionToolbar(null)}
+              className="p-1 hover:bg-gray-800 text-gray-400 hover:text-white rounded-lg transition-colors cursor-pointer"
+              title="Close"
+            >
+              <X size={13} />
+            </button>
+            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-[1px] border-4 border-transparent border-t-gray-900" />
+          </div>
+        ) : (
+          <div
+            style={{
+              top: `${selectionToolbar.top}px`,
+              left: `${selectionToolbar.left}px`,
             }}
-            className="p-1.5 rounded-lg hover:bg-gray-800 text-gray-200 hover:text-white transition-colors cursor-pointer"
-            title="Italic (Ctrl+I)"
-          >
-            <Italic size={13} />
-          </button>
-
-          {/* Underline */}
-          <button
-            type="button"
+            className="fixed z-50 -translate-x-1/2 flex items-center gap-0.5 p-1 bg-gray-900/95 text-white rounded-xl shadow-2xl border border-gray-700/80 backdrop-blur-md animate-in fade-in zoom-in-95 duration-100 select-none"
             onMouseDown={(e) => e.preventDefault()}
-            onClick={(e) => {
-              e.preventDefault();
-              execFormatting("underline");
-              setTimeout(updateFloatingToolbar, 20);
-            }}
-            className="p-1.5 rounded-lg hover:bg-gray-800 text-gray-200 hover:text-white transition-colors cursor-pointer"
-            title="Underline (Ctrl+U)"
           >
-            <Underline size={13} />
-          </button>
+            {/* Bold */}
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={(e) => {
+                e.preventDefault();
+                execFormatting("bold");
+                setTimeout(updateFloatingToolbar, 20);
+              }}
+              className="p-1.5 rounded-lg hover:bg-gray-800 text-gray-200 hover:text-white transition-colors cursor-pointer"
+              title="Bold (Ctrl+B)"
+            >
+              <Bold size={13} className="stroke-[2.5]" />
+            </button>
 
-          <span className="w-px h-3.5 bg-gray-700 mx-0.5" />
+            {/* Italic */}
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={(e) => {
+                e.preventDefault();
+                execFormatting("italic");
+                setTimeout(updateFloatingToolbar, 20);
+              }}
+              className="p-1.5 rounded-lg hover:bg-gray-800 text-gray-200 hover:text-white transition-colors cursor-pointer"
+              title="Italic (Ctrl+I)"
+            >
+              <Italic size={13} />
+            </button>
 
-          {/* H2 */}
-          <button
-            type="button"
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={(e) => {
-              e.preventDefault();
-              execFormatBlock("h2");
-              setSelectionToolbar(null);
-            }}
-            className="px-1.5 py-1 rounded-lg hover:bg-gray-800 text-gray-200 hover:text-emerald-400 font-bold text-xs transition-colors cursor-pointer"
-            title="Heading 2"
-          >
-            H2
-          </button>
+            {/* Underline */}
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={(e) => {
+                e.preventDefault();
+                execFormatting("underline");
+                setTimeout(updateFloatingToolbar, 20);
+              }}
+              className="p-1.5 rounded-lg hover:bg-gray-800 text-gray-200 hover:text-white transition-colors cursor-pointer"
+              title="Underline (Ctrl+U)"
+            >
+              <Underline size={13} />
+            </button>
 
-          {/* H3 */}
-          <button
-            type="button"
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={(e) => {
-              e.preventDefault();
-              execFormatBlock("h3");
-              setSelectionToolbar(null);
-            }}
-            className="px-1.5 py-1 rounded-lg hover:bg-gray-800 text-gray-200 hover:text-emerald-400 font-bold text-xs transition-colors cursor-pointer"
-            title="Heading 3"
-          >
-            H3
-          </button>
+            <span className="w-px h-3.5 bg-gray-700 mx-0.5" />
 
-          <span className="w-px h-3.5 bg-gray-700 mx-0.5" />
+            {/* H2 */}
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={(e) => {
+                e.preventDefault();
+                execFormatBlock("h2");
+                setSelectionToolbar(null);
+              }}
+              className="px-1.5 py-1 rounded-lg hover:bg-gray-800 text-gray-200 hover:text-emerald-400 font-bold text-xs transition-colors cursor-pointer"
+              title="Heading 2"
+            >
+              H2
+            </button>
 
-          {/* Link */}
-          <button
-            type="button"
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={(e) => {
-              e.preventDefault();
-              openLinkModal();
-              setSelectionToolbar(null);
-            }}
-            className="p-1.5 rounded-lg hover:bg-gray-800 text-emerald-400 hover:text-emerald-300 transition-colors cursor-pointer"
-            title="Insert Link (Ctrl+K)"
-          >
-            <Link2 size={13} />
-          </button>
+            {/* H3 */}
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={(e) => {
+                e.preventDefault();
+                execFormatBlock("h3");
+                setSelectionToolbar(null);
+              }}
+              className="px-1.5 py-1 rounded-lg hover:bg-gray-800 text-gray-200 hover:text-emerald-400 font-bold text-xs transition-colors cursor-pointer"
+              title="Heading 3"
+            >
+              H3
+            </button>
 
-          {/* Quote */}
-          <button
-            type="button"
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={(e) => {
-              e.preventDefault();
-              execFormatBlock("blockquote");
-              setSelectionToolbar(null);
-            }}
-            className="p-1.5 rounded-lg hover:bg-gray-800 text-amber-400 hover:text-amber-300 transition-colors cursor-pointer"
-            title="Quote"
-          >
-            <Quote size={13} />
-          </button>
+            <span className="w-px h-3.5 bg-gray-700 mx-0.5" />
 
-          {/* Clear Format */}
-          <button
-            type="button"
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={(e) => {
-              e.preventDefault();
-              execFormatting("removeFormat");
-              setTimeout(updateFloatingToolbar, 20);
-            }}
-            className="p-1.5 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-gray-200 transition-colors cursor-pointer"
-            title="Clear formatting"
-          >
-            <RemoveFormatting size={13} />
-          </button>
+            {/* Link Button (opens inline link popup right here!) */}
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={handleOpenInlineLink}
+              className="px-2 py-1 rounded-lg hover:bg-gray-800 text-emerald-400 hover:text-emerald-300 transition-colors cursor-pointer flex items-center gap-1 text-xs font-bold"
+              title="Insert Link on selected text (Ctrl+K)"
+            >
+              <Link2 size={13} />
+              <span>Link</span>
+            </button>
 
-          {/* Little Caret Pointing Down */}
-          <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-[1px] border-4 border-transparent border-t-gray-900/95" />
-        </div>
+            {/* Quote */}
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={(e) => {
+                e.preventDefault();
+                execFormatBlock("blockquote");
+                setSelectionToolbar(null);
+              }}
+              className="p-1.5 rounded-lg hover:bg-gray-800 text-amber-400 hover:text-amber-300 transition-colors cursor-pointer"
+              title="Quote"
+            >
+              <Quote size={13} />
+            </button>
+
+            {/* Clear Format */}
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={(e) => {
+                e.preventDefault();
+                execFormatting("removeFormat");
+                setTimeout(updateFloatingToolbar, 20);
+              }}
+              className="p-1.5 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-gray-200 transition-colors cursor-pointer"
+              title="Clear formatting"
+            >
+              <RemoveFormatting size={13} />
+            </button>
+
+            {/* Little Caret Pointing Down */}
+            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-[1px] border-4 border-transparent border-t-gray-900/95" />
+          </div>
+        )
       )}
 
       {/* ═══════════════════════════════════════════════════════════════════ */}
