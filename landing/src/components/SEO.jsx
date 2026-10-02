@@ -61,10 +61,11 @@ const SEO = ({
       <meta property="og:url" content={canonicalUrl} />
       <meta property="og:image" content={image} />
       <meta property="og:image:secure_url" content={image} />
+      <meta property="og:image:alt" content={fullTitle} />
       <meta property="og:locale" content="en_IN" />
 
       {/* Twitter */}
-      <meta name="twitter:card" content="summary" />
+      <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={image} />

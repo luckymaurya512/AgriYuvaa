@@ -72,6 +72,122 @@ router.get("/", async (req, res) => {
   }
 });
 
+// Helper for safely escaping HTML in dynamic crawler previews
+const escapeHtml = (str) => {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+};
+
+// GET /api/blogs/share/:slug — Social Crawler preview for WhatsApp, Facebook, LinkedIn, Instagram, Twitter
+router.get("/share/:slug", async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const isLanding = req.query.site === "landing";
+    const siteName = isLanding ? "AgriYuvaa" : "AgriYuvaa Jobs";
+    const defaultLogo = isLanding
+      ? "https://agriyuvaa.com/logo.png"
+      : "https://jobs.agriyuvaa.com/logo.png";
+    const baseSiteUrl = isLanding
+      ? "https://agriyuvaa.com"
+      : "https://jobs.agriyuvaa.com";
+
+    const blog = await Blog.findOne({ slug, isPublished: true });
+
+    if (!blog) {
+      return res.status(200).send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>${escapeHtml(siteName)} — Agriculture Careers & Insights</title>
+  <meta property="og:site_name" content="${escapeHtml(siteName)}">
+  <meta property="og:title" content="${escapeHtml(siteName)}">
+  <meta property="og:description" content="Explore agriculture career insights, jobs, and articles on AgriYuvaa.">
+  <meta property="og:image" content="${defaultLogo}">
+  <meta property="og:image:secure_url" content="${defaultLogo}">
+  <meta property="og:image:type" content="image/png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="${defaultLogo}">
+</head>
+<body>
+  <script>window.location.replace("${baseSiteUrl}/blog");</script>
+</body>
+</html>`);
+    }
+
+    const title = blog.metaTitle || blog.title || siteName;
+    const displayTitle = title.includes("AgriYuvaa") ? title : `${title} | ${siteName}`;
+
+    let description = blog.metaDescription || blog.excerpt || "";
+    if (!description && blog.content) {
+      description = blog.content.replace(/<[^>]*>/g, "").substring(0, 160).trim();
+    }
+    if (!description) {
+      description = "Read this article on AgriYuvaa — India's premier agriculture career and knowledge network.";
+    }
+
+    // Determine Image: Thumbnail/CoverImage first, else fallback to logo
+    const rawImage = (blog.ogImage || blog.coverImage || "").trim();
+    let finalImage = defaultLogo;
+
+    if (rawImage && !rawImage.startsWith("data:")) {
+      if (rawImage.startsWith("http://") || rawImage.startsWith("https://")) {
+        finalImage = rawImage.replace(/^http:\/\//, "https://");
+      } else if (rawImage.startsWith("/")) {
+        finalImage = `${baseSiteUrl}${rawImage}`;
+      } else {
+        finalImage = `${baseSiteUrl}/${rawImage}`;
+      }
+    }
+
+    const canonicalUrl = `${baseSiteUrl}/blog/${blog.slug}`;
+
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>${escapeHtml(displayTitle)}</title>
+  <meta name="description" content="${escapeHtml(description)}">
+
+  <!-- Open Graph / WhatsApp / Facebook / Instagram / LinkedIn -->
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="${escapeHtml(siteName)}">
+  <meta property="og:title" content="${escapeHtml(displayTitle)}">
+  <meta property="og:description" content="${escapeHtml(description)}">
+  <meta property="og:url" content="${canonicalUrl}">
+  <meta property="og:image" content="${finalImage}">
+  <meta property="og:image:secure_url" content="${finalImage}">
+  <meta property="og:image:alt" content="${escapeHtml(blog.title)}">
+  <meta property="og:locale" content="en_IN">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${escapeHtml(displayTitle)}">
+  <meta name="twitter:description" content="${escapeHtml(description)}">
+  <meta name="twitter:image" content="${finalImage}">
+
+  <link rel="canonical" href="${canonicalUrl}">
+</head>
+<body>
+  <h1>${escapeHtml(blog.title)}</h1>
+  <p>${escapeHtml(description)}</p>
+  <img src="${finalImage}" alt="${escapeHtml(blog.title)}" />
+  <script>window.location.replace("${canonicalUrl}");</script>
+</body>
+</html>`;
+
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.setHeader("Cache-Control", "public, max-age=300, s-maxage=600");
+    return res.status(200).send(html);
+  } catch (err) {
+    res.status(500).send("Error rendering blog preview");
+  }
+});
+
 // GET /api/blogs/:slug — single blog by slug
 router.get("/:slug", async (req, res) => {
   try {

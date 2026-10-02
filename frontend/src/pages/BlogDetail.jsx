@@ -84,12 +84,21 @@ const BlogDetail = () => {
     );
   }
 
+  const resolveBlogImage = (blogObj) => {
+    const raw = (blogObj?.ogImage || blogObj?.coverImage || blogObj?.image || "").trim();
+    if (!raw || raw.startsWith("data:")) return "https://jobs.agriyuvaa.com/logo.png";
+    if (raw.startsWith("http://")) return raw.replace("http://", "https://");
+    if (raw.startsWith("https://")) return raw;
+    if (raw.startsWith("/")) return `https://jobs.agriyuvaa.com${raw}`;
+    return `https://jobs.agriyuvaa.com/${raw}`;
+  };
+
   const seoTitle = blog.metaTitle || blog.title;
   const seoDescription =
     blog.metaDescription ||
     blog.excerpt ||
     (blog.content ? blog.content.substring(0, 155).replace(/<[^>]+>/g, "").trim() : blog.title);
-  const seoImage = blog.ogImage || blog.coverImage || "https://jobs.agriyuvaa.com/logo.png";
+  const seoImage = resolveBlogImage(blog);
   const seoKeywords =
     blog.metaKeywords?.length > 0
       ? blog.metaKeywords
