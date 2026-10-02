@@ -86,22 +86,87 @@ export const checkIsLongResume = (data) => {
   return score > 18;
 };
 
-export const getEffectiveSplit = (data, splitSetting) => {
+export const getEffectiveSplit = (data, splitSetting = "auto", template = "agri_clean") => {
   if (splitSetting && splitSetting !== "auto") return splitSetting;
+  if (!data) return "experience";
 
-  const validEdu = (data.education || []).filter((e) => e.degree || e.institution);
-  const validExp = (data.experience || []).filter((e) => e.role || e.company);
+  // Template section sequence
+  const order =
+    template === "modern_green"
+      ? ["objective", "experience", "education", "publications", "certifications", "skills", "projects"]
+      : ["objective", "education", "experience", "publications", "certifications", "skills", "projects"];
 
-  if (validEdu.length >= 2 && validExp.length >= 2) {
-    return "education";
+  const sectionScores = {
+    objective: () => {
+      if (!data.objective || !data.objective.trim()) return 0;
+      return 1.5 + Math.ceil(data.objective.trim().length / 70);
+    },
+    education: () => {
+      const valid = (data.education || []).filter((e) => e.degree || e.institution);
+      if (valid.length === 0) return 0;
+      return 1.5 + valid.length * 2.2;
+    },
+    experience: () => {
+      const valid = (data.experience || []).filter((e) => e.role || e.company);
+      if (valid.length === 0) return 0;
+      let s = 1.5 + valid.length * 2.5;
+      valid.forEach((e) => {
+        if (e.description) s += Math.ceil(e.description.length / 90);
+      });
+      return s;
+    },
+    publications: () => {
+      const valid = (data.publications || []).filter((p) => p.title);
+      if (valid.length === 0) return 0;
+      let s = 1.5 + valid.length * 2.2;
+      valid.forEach((p) => {
+        if (p.description) s += Math.ceil(p.description.length / 90);
+      });
+      return s;
+    },
+    certifications: () => {
+      const valid = (data.certificationsList || []).filter((c) => c.name);
+      if (valid.length === 0) return 0;
+      return 1.0 + valid.length * 1.5;
+    },
+    skills: () => {
+      return data.skills && data.skills.trim() ? 2.5 : 0;
+    },
+    projects: () => {
+      const valid = (data.projects || []).filter((p) => p.title);
+      if (valid.length === 0) return 0;
+      let s = 1.5;
+      valid.forEach((p) => {
+        s += 2.0;
+        if (p.description) s += Math.ceil(p.description.length / 80);
+      });
+      return s;
+    },
+  };
+
+  // Standard A4 sheet can comfortably hold sections totaling up to ~19 points
+  const PAGE_1_CAPACITY = 19;
+  let cumScore = 0;
+  let lastFitSection = order[0];
+
+  for (let i = 0; i < order.length; i++) {
+    const sec = order[i];
+    const scoreFn = sectionScores[sec];
+    const score = scoreFn ? scoreFn() : 0;
+    if (score === 0) continue;
+
+    if (cumScore + score <= PAGE_1_CAPACITY) {
+      cumScore += score;
+      lastFitSection = sec;
+    } else {
+      if (cumScore === 0) {
+        lastFitSection = sec;
+      }
+      break;
+    }
   }
-  if (validExp.length > 0) {
-    return "experience";
-  }
-  if (validEdu.length > 0) {
-    return "education";
-  }
-  return "objective";
+
+  return lastFitSection || "experience";
 };
 
 const sampleData = {
@@ -343,8 +408,8 @@ const ResumeBuilder = () => {
   const [showDoneModal, setShowDoneModal] = useState(false);
 
   const isLong = checkIsLongResume(data);
-  const isTwoPages = pageMode === "2" || (pageMode === "auto" && isLong);
-  const effectiveSplit = getEffectiveSplit(data, splitAfter);
+  const isTwoPages = isLong;
+  const effectiveSplit = getEffectiveSplit(data, "auto", template);
 
   const handleSaveAndFinish = async () => {
     setSavingResume(true);
@@ -1340,82 +1405,23 @@ const ResumeBuilder = () => {
               activeTab === "editor" ? "hidden md:block" : "block"
             }`}
           >
-            {/* Live Preview Controls Header */}
-            <div className="flex flex-wrap items-center justify-between gap-2 mb-3 no-print bg-white p-2.5 rounded-xl border border-gray-200 shadow-2xs">
+            {/* Live Preview Header (Clean & Minimal) */}
+            <div className="flex items-center justify-between gap-2 mb-3 no-print bg-white px-3.5 py-2.5 rounded-xl border border-gray-200 shadow-2xs">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-brand-grey flex items-center gap-1.5">
-                  <Eye size={14} className="text-brand-green" /> Live Preview
-                </span>
-                <span
-                  className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${
-                    isTwoPages
-                      ? "bg-amber-100 text-amber-900 border border-amber-300"
-                      : "bg-emerald-100 text-emerald-900 border border-emerald-300"
-                  }`}
-                >
-                  {isTwoPages ? "📄 2 Pages (A4)" : "📄 1 Page (A4)"}
+                  <Eye size={15} className="text-emerald-700" /> Live Preview
                 </span>
               </div>
-
-              {/* Page mode controls */}
               <div className="flex items-center gap-2">
-                <div className="flex items-center bg-gray-100 p-0.5 rounded-lg text-xs">
-                  <button
-                    type="button"
-                    onClick={() => setPageMode("auto")}
-                    className={`px-2 py-1 rounded-md text-[11px] font-semibold transition-all ${
-                      pageMode === "auto"
-                        ? "bg-white text-emerald-800 shadow-2xs"
-                        : "text-gray-500 hover:text-gray-800"
-                    }`}
-                    title="Auto-detect whether resume fits 1 page or needs 2 pages"
-                  >
-                    Auto
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPageMode("1")}
-                    className={`px-2 py-1 rounded-md text-[11px] font-semibold transition-all ${
-                      pageMode === "1"
-                        ? "bg-white text-emerald-800 shadow-2xs"
-                        : "text-gray-500 hover:text-gray-800"
-                    }`}
-                    title="Force single page layout"
-                  >
-                    1 Page
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPageMode("2")}
-                    className={`px-2 py-1 rounded-md text-[11px] font-semibold transition-all ${
-                      pageMode === "2"
-                        ? "bg-white text-emerald-800 shadow-2xs"
-                        : "text-gray-500 hover:text-gray-800"
-                    }`}
-                    title="Force two pages layout"
-                  >
-                    2 Pages
-                  </button>
-                </div>
-
-                {isTwoPages && (
-                  <div className="flex items-center gap-1 text-[11px]">
-                    <span className="text-gray-500 hidden sm:inline">Split:</span>
-                    <select
-                      value={splitAfter}
-                      onChange={(e) => setSplitAfter(e.target.value)}
-                      className="text-xs bg-gray-50 border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 font-medium focus:ring-1 focus:ring-emerald-500 cursor-pointer"
-                      title="Choose section after which Page 2 starts"
-                    >
-                      <option value="auto">Auto Split</option>
-                      <option value="education">After Education</option>
-                      <option value="experience">After Experience</option>
-                      <option value="publications">After Publications</option>
-                      <option value="certifications">After Certifications</option>
-                      <option value="skills">After Skills</option>
-                    </select>
-                  </div>
-                )}
+                <span
+                  className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${
+                    isTwoPages
+                      ? "bg-amber-50 text-amber-900 border-amber-200"
+                      : "bg-emerald-50 text-emerald-900 border-emerald-200"
+                  }`}
+                >
+                  {isTwoPages ? "📄 Standard A4 (2 Pages)" : "📄 Standard A4 (1 Page)"}
+                </span>
               </div>
             </div>
 
@@ -1432,7 +1438,7 @@ const ResumeBuilder = () => {
                       <span>Standard A4 Sheet</span>
                     </div>
 
-                    <div className="p-8 sm:p-10 text-gray-800 min-h-[700px] flex flex-col justify-between">
+                    <div className="p-8 sm:p-10 text-gray-800 min-h-[780px] flex flex-col justify-between">
                       <div>
                         {template === "agri_clean" && (
                           <TemplateAgriClean data={data} page={1} splitAfter={effectiveSplit} />
@@ -1476,7 +1482,7 @@ const ResumeBuilder = () => {
                       <span>Standard A4 Sheet</span>
                     </div>
 
-                    <div className="p-8 sm:p-10 text-gray-800 min-h-[700px] flex flex-col justify-between">
+                    <div className="p-8 sm:p-10 text-gray-800 min-h-[780px] flex flex-col justify-between">
                       <div>
                         {template === "agri_clean" && (
                           <TemplateAgriClean data={data} page={2} splitAfter={effectiveSplit} />
@@ -1502,10 +1508,10 @@ const ResumeBuilder = () => {
                     <span className="flex items-center gap-1.5 text-emerald-800">
                       <span className="w-2 h-2 rounded-full bg-emerald-500"></span> Page 1 of 1 (Single Page)
                     </span>
-                    <span>Fits A4 Standard Format</span>
+                    <span>Standard A4 Sheet</span>
                   </div>
 
-                  <div className="p-8 sm:p-10 text-gray-800 min-h-[800px]">
+                  <div className="p-8 sm:p-10 text-gray-800 min-h-[780px]">
                     {template === "agri_clean" && <TemplateAgriClean data={data} page="all" />}
                     {template === "modern_green" && <TemplateModernGreen data={data} page="all" />}
                     {template === "classic_serif" && <TemplateClassicSerif data={data} page="all" />}
