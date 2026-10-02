@@ -42,71 +42,169 @@ export const checkIsLongResume = (data) => {
   if (!data) return false;
   let score = 0;
   if (data.objective && data.objective.trim().length > 0) {
-    score += Math.ceil(data.objective.length / 70);
+    score += Math.ceil(data.objective.trim().length / 80);
   }
   const validEdu = (data.education || []).filter((e) => e.degree || e.institution);
-  score += validEdu.length * 2.5;
+  score += validEdu.length * 2.0;
 
   const validExp = (data.experience || []).filter((e) => e.role || e.company);
   validExp.forEach((e) => {
-    score += 3;
+    score += 2.5;
     if (e.description) {
-      score += Math.ceil(e.description.length / 80);
+      score += Math.ceil(e.description.length / 90);
     }
   });
 
   const validPubs = (data.publications || []).filter((p) => p.title);
-  score += validPubs.length * 2.5;
+  validPubs.forEach((p) => {
+    score += 2.0;
+    if (p.description) score += Math.ceil(p.description.length / 90);
+  });
 
   const validCerts = (data.certificationsList || []).filter((c) => c.name);
-  score += validCerts.length * 1.8;
+  score += validCerts.length * 1.5;
 
   if (data.skills && data.skills.trim()) {
-    score += Math.ceil(data.skills.split(",").length / 3) * 1.5;
+    score += 2.0;
   }
 
   const validProj = (data.projects || []).filter((p) => p.title);
   validProj.forEach((p) => {
-    score += 2.5;
-    if (p.description) score += Math.ceil(p.description.length / 80);
+    score += 2.0;
+    if (p.description) score += Math.ceil(p.description.length / 90);
   });
 
   (data.customSections || []).forEach((s) => {
     score += 1.5;
     (s.items || []).forEach((it) => {
-      if (it.title || it.description) score += 2;
+      if (it.title || it.description) score += 2.0;
     });
   });
 
   if (data.languages && data.languages.trim()) {
-    score += 1;
+    score += 1.0;
   }
 
-  // A standard 1-page A4 sheet comfortably fits score <= 18
-  return score > 18;
+  // A standard A4 sheet comfortably fits content up to score <= 30
+  // It only becomes a 2-page resume when content exceeds a full A4 sheet
+  return score > 30;
 };
 
 export const getEffectiveSplit = (data, splitSetting = "auto", template = "agri_clean") => {
   if (splitSetting && splitSetting !== "auto") return splitSetting;
   if (!data) return template === "modern_green" ? "education" : "experience";
 
-  const validExp = (data.experience || []).filter((e) => e.role || e.company);
+  const order =
+    template === "modern_green"
+      ? [
+          "objective",
+          "experience",
+          "education",
+          "publications",
+          "certifications",
+          "skills",
+          "projects",
+          "customSections",
+          "languages",
+        ]
+      : [
+          "objective",
+          "education",
+          "experience",
+          "publications",
+          "certifications",
+          "skills",
+          "projects",
+          "customSections",
+          "languages",
+        ];
 
-  if (validExp.length > 0) {
-    // Professional 2-page balance:
-    // Page 1 comfortably holds Contact Header, Career Objective, Education, and Experience.
-    // Page 2 displays the remaining credentials: Publications, Certifications, Skills, Projects, etc.
-    return template === "modern_green" ? "education" : "experience";
+  const sectionScores = {
+    objective: () => {
+      if (!data.objective || !data.objective.trim()) return 0;
+      return 1.5 + Math.ceil(data.objective.trim().length / 80);
+    },
+    education: () => {
+      const valid = (data.education || []).filter((e) => e.degree || e.institution);
+      if (valid.length === 0) return 0;
+      return 1.5 + valid.length * 2.0;
+    },
+    experience: () => {
+      const valid = (data.experience || []).filter((e) => e.role || e.company);
+      if (valid.length === 0) return 0;
+      let s = 1.5 + valid.length * 2.2;
+      valid.forEach((e) => {
+        if (e.description) s += Math.ceil(e.description.length / 90);
+      });
+      return s;
+    },
+    publications: () => {
+      const valid = (data.publications || []).filter((p) => p.title);
+      if (valid.length === 0) return 0;
+      let s = 1.5 + valid.length * 2.0;
+      valid.forEach((p) => {
+        if (p.description) s += Math.ceil(p.description.length / 90);
+      });
+      return s;
+    },
+    certifications: () => {
+      const valid = (data.certificationsList || []).filter((c) => c.name);
+      if (valid.length === 0) return 0;
+      return 1.0 + valid.length * 1.5;
+    },
+    skills: () => {
+      return data.skills && data.skills.trim() ? 2.0 : 0;
+    },
+    projects: () => {
+      const valid = (data.projects || []).filter((p) => p.title);
+      if (valid.length === 0) return 0;
+      let s = 1.5;
+      valid.forEach((p) => {
+        s += 2.0;
+        if (p.description) s += Math.ceil(p.description.length / 90);
+      });
+      return s;
+    },
+    customSections: () => {
+      if (!data.customSections || data.customSections.length === 0) return 0;
+      let s = 0;
+      data.customSections.forEach((sec) => {
+        s += 1.5;
+        (sec.items || []).forEach((it) => {
+          if (it.title || it.description) s += 2.0;
+        });
+      });
+      return s;
+    },
+    languages: () => {
+      return data.languages && data.languages.trim() ? 1.0 : 0;
+    },
+  };
+
+  // Full A4 sheet capacity: ~28 points
+  // Fill Page 1 as much as possible before overflowing to Page 2
+  const PAGE_1_CAPACITY = 28;
+  const minSplit = template === "modern_green" ? "education" : "experience";
+  let cumScore = 0;
+  let lastFitSection = minSplit;
+
+  for (let i = 0; i < order.length; i++) {
+    const sec = order[i];
+    const scoreFn = sectionScores[sec];
+    const score = scoreFn ? scoreFn() : 0;
+    if (score === 0) continue;
+
+    if (cumScore + score <= PAGE_1_CAPACITY) {
+      cumScore += score;
+      if (order.indexOf(sec) >= order.indexOf(minSplit)) {
+        lastFitSection = sec;
+      }
+    } else {
+      break;
+    }
   }
 
-  const validEdu = (data.education || []).filter((e) => e.degree || e.institution);
-  if (validEdu.length > 0) {
-    const validPubs = (data.publications || []).filter((p) => p.title);
-    if (validPubs.length > 0) return "publications";
-    return "education";
-  }
-
-  return "objective";
+  return lastFitSection || minSplit;
 };
 
 const sampleData = {
