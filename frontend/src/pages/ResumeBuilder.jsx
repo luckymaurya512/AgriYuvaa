@@ -85,9 +85,9 @@ export const checkIsLongResume = (data) => {
     score += 1.0;
   }
 
-  // A standard A4 sheet comfortably fits content up to score <= 30
-  // It only becomes a 2-page resume when content exceeds a full A4 sheet
-  return score > 30;
+  // A standard professional A4 sheet fits up to score <= 46
+  // Only genuine multi-page CVs (e.g. 4+ jobs, multiple publications, projects) need Page 2
+  return score > 46;
 };
 
 export const getEffectiveSplit = (data, splitSetting = "auto", template = "agri_clean") => {
@@ -181,9 +181,9 @@ export const getEffectiveSplit = (data, splitSetting = "auto", template = "agri_
     },
   };
 
-  // Full A4 sheet capacity: ~28 points
+  // Full A4 sheet capacity: ~44 points
   // Fill Page 1 as much as possible before overflowing to Page 2
-  const PAGE_1_CAPACITY = 28;
+  const PAGE_1_CAPACITY = 44;
   const minSplit = template === "modern_green" ? "education" : "experience";
   let cumScore = 0;
   let lastFitSection = minSplit;
@@ -1476,22 +1476,16 @@ const ResumeBuilder = () => {
                       <span>Standard A4 Sheet</span>
                     </div>
 
-                    <div className="p-8 sm:p-10 text-gray-800 min-h-[780px] flex flex-col justify-between">
-                      <div>
-                        {template === "agri_clean" && (
-                          <TemplateAgriClean data={data} page={1} splitAfter={effectiveSplit} />
-                        )}
-                        {template === "modern_green" && (
-                          <TemplateModernGreen data={data} page={1} splitAfter={effectiveSplit} />
-                        )}
-                        {template === "classic_serif" && (
-                          <TemplateClassicSerif data={data} page={1} splitAfter={effectiveSplit} />
-                        )}
-                      </div>
-                      <div className="pt-6 border-t border-gray-100 flex justify-between items-center text-[10px] text-gray-400 no-print html2pdf__ignore mt-6">
-                        <span>{data.fullName || "Candidate"} · AgriYuvaa Resume</span>
-                        <span>Page 1 of 2</span>
-                      </div>
+                    <div className="p-8 sm:p-10 text-gray-800">
+                      {template === "agri_clean" && (
+                        <TemplateAgriClean data={data} page={1} splitAfter={effectiveSplit} />
+                      )}
+                      {template === "modern_green" && (
+                        <TemplateModernGreen data={data} page={1} splitAfter={effectiveSplit} />
+                      )}
+                      {template === "classic_serif" && (
+                        <TemplateClassicSerif data={data} page={1} splitAfter={effectiveSplit} />
+                      )}
                     </div>
                   </div>
 
@@ -1513,22 +1507,16 @@ const ResumeBuilder = () => {
                       <span>Standard A4 Sheet</span>
                     </div>
 
-                    <div className="p-8 sm:p-10 text-gray-800 min-h-[780px] flex flex-col justify-between">
-                      <div>
-                        {template === "agri_clean" && (
-                          <TemplateAgriClean data={data} page={2} splitAfter={effectiveSplit} />
-                        )}
-                        {template === "modern_green" && (
-                          <TemplateModernGreen data={data} page={2} splitAfter={effectiveSplit} />
-                        )}
-                        {template === "classic_serif" && (
-                          <TemplateClassicSerif data={data} page={2} splitAfter={effectiveSplit} />
-                        )}
-                      </div>
-                      <div className="pt-6 border-t border-gray-100 flex justify-between items-center text-[10px] text-gray-400 no-print html2pdf__ignore mt-6">
-                        <span>{data.fullName || "Candidate"} · AgriYuvaa Resume</span>
-                        <span>Page 2 of 2</span>
-                      </div>
+                    <div className="p-8 sm:p-10 text-gray-800">
+                      {template === "agri_clean" && (
+                        <TemplateAgriClean data={data} page={2} splitAfter={effectiveSplit} />
+                      )}
+                      {template === "modern_green" && (
+                        <TemplateModernGreen data={data} page={2} splitAfter={effectiveSplit} />
+                      )}
+                      {template === "classic_serif" && (
+                        <TemplateClassicSerif data={data} page={2} splitAfter={effectiveSplit} />
+                      )}
                     </div>
                   </div>
                 </>
@@ -1542,7 +1530,7 @@ const ResumeBuilder = () => {
                     <span>Standard A4 Sheet</span>
                   </div>
 
-                  <div className="p-8 sm:p-10 text-gray-800 min-h-[780px]">
+                  <div className="p-8 sm:p-10 text-gray-800">
                     {template === "agri_clean" && <TemplateAgriClean data={data} page="all" />}
                     {template === "modern_green" && <TemplateModernGreen data={data} page="all" />}
                     {template === "classic_serif" && <TemplateClassicSerif data={data} page="all" />}
