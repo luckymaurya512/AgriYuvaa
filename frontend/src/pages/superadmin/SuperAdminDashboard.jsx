@@ -31,6 +31,7 @@ import {
   Settings,
   Link2,
   Trash2,
+  Phone,
 } from "lucide-react";
 import ResumePreviewModal from "../../components/ResumePreviewModal.jsx";
 import ConfirmModal from "../../components/common/ConfirmModal.jsx";
@@ -86,6 +87,7 @@ const SuperAdminDashboard = () => {
         !q ||
         (u.name && u.name.toLowerCase().includes(q)) ||
         (u.email && u.email.toLowerCase().includes(q)) ||
+        (u.phone && String(u.phone).toLowerCase().includes(q)) ||
         (u.role && u.role.toLowerCase().includes(q));
 
       return matchesRole && matchesSearch;
@@ -1077,7 +1079,7 @@ const SuperAdminDashboard = () => {
                   <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input
                     type="text"
-                    placeholder="Search name or email..."
+                    placeholder="Search name, email, or mobile..."
                     value={userSearch}
                     onChange={(e) => setUserSearch(e.target.value)}
                     className="pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 bg-white"
@@ -1091,6 +1093,7 @@ const SuperAdminDashboard = () => {
                   <tr>
                     <th className="text-left px-5 py-3">Name</th>
                     <th className="text-left px-5 py-3">Email</th>
+                    <th className="text-left px-5 py-3">Mobile No.</th>
                     <th className="text-left px-5 py-3">Role</th>
                     <th className="text-left px-5 py-3">Status</th>
                     <th className="text-right px-5 py-3">Role Actions</th>
@@ -1100,7 +1103,7 @@ const SuperAdminDashboard = () => {
                 <tbody>
                   {filteredUsers.length === 0 ? (
                     <tr>
-                      <td colSpan="6" className="text-center py-12 text-brand-grey text-xs">
+                      <td colSpan="7" className="text-center py-12 text-brand-grey text-xs">
                         No registered users match your selected filter or search term.
                       </td>
                     </tr>
@@ -1109,6 +1112,20 @@ const SuperAdminDashboard = () => {
                     <tr key={u._id} className="border-t border-brand-border hover:bg-gray-50/50 transition-colors">
                       <td className="px-5 py-3 font-medium text-brand-black">{u.name}</td>
                       <td className="px-5 py-3 text-brand-grey">{u.email}</td>
+                      <td className="px-5 py-3 text-xs">
+                        {u.phone ? (
+                          <a
+                            href={`tel:${u.phone}`}
+                            className="text-brand-black hover:text-emerald-700 font-medium hover:underline inline-flex items-center gap-1.5 font-mono"
+                            title={`Call ${u.phone}`}
+                          >
+                            <Phone size={12} className="text-emerald-600 shrink-0" />
+                            <span>{u.phone}</span>
+                          </a>
+                        ) : (
+                          <span className="text-gray-400 italic">Not Provided</span>
+                        )}
+                      </td>
                       <td className="px-5 py-3">
                         <span
                           className={`text-[11px] font-bold px-2.5 py-0.5 rounded-md capitalize ${

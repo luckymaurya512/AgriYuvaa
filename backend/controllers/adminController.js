@@ -49,11 +49,29 @@ export const listUsers = asyncHandler(async (req, res) => {
   const employerProfiles = await EmployerProfile.find({}, "user").lean();
   const employerUserIds = new Set(employerProfiles.map((p) => p.user?.toString()).filter(Boolean));
 
+  // Query seekerProfiles for fallback phone numbers (e.g. from resumeData)
+  const seekerProfiles = await SeekerProfile.find({}, "user resumeData").lean();
+  const seekerPhoneMap = new Map();
+  seekerProfiles.forEach((sp) => {
+    if (sp.user) {
+      const phone =
+        sp.resumeData?.basics?.phone ||
+        sp.resumeData?.phone ||
+        sp.resumeData?.personalInfo?.phone ||
+        "";
+      if (phone && String(phone).trim()) {
+        seekerPhoneMap.set(sp.user.toString(), String(phone).trim());
+      }
+    }
+  });
+
   const enrichedUsers = users.map((u) => {
     const hasEmpProfile = employerUserIds.has(u._id.toString());
     const originalRole = u.previousRole || (hasEmpProfile ? "employer" : "seeker");
+    const resolvedPhone = u.phone || seekerPhoneMap.get(u._id.toString()) || "";
     return {
       ...u,
+      phone: resolvedPhone,
       hasEmployerProfile: hasEmpProfile,
       originalRole,
     };
