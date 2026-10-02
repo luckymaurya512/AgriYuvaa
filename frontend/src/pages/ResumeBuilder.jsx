@@ -1468,14 +1468,7 @@ const ResumeBuilder = () => {
               {isTwoPages ? (
                 <>
                   {/* ── SHEET 1 (PAGE 1) ── */}
-                  <div className="resume-page-sheet bg-white border border-gray-300 shadow-xl rounded-xl overflow-hidden print:shadow-none print:border-none print:m-0 print:p-0 print:w-full print:rounded-none">
-                    <div className="bg-gray-50 border-b border-gray-200 px-6 py-2 flex items-center justify-between text-[11px] text-gray-500 font-semibold no-print html2pdf__ignore">
-                      <span className="flex items-center gap-1.5 text-emerald-800">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500"></span> Page 1 of 2
-                      </span>
-                      <span>Standard A4 Sheet</span>
-                    </div>
-
+                  <div className="resume-page-sheet bg-white border border-gray-200 shadow-xl rounded-xl overflow-hidden print:shadow-none print:border-none print:m-0 print:p-0 print:w-full print:rounded-none">
                     <div className="p-8 sm:p-10 text-gray-800">
                       {template === "agri_clean" && (
                         <TemplateAgriClean data={data} page={1} splitAfter={effectiveSplit} />
@@ -1499,14 +1492,7 @@ const ResumeBuilder = () => {
                   />
 
                   {/* ── SHEET 2 (PAGE 2) ── */}
-                  <div className="resume-page-sheet bg-white border border-gray-300 shadow-xl rounded-xl overflow-hidden print:shadow-none print:border-none print:m-0 print:p-0 print:w-full print:rounded-none">
-                    <div className="bg-gray-50 border-b border-gray-200 px-6 py-2 flex items-center justify-between text-[11px] text-gray-500 font-semibold no-print html2pdf__ignore">
-                      <span className="flex items-center gap-1.5 text-emerald-800">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500"></span> Page 2 of 2
-                      </span>
-                      <span>Standard A4 Sheet</span>
-                    </div>
-
+                  <div className="resume-page-sheet bg-white border border-gray-200 shadow-xl rounded-xl overflow-hidden print:shadow-none print:border-none print:m-0 print:p-0 print:w-full print:rounded-none">
                     <div className="p-8 sm:p-10 text-gray-800">
                       {template === "agri_clean" && (
                         <TemplateAgriClean data={data} page={2} splitAfter={effectiveSplit} />
@@ -1522,14 +1508,7 @@ const ResumeBuilder = () => {
                 </>
               ) : (
                 /* ── SINGLE PAGE RESUME ── */
-                <div className="resume-page-sheet bg-white border border-gray-300 shadow-xl rounded-xl overflow-hidden print:shadow-none print:border-none print:m-0 print:p-0 print:w-full print:rounded-none">
-                  <div className="bg-gray-50 border-b border-gray-200 px-6 py-2 flex items-center justify-between text-[11px] text-gray-500 font-semibold no-print html2pdf__ignore">
-                    <span className="flex items-center gap-1.5 text-emerald-800">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500"></span> Page 1 of 1 (Single Page)
-                    </span>
-                    <span>Standard A4 Sheet</span>
-                  </div>
-
+                <div className="resume-page-sheet bg-white border border-gray-200 shadow-xl rounded-xl overflow-hidden print:shadow-none print:border-none print:m-0 print:p-0 print:w-full print:rounded-none">
                   <div className="p-8 sm:p-10 text-gray-800">
                     {template === "agri_clean" && <TemplateAgriClean data={data} page="all" />}
                     {template === "modern_green" && <TemplateModernGreen data={data} page="all" />}
@@ -1537,6 +1516,7 @@ const ResumeBuilder = () => {
                   </div>
                 </div>
               )}
+
             </div>
           </div>
         </div>
