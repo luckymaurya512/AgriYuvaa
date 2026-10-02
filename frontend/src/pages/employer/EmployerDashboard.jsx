@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Plus, Edit3, Trash2, Users, Calendar, Clock, ExternalLink } from "lucide-react";
 import { fetchMyJobs, deleteJob } from "../../services/jobService.js";
+import ConfirmModal from "../../components/common/ConfirmModal.jsx";
 import SEO from "../../components/SEO.jsx";
 
 const statusColors = {
@@ -19,6 +20,25 @@ const EmployerDashboard = () => {
   const [actionSuccess, setActionSuccess] = useState("");
   const [deletingId, setDeletingId] = useState(null);
 
+  // ── Confirmation Modal State ──
+  const [confirmConfig, setConfirmConfig] = useState({
+    isOpen: false,
+    title: "",
+    subtitle: "",
+    message: "",
+    itemName: "",
+    itemType: "",
+    confirmText: "Yes, Delete Job",
+    cancelText: "Keep Job",
+    variant: "danger",
+    loading: false,
+    onConfirm: null,
+  });
+
+  const closeConfirmModal = () => {
+    setConfirmConfig((prev) => ({ ...prev, isOpen: false, loading: false }));
+  };
+
   const loadJobs = () => {
     setLoading(true);
     fetchMyJobs()
@@ -31,26 +51,38 @@ const EmployerDashboard = () => {
     loadJobs();
   }, []);
 
-  const handleDeleteJob = async (job) => {
-    if (
-      !window.confirm(
-        `Are you sure you want to delete "${job.title}"?\n\nThis will permanently delete this job listing and its applicant data.`
-      )
-    ) {
-      return;
-    }
-
-    setDeletingId(job._id);
-    try {
-      await deleteJob(job._id);
-      setJobs((prev) => prev.filter((j) => j._id !== job._id));
-      setActionSuccess(`Job "${job.title}" has been deleted successfully.`);
-      setTimeout(() => setActionSuccess(""), 4000);
-    } catch (err) {
-      alert(err.response?.data?.message || "Failed to delete job.");
-    } finally {
-      setDeletingId(null);
-    }
+  const handleDeleteJob = (job) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: "Permanently Delete Job Post?",
+      subtitle: "This listing will be permanently removed from candidate job feeds.",
+      message: (
+        <span>
+          Are you sure you want to delete <strong>"{job.title}"</strong>?
+          All candidate application history and bookmarks linked to this job will be lost.
+        </span>
+      ),
+      itemName: job.title,
+      itemType: "Job Listing",
+      confirmText: "Yes, Delete Job",
+      cancelText: "Keep Job",
+      variant: "danger",
+      onConfirm: async () => {
+        setConfirmConfig((prev) => ({ ...prev, loading: true }));
+        setDeletingId(job._id);
+        try {
+          await deleteJob(job._id);
+          setJobs((prev) => prev.filter((j) => j._id !== job._id));
+          setActionSuccess(`Job "${job.title}" has been deleted successfully.`);
+          setTimeout(() => setActionSuccess(""), 4000);
+        } catch (err) {
+          alert(err.response?.data?.message || "Failed to delete job.");
+        } finally {
+          setDeletingId(null);
+          closeConfirmModal();
+        }
+      },
+    });
   };
 
   return (
@@ -302,6 +334,22 @@ const EmployerDashboard = () => {
           </>
         )}
       </div>
+
+      {/* Critical Action Confirmation Dialog Modal */}
+      <ConfirmModal
+        isOpen={confirmConfig.isOpen}
+        title={confirmConfig.title}
+        subtitle={confirmConfig.subtitle}
+        message={confirmConfig.message}
+        itemName={confirmConfig.itemName}
+        itemType={confirmConfig.itemType}
+        confirmText={confirmConfig.confirmText}
+        cancelText={confirmConfig.cancelText}
+        variant={confirmConfig.variant}
+        loading={confirmConfig.loading}
+        onConfirm={confirmConfig.onConfirm}
+        onClose={closeConfirmModal}
+      />
     </div>
   );
 };

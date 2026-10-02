@@ -33,6 +33,7 @@ import GovtJobCard from "../components/GovtJobCard.jsx";
 import SEO from "../components/SEO.jsx";
 import ResumePromoCard from "../components/ResumePromoCard.jsx";
 import CommunityPromoCard from "../components/CommunityPromoCard.jsx";
+import ConfirmModal from "../components/common/ConfirmModal.jsx";
 
 const slugify = (text) =>
   (text || "")
@@ -60,6 +61,25 @@ const GovtJobDetail = () => {
   const [savingEdit, setSavingEdit] = useState(false);
   const [editError, setEditError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+
+  // ── Confirmation Modal State ──
+  const [confirmConfig, setConfirmConfig] = useState({
+    isOpen: false,
+    title: "",
+    subtitle: "",
+    message: "",
+    itemName: "",
+    itemType: "",
+    confirmText: "Yes, Delete Notice",
+    cancelText: "Keep Notice",
+    variant: "danger",
+    loading: false,
+    onConfirm: null,
+  });
+
+  const closeConfirmModal = () => {
+    setConfirmConfig((prev) => ({ ...prev, isOpen: false, loading: false }));
+  };
 
   const handleOpenEdit = () => {
     if (!job) return;
@@ -105,14 +125,34 @@ const GovtJobDetail = () => {
     }
   };
 
-  const handleDelete = async () => {
-    if (!window.confirm(`Are you sure you want to permanently delete "${job.title}"?`)) return;
-    try {
-      await deleteGovtJob(job._id);
-      navigate("/govt-jobs", { replace: true });
-    } catch (err) {
-      alert(err.response?.data?.message || "Failed to delete vacancy");
-    }
+  const handleDelete = () => {
+    setConfirmConfig({
+      isOpen: true,
+      title: "Delete Government Vacancy?",
+      subtitle: "This official vacancy notice will be permanently deleted from the portal.",
+      message: (
+        <span>
+          Are you sure you want to permanently delete <strong>"{job.title}"</strong>?
+          This action cannot be undone.
+        </span>
+      ),
+      itemName: job.title,
+      itemType: "Govt Vacancy",
+      confirmText: "Yes, Delete Notice",
+      cancelText: "Keep Notice",
+      variant: "danger",
+      onConfirm: async () => {
+        setConfirmConfig((prev) => ({ ...prev, loading: true }));
+        try {
+          await deleteGovtJob(job._id);
+          navigate("/govt-jobs", { replace: true });
+        } catch (err) {
+          alert(err.response?.data?.message || "Failed to delete vacancy");
+        } finally {
+          closeConfirmModal();
+        }
+      },
+    });
   };
 
   useEffect(() => {
@@ -848,6 +888,22 @@ const GovtJobDetail = () => {
             </div>
           </div>
         )}
+
+        {/* Critical Action Confirmation Dialog Modal */}
+        <ConfirmModal
+          isOpen={confirmConfig.isOpen}
+          title={confirmConfig.title}
+          subtitle={confirmConfig.subtitle}
+          message={confirmConfig.message}
+          itemName={confirmConfig.itemName}
+          itemType={confirmConfig.itemType}
+          confirmText={confirmConfig.confirmText}
+          cancelText={confirmConfig.cancelText}
+          variant={confirmConfig.variant}
+          loading={confirmConfig.loading}
+          onConfirm={confirmConfig.onConfirm}
+          onClose={closeConfirmModal}
+        />
       </div>
     </div>
   );

@@ -30,8 +30,10 @@ import {
   Check,
   Settings,
   Link2,
+  Trash2,
 } from "lucide-react";
 import ResumePreviewModal from "../../components/ResumePreviewModal.jsx";
+import ConfirmModal from "../../components/common/ConfirmModal.jsx";
 import {
   fetchPlatformStats,
   fetchUsers,
@@ -44,6 +46,7 @@ import {
   upsertPageSeoConfig,
   deletePageSeoConfig,
 } from "../../services/adminService.js";
+import { deleteJob } from "../../services/jobService.js";
 import SEO from "../../components/SEO.jsx";
 
 const SuperAdminDashboard = () => {
@@ -120,6 +123,25 @@ const SuperAdminDashboard = () => {
   });
   const [savingSeo, setSavingSeo] = useState(false);
   const [seoError, setSeoError] = useState("");
+
+  // ── Critical Action Confirmation Dialog State ──
+  const [confirmConfig, setConfirmConfig] = useState({
+    isOpen: false,
+    title: "",
+    subtitle: "",
+    message: "",
+    itemName: "",
+    itemType: "",
+    confirmText: "Yes, Proceed",
+    cancelText: "Think Again / Cancel",
+    variant: "danger",
+    loading: false,
+    onConfirm: null,
+  });
+
+  const closeConfirmModal = () => {
+    setConfirmConfig((prev) => ({ ...prev, isOpen: false, loading: false }));
+  };
 
   const handleExportCSV = (customList = null, filenamePrefix = "all_applications") => {
     const listToExport = customList || applications;
@@ -334,18 +356,38 @@ const SuperAdminDashboard = () => {
     }
   };
 
-  const handleResetSeo = async (item) => {
+  const handleResetSeo = (item) => {
     if (!item._id) return;
-    if (!window.confirm(`Reset SEO for "${item.route}" back to platform default?`)) return;
-    try {
-      await deletePageSeoConfig(item._id);
-      setSuccessMsg(`Reset SEO for ${item.route} to default.`);
-      setTimeout(() => setSuccessMsg(""), 4000);
-      loadPageSeo();
-      window.dispatchEvent(new Event("agriyuvaa_page_seo_updated"));
-    } catch (err) {
-      alert(err.response?.data?.message || "Failed to reset page SEO");
-    }
+    setConfirmConfig({
+      isOpen: true,
+      title: "Reset SEO to Default?",
+      subtitle: "Revert Google search metadata for this route back to system defaults.",
+      message: (
+        <span>
+          Are you sure you want to reset SEO settings for route <strong>"{item.route}"</strong>?
+          Custom meta titles, descriptions, and focus keywords will be deleted and platform defaults will be restored.
+        </span>
+      ),
+      itemName: `${item.pageName || item.route} (${item.route})`,
+      itemType: "Page Route",
+      confirmText: "Yes, Reset to Default",
+      cancelText: "Keep Custom SEO",
+      variant: "warning",
+      onConfirm: async () => {
+        setConfirmConfig((prev) => ({ ...prev, loading: true }));
+        try {
+          await deletePageSeoConfig(item._id);
+          setSuccessMsg(`Reset SEO for ${item.route} to default.`);
+          setTimeout(() => setSuccessMsg(""), 4000);
+          loadPageSeo();
+          window.dispatchEvent(new Event("agriyuvaa_page_seo_updated"));
+        } catch (err) {
+          setError(err.response?.data?.message || "Failed to reset page SEO");
+        } finally {
+          closeConfirmModal();
+        }
+      },
+    });
   };
 
   const loadPlatformApplications = () => {
@@ -367,22 +409,117 @@ const SuperAdminDashboard = () => {
     loadPlatformApplications();
   }, [appStatusFilter]);
 
-  const handleStatusToggle = async (user) => {
+  const handleStatusToggle = (user) => {
     const next = user.status === "active" ? "suspended" : "active";
-    await updateUserStatus(user._id, next);
-    loadAll();
+    const isSuspending = next === "suspended";
+    setConfirmConfig({
+      isOpen: true,
+      title: isSuspending ? "Suspend User Account?" : "Reactivate User Account?",
+      subtitle: isSuspending
+        ? "Prevent this user from logging in or using portal features."
+        : "Restore standard platform login and portal access.",
+      message: isSuspending ? (
+        <span>
+          Are you sure you want to suspend <strong>{user.name}</strong> ({user.email})?
+          They will immediately lose access to their account until reinstated by a Super Admin.
+        </span>
+      ) : (
+        <span>
+          Are you sure you want to reactivate <strong>{user.name}</strong> ({user.email})?
+          Their account access will be restored immediately.
+        </span>
+      ),
+      itemName: `${user.name} (${user.email})`,
+      itemType: "Account",
+      confirmText: isSuspending ? "Yes, Suspend Account" : "Yes, Reactivate",
+      cancelText: "Cancel",
+      variant: isSuspending ? "danger" : "info",
+      onConfirm: async () => {
+        setConfirmConfig((prev) => ({ ...prev, loading: true }));
+        try {
+          await updateUserStatus(user._id, next);
+          setSuccessMsg(`User ${user.name} marked as ${next}.`);
+          setTimeout(() => setSuccessMsg(""), 4000);
+          loadAll();
+        } catch (err) {
+          setError(err.response?.data?.message || "Failed to change user status");
+        } finally {
+          closeConfirmModal();
+        }
+      },
+    });
   };
 
-  const handleRoleToggle = async (user, newRole) => {
-    if (!window.confirm(`Are you sure you want to change ${user.name}'s role to "${newRole}"?`)) return;
-    try {
-      await updateUserRole(user._id, newRole);
-      setSuccessMsg(`Role for ${user.name} updated to "${newRole}".`);
-      setTimeout(() => setSuccessMsg(""), 4000);
-      loadAll();
-    } catch (err) {
-      alert(err.response?.data?.message || "Failed to update role");
-    }
+  const handleRoleToggle = (user, newRole) => {
+    const isPromotion = newRole === "admin" || newRole === "superadmin";
+    setConfirmConfig({
+      isOpen: true,
+      title: isPromotion ? "Promote User to Admin?" : `Demote User to ${newRole === "employer" ? "Employer" : "Job Seeker"}?`,
+      subtitle: isPromotion
+        ? "Grant full administrative access across jobs, candidates, and portal settings."
+        : "Revoke administrative privileges and restore standard user permissions.",
+      message: isPromotion ? (
+        <span>
+          Are you sure you want to grant <strong>Admin privileges</strong> to <strong>{user.name}</strong> ({user.email})?
+          They will be able to manage job posts, review applicants, and view user profiles.
+        </span>
+      ) : (
+        <span>
+          Are you sure you want to demote <strong>{user.name}</strong> from Admin back to <strong>{newRole === "employer" ? "Employer" : "Job Seeker"}</strong>?
+          They will immediately lose access to the administrative control suite.
+        </span>
+      ),
+      itemName: `${user.name} (${user.email})`,
+      itemType: "User Permission",
+      confirmText: isPromotion ? "Yes, Make Admin" : `Yes, Demote to ${newRole === "employer" ? "Employer" : "Seeker"}`,
+      cancelText: "Cancel / Keep Current Role",
+      variant: isPromotion ? "info" : "warning",
+      onConfirm: async () => {
+        setConfirmConfig((prev) => ({ ...prev, loading: true }));
+        try {
+          await updateUserRole(user._id, newRole);
+          setSuccessMsg(`Role for ${user.name} updated to "${newRole}".`);
+          setTimeout(() => setSuccessMsg(""), 4000);
+          loadAll();
+        } catch (err) {
+          setError(err.response?.data?.message || "Failed to update role");
+        } finally {
+          closeConfirmModal();
+        }
+      },
+    });
+  };
+
+  const handleDeleteJob = (job) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: "Permanently Delete Job Post?",
+      subtitle: "This listing will be purged from search results and dashboards.",
+      message: (
+        <span>
+          Are you sure you want to delete <strong>"{job.title}"</strong>?
+          All candidate application history and bookmarks linked to this job post will be permanently removed.
+        </span>
+      ),
+      itemName: job.title,
+      itemType: "Job Listing",
+      confirmText: "Yes, Delete Job",
+      cancelText: "Keep Job",
+      variant: "danger",
+      onConfirm: async () => {
+        setConfirmConfig((prev) => ({ ...prev, loading: true }));
+        try {
+          await deleteJob(job._id);
+          setSuccessMsg(`Job "${job.title}" was permanently removed.`);
+          setTimeout(() => setSuccessMsg(""), 4000);
+          setAllJobs((prev) => prev.filter((j) => j._id !== job._id));
+        } catch (err) {
+          setError(err.response?.data?.message || "Failed to delete job");
+        } finally {
+          closeConfirmModal();
+        }
+      },
+    });
   };
 
   const handleUpgradeAdmin = async (e) => {
@@ -1108,10 +1245,18 @@ const SuperAdminDashboard = () => {
                       <td className="px-5 py-3.5 text-right space-x-2">
                         <Link
                           to={`/employer/post-job?edit=${job._id}`}
-                          className="text-xs font-semibold text-brand-black hover:text-brand-green-dark bg-gray-100 hover:bg-emerald-50 px-2.5 py-1.5 rounded-lg border border-gray-200 transition-colors inline-flex items-center gap-1"
+                          className="text-xs font-semibold text-brand-black hover:text-brand-green-dark bg-gray-100 hover:bg-emerald-50 px-2.5 py-1.5 rounded-lg border border-gray-200 transition-colors inline-flex items-center gap-1 shadow-2xs"
                         >
                           <Edit3 size={13} /> Edit
                         </Link>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteJob(job)}
+                          className="text-xs font-semibold text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 px-2.5 py-1.5 rounded-lg border border-rose-200 transition-colors inline-flex items-center gap-1 cursor-pointer shadow-2xs"
+                          title="Permanently Delete Job Post"
+                        >
+                          <Trash2 size={13} /> Delete
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -2076,6 +2221,22 @@ const SuperAdminDashboard = () => {
           onClose={() => setPreviewApp(null)}
         />
       )}
+
+      {/* Critical Action Confirmation Dialog Modal */}
+      <ConfirmModal
+        isOpen={confirmConfig.isOpen}
+        title={confirmConfig.title}
+        subtitle={confirmConfig.subtitle}
+        message={confirmConfig.message}
+        itemName={confirmConfig.itemName}
+        itemType={confirmConfig.itemType}
+        confirmText={confirmConfig.confirmText}
+        cancelText={confirmConfig.cancelText}
+        variant={confirmConfig.variant}
+        loading={confirmConfig.loading}
+        onConfirm={confirmConfig.onConfirm}
+        onClose={closeConfirmModal}
+      />
     </div>
   );
 };

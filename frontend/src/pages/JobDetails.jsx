@@ -37,6 +37,7 @@ import { useAuth } from "../context/AuthContext.jsx";
 import JobCard from "../components/JobCard.jsx";
 import WhatsAppIcon from "../components/WhatsAppIcon.jsx";
 import RichTextRenderer from "../components/common/RichTextRenderer.jsx";
+import ConfirmModal from "../components/common/ConfirmModal.jsx";
 import SEO from "../components/SEO.jsx";
 import ResumePromoCard from "../components/ResumePromoCard.jsx";
 import CommunityPromoCard from "../components/CommunityPromoCard.jsx";
@@ -90,6 +91,25 @@ const JobDetails = () => {
   const [copiedShare, setCopiedShare] = useState(false);
   const [copiedCc, setCopiedCc] = useState(false);
   const [copiedBody, setCopiedBody] = useState(false);
+
+  // ── Confirmation Modal State ──
+  const [confirmConfig, setConfirmConfig] = useState({
+    isOpen: false,
+    title: "",
+    subtitle: "",
+    message: "",
+    itemName: "",
+    itemType: "",
+    confirmText: "Yes, Delete Job",
+    cancelText: "Keep Job",
+    variant: "danger",
+    loading: false,
+    onConfirm: null,
+  });
+
+  const closeConfirmModal = () => {
+    setConfirmConfig((prev) => ({ ...prev, isOpen: false, loading: false }));
+  };
 
   useEffect(() => {
     fetchJobById(id)
@@ -374,25 +394,38 @@ const JobDetails = () => {
     }
   };
 
-  const handleDeleteJob = async () => {
-    if (
-      !window.confirm(
-        `Are you sure you want to delete "${job.title}"?\n\nThis will permanently remove the listing and its applicant records.`
-      )
-    ) {
-      return;
-    }
-    try {
-      await deleteJob(id);
-      alert(`Job "${job.title}" has been removed.`);
-      if (isAdmin) {
-        navigate("/admin?tab=jobs");
-      } else {
-        navigate("/employer/dashboard");
-      }
-    } catch (err) {
-      alert(err.response?.data?.message || "Failed to delete job");
-    }
+  const handleDeleteJob = () => {
+    setConfirmConfig({
+      isOpen: true,
+      title: "Permanently Delete Job Post?",
+      subtitle: "This listing and all applicant submissions will be permanently deleted.",
+      message: (
+        <span>
+          Are you sure you want to delete <strong>"{job.title}"</strong>?
+          This action is permanent and cannot be reversed.
+        </span>
+      ),
+      itemName: job.title,
+      itemType: "Job Listing",
+      confirmText: "Yes, Delete Job",
+      cancelText: "Keep Job",
+      variant: "danger",
+      onConfirm: async () => {
+        setConfirmConfig((prev) => ({ ...prev, loading: true }));
+        try {
+          await deleteJob(id);
+          if (isAdmin) {
+            navigate("/admin?tab=jobs");
+          } else {
+            navigate("/employer/dashboard");
+          }
+        } catch (err) {
+          alert(err.response?.data?.message || "Failed to delete job");
+        } finally {
+          closeConfirmModal();
+        }
+      },
+    });
   };
 
   const salaryText = (job.salaryMin || job.salaryMax)
@@ -1197,6 +1230,22 @@ const JobDetails = () => {
           </div>
         </div>
       )}
+
+      {/* Critical Action Confirmation Dialog Modal */}
+      <ConfirmModal
+        isOpen={confirmConfig.isOpen}
+        title={confirmConfig.title}
+        subtitle={confirmConfig.subtitle}
+        message={confirmConfig.message}
+        itemName={confirmConfig.itemName}
+        itemType={confirmConfig.itemType}
+        confirmText={confirmConfig.confirmText}
+        cancelText={confirmConfig.cancelText}
+        variant={confirmConfig.variant}
+        loading={confirmConfig.loading}
+        onConfirm={confirmConfig.onConfirm}
+        onClose={closeConfirmModal}
+      />
     </div>
   );
 };

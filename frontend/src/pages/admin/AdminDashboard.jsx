@@ -40,6 +40,7 @@ import {
   Globe,
 } from "lucide-react";
 import ResumePreviewModal from "../../components/ResumePreviewModal.jsx";
+import ConfirmModal from "../../components/common/ConfirmModal.jsx";
 import {
   fetchPlatformStats,
   fetchPendingJobs,
@@ -150,6 +151,25 @@ const AdminDashboard = () => {
   const [previewApp, setPreviewApp] = useState(null);
 
   const [actionSuccess, setActionSuccess] = useState("");
+
+  // ── Critical Action Confirmation Modal State ──
+  const [confirmConfig, setConfirmConfig] = useState({
+    isOpen: false,
+    title: "",
+    subtitle: "",
+    message: "",
+    itemName: "",
+    itemType: "",
+    confirmText: "Yes, Proceed",
+    cancelText: "Think Again / Cancel",
+    variant: "danger",
+    loading: false,
+    onConfirm: null,
+  });
+
+  const closeConfirmModal = () => {
+    setConfirmConfig((prev) => ({ ...prev, isOpen: false, loading: false }));
+  };
 
   // ── CMS State ──
   const [cmsBlogs, setCmsBlogs] = useState([]);
@@ -443,16 +463,36 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleDeleteGovtJob = async (job) => {
-    if (!window.confirm(`Are you sure you want to delete the notice for "${job.title}"?`)) return;
-    try {
-      await deleteGovtJob(job._id);
-      setActionSuccess(`Vacancy notice "${job.title}" removed.`);
-      setTimeout(() => setActionSuccess(""), 4000);
-      loadGovtJobsData();
-    } catch (err) {
-      alert(err.response?.data?.message || "Failed to delete vacancy");
-    }
+  const handleDeleteGovtJob = (job) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: "Delete Government Vacancy?",
+      subtitle: "This official vacancy notice will be permanently removed from the portal.",
+      message: (
+        <span>
+          Are you sure you want to delete the notice for <strong>"{job.title}"</strong> ({job.department || "Govt Dept"})?
+          Job seekers will no longer be able to view or download notification PDFs for this notice.
+        </span>
+      ),
+      itemName: job.title,
+      itemType: "Govt Vacancy",
+      confirmText: "Yes, Delete Notice",
+      cancelText: "Keep Notice",
+      variant: "danger",
+      onConfirm: async () => {
+        setConfirmConfig((prev) => ({ ...prev, loading: true }));
+        try {
+          await deleteGovtJob(job._id);
+          setActionSuccess(`Vacancy notice "${job.title}" removed.`);
+          setTimeout(() => setActionSuccess(""), 4000);
+          loadGovtJobsData();
+        } catch (err) {
+          alert(err.response?.data?.message || "Failed to delete vacancy");
+        } finally {
+          closeConfirmModal();
+        }
+      },
+    });
   };
 
   const handleCopyGovtLink = (job) => {
@@ -487,16 +527,36 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleDeleteJob = async (job) => {
-    if (!window.confirm(`Are you sure you want to delete "${job.title}"? This cannot be undone.`)) return;
-    try {
-      await deleteJob(job._id);
-      setActionSuccess(`Job "${job.title}" has been removed.`);
-      setTimeout(() => setActionSuccess(""), 4000);
-      loadAll();
-    } catch (err) {
-      alert(err.response?.data?.message || "Failed to delete job");
-    }
+  const handleDeleteJob = (job) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: "Permanently Delete Job Post?",
+      subtitle: "This listing will be purged from search results and dashboards.",
+      message: (
+        <span>
+          Are you sure you want to delete <strong>"{job.title}"</strong>?
+          All candidate application history and bookmarks linked to this job post will be permanently removed.
+        </span>
+      ),
+      itemName: job.title,
+      itemType: "Job Listing",
+      confirmText: "Yes, Delete Job",
+      cancelText: "Keep Job",
+      variant: "danger",
+      onConfirm: async () => {
+        setConfirmConfig((prev) => ({ ...prev, loading: true }));
+        try {
+          await deleteJob(job._id);
+          setActionSuccess(`Job "${job.title}" has been removed.`);
+          setTimeout(() => setActionSuccess(""), 4000);
+          loadAll();
+        } catch (err) {
+          alert(err.response?.data?.message || "Failed to delete job");
+        } finally {
+          closeConfirmModal();
+        }
+      },
+    });
   };
 
   return (
@@ -2533,6 +2593,22 @@ const AdminDashboard = () => {
           </div>
         </div>
       )}
+
+      {/* Critical Action Confirmation Dialog Modal */}
+      <ConfirmModal
+        isOpen={confirmConfig.isOpen}
+        title={confirmConfig.title}
+        subtitle={confirmConfig.subtitle}
+        message={confirmConfig.message}
+        itemName={confirmConfig.itemName}
+        itemType={confirmConfig.itemType}
+        confirmText={confirmConfig.confirmText}
+        cancelText={confirmConfig.cancelText}
+        variant={confirmConfig.variant}
+        loading={confirmConfig.loading}
+        onConfirm={confirmConfig.onConfirm}
+        onClose={closeConfirmModal}
+      />
     </div>
   );
 };
@@ -2648,9 +2724,20 @@ const CmsPanel = ({ type, items, loading, onLoad, onDelete, onSave, fields, colu
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm(`Delete this ${type}? This cannot be undone.`)) return;
-    try { await onDelete(id); } catch { alert(`Failed to delete ${type}`); }
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await onDelete(deleteTarget._id);
+    } catch {
+      alert(`Failed to delete ${type}`);
+    } finally {
+      setDeleting(false);
+      setDeleteTarget(null);
+    }
   };
 
   const formatCell = (item, col) => {
@@ -3034,7 +3121,7 @@ const CmsPanel = ({ type, items, loading, onLoad, onDelete, onSave, fields, colu
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button onClick={() => startEdit(item)} className="text-xs font-semibold text-blue-700 hover:text-blue-900 flex items-center gap-1"><Edit3 size={12} /> Edit</button>
-                        <button onClick={() => handleDelete(item._id)} className="text-xs font-semibold text-red-600 hover:text-red-800 flex items-center gap-1"><Trash2 size={12} /> Delete</button>
+                        <button onClick={() => setDeleteTarget(item)} className="text-xs font-semibold text-red-600 hover:text-red-800 flex items-center gap-1 cursor-pointer"><Trash2 size={12} /> Delete</button>
                       </div>
                     </td>
                   </tr>
@@ -3044,6 +3131,22 @@ const CmsPanel = ({ type, items, loading, onLoad, onDelete, onSave, fields, colu
           </div>
         </div>
       )}
+
+      {/* CMS Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={Boolean(deleteTarget)}
+        title={`Delete ${type.slice(0, 1).toUpperCase() + type.slice(1)}?`}
+        subtitle={`This ${type} will be permanently removed from the website.`}
+        message={`Are you sure you want to permanently delete this ${type}? This action cannot be reversed.`}
+        itemName={deleteTarget?.title || deleteTarget?.name || ""}
+        itemType={type.slice(0, 1).toUpperCase() + type.slice(1)}
+        confirmText={`Yes, Delete ${type.slice(0, 1).toUpperCase() + type.slice(1)}`}
+        cancelText="Think Again / Cancel"
+        variant="danger"
+        loading={deleting}
+        onConfirm={confirmDelete}
+        onClose={() => setDeleteTarget(null)}
+      />
     </div>
   );
 };

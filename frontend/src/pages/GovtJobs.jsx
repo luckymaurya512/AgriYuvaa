@@ -30,6 +30,7 @@ import SEO from "../components/SEO.jsx";
 import WhatsAppIcon from "../components/WhatsAppIcon.jsx";
 import ResumePromoCard from "../components/ResumePromoCard.jsx";
 import CommunityPromoCard from "../components/CommunityPromoCard.jsx";
+import ConfirmModal from "../components/common/ConfirmModal.jsx";
 
 
 const categories = [
@@ -96,6 +97,25 @@ const GovtJobs = () => {
   const [submitting, setSubmitting] = useState(false);
   const [modalError, setModalError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+
+  // ── Confirmation Modal State ──
+  const [confirmConfig, setConfirmConfig] = useState({
+    isOpen: false,
+    title: "",
+    subtitle: "",
+    message: "",
+    itemName: "",
+    itemType: "",
+    confirmText: "Yes, Delete Notice",
+    cancelText: "Keep Notice",
+    variant: "danger",
+    loading: false,
+    onConfirm: null,
+  });
+
+  const closeConfirmModal = () => {
+    setConfirmConfig((prev) => ({ ...prev, isOpen: false, loading: false }));
+  };
 
   const loadGovtJobs = () => {
     setLoading(true);
@@ -239,16 +259,36 @@ const GovtJobs = () => {
     }
   };
 
-  const handleDeleteJob = async (id, title) => {
-    if (!window.confirm(`Are you sure you want to delete the notice for "${title}"?`)) return;
-    try {
-      await api.delete(`/govt-jobs/${id}`);
-      setSuccessMsg("Vacancy removed successfully.");
-      setTimeout(() => setSuccessMsg(""), 4000);
-      loadGovtJobs();
-    } catch (err) {
-      alert(err.response?.data?.message || "Failed to delete job");
-    }
+  const handleDeleteJob = (id, title) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: "Delete Government Vacancy?",
+      subtitle: "This official vacancy notice will be permanently removed from the portal.",
+      message: (
+        <span>
+          Are you sure you want to delete the notice for <strong>"{title}"</strong>?
+          Job seekers will no longer be able to view details or apply for this government vacancy.
+        </span>
+      ),
+      itemName: title,
+      itemType: "Govt Vacancy",
+      confirmText: "Yes, Delete Notice",
+      cancelText: "Keep Notice",
+      variant: "danger",
+      onConfirm: async () => {
+        setConfirmConfig((prev) => ({ ...prev, loading: true }));
+        try {
+          await api.delete(`/govt-jobs/${id}`);
+          setSuccessMsg("Vacancy removed successfully.");
+          setTimeout(() => setSuccessMsg(""), 4000);
+          loadGovtJobs();
+        } catch (err) {
+          alert(err.response?.data?.message || "Failed to delete job");
+        } finally {
+          closeConfirmModal();
+        }
+      },
+    });
   };
 
   return (
@@ -905,6 +945,22 @@ const GovtJobs = () => {
           </div>
         </div>
       )}
+
+      {/* Critical Action Confirmation Dialog Modal */}
+      <ConfirmModal
+        isOpen={confirmConfig.isOpen}
+        title={confirmConfig.title}
+        subtitle={confirmConfig.subtitle}
+        message={confirmConfig.message}
+        itemName={confirmConfig.itemName}
+        itemType={confirmConfig.itemType}
+        confirmText={confirmConfig.confirmText}
+        cancelText={confirmConfig.cancelText}
+        variant={confirmConfig.variant}
+        loading={confirmConfig.loading}
+        onConfirm={confirmConfig.onConfirm}
+        onClose={closeConfirmModal}
+      />
     </div>
   );
 };
