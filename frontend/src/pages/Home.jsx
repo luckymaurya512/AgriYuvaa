@@ -207,41 +207,11 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Government Agriculture Vacancies Spotlight */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
-        <div className="bg-gradient-to-r from-emerald-900 via-emerald-800 to-green-900 text-white rounded-2xl sm:rounded-3xl p-5 sm:p-10 shadow-lg border border-emerald-700/50 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 lg:gap-10">
-          <div className="space-y-3 max-w-2xl">
-            <div className="inline-flex items-center gap-2 bg-amber-400/20 text-amber-300 border border-amber-400/30 px-3 py-1 rounded-full text-xs font-semibold">
-              <span>🏛️ Central & State Govt Opportunities</span>
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-white leading-tight">
-              Looking for Government Agriculture Vacancies?
-            </h2>
-            <p className="text-emerald-100/90 text-xs sm:text-sm leading-relaxed">
-              Track live official notifications, eligibility criteria, and application links for <strong>NABARD, IBPS AFO, ICAR, State PSC Agriculture Officers (ADO)</strong>, and PSU recruitments.
-            </p>
-            <div className="flex flex-wrap gap-2 pt-1">
-              <span className="bg-white/10 text-white text-xs px-2.5 py-1 rounded-lg border border-white/10">Banking & NABARD</span>
-              <span className="bg-white/10 text-white text-xs px-2.5 py-1 rounded-lg border border-white/10">State PSC / ADO</span>
-              <span className="bg-white/10 text-white text-xs px-2.5 py-1 rounded-lg border border-white/10">ICAR & Research</span>
-              <span className="bg-white/10 text-white text-xs px-2.5 py-1 rounded-lg border border-white/10">IFFCO & PSUs</span>
-            </div>
-          </div>
-          <div className="shrink-0 w-full sm:w-auto">
-            <Link
-              to="/govt-jobs"
-              className="inline-flex items-center justify-center gap-2 bg-white text-brand-black font-bold px-6 py-3.5 rounded-xl hover:bg-amber-300 transition-all shadow-md text-sm w-full sm:w-auto whitespace-nowrap"
-            >
-              Explore Govt Vacancies <ArrowRight size={16} />
-            </Link>
-          </div>
-        </div>
-      </section>
-
       {/* Featured Jobs & Government Vacancies */}
       {(featuredJobs.length > 0 || govtJobs.length > 0) && (
         <section className="bg-brand-surface border-y border-brand-border py-10 sm:py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 sm:space-y-12">
+            {/* Featured Jobs */}
             {featuredJobs.length > 0 && (
               <div>
                 <div className="flex items-center justify-between mb-6">
@@ -258,9 +228,38 @@ const Home = () => {
               </div>
             )}
 
+            {/* Government Agriculture Vacancies Spotlight Card */}
+            <div className="bg-gradient-to-r from-emerald-900 via-emerald-800 to-green-900 text-white rounded-2xl sm:rounded-3xl p-5 sm:p-10 shadow-lg border border-emerald-700/50 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 lg:gap-10">
+              <div className="space-y-3 max-w-2xl">
+                <div className="inline-flex items-center gap-2 bg-amber-400/20 text-amber-300 border border-amber-400/30 px-3 py-1 rounded-full text-xs font-semibold">
+                  <span>🏛️ Central & State Govt Opportunities</span>
+                </div>
+                <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-white leading-tight">
+                  Looking for Government Agriculture Vacancies?
+                </h2>
+                <p className="text-emerald-100/90 text-xs sm:text-sm leading-relaxed">
+                  Track live official notifications, eligibility criteria, and application links for <strong>NABARD, IBPS AFO, ICAR, State PSC Agriculture Officers (ADO)</strong>, and PSU recruitments.
+                </p>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  <span className="bg-white/10 text-white text-xs px-2.5 py-1 rounded-lg border border-white/10">Banking & NABARD</span>
+                  <span className="bg-white/10 text-white text-xs px-2.5 py-1 rounded-lg border border-white/10">State PSC / ADO</span>
+                  <span className="bg-white/10 text-white text-xs px-2.5 py-1 rounded-lg border border-white/10">ICAR & Research</span>
+                  <span className="bg-white/10 text-white text-xs px-2.5 py-1 rounded-lg border border-white/10">IFFCO & PSUs</span>
+                </div>
+              </div>
+              <div className="shrink-0 w-full sm:w-auto">
+                <Link
+                  to="/govt-jobs"
+                  className="inline-flex items-center justify-center gap-2 bg-white text-brand-black font-bold px-6 py-3.5 rounded-xl hover:bg-amber-300 transition-all shadow-md text-sm w-full sm:w-auto whitespace-nowrap"
+                >
+                  Explore Govt Vacancies <ArrowRight size={16} />
+                </Link>
+              </div>
+            </div>
+
             {/* 3 Cards of Government Jobs */}
             {govtJobs.length > 0 && (
-              <div className={featuredJobs.length > 0 ? "pt-8 sm:pt-10 border-t border-brand-border" : ""}>
+              <div className="pt-8 sm:pt-10 border-t border-brand-border">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
                   <div>
                     <h2 className="text-xl sm:text-2xl font-display font-bold flex items-center gap-2 sm:gap-2.5">
