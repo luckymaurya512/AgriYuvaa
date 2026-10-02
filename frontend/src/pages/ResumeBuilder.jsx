@@ -479,6 +479,17 @@ const ResumeBuilder = () => {
   };
 
   const handleDownloadPDF = async () => {
+    // If logged in, automatically persist to candidate profile to ensure builder usage is tracked
+    if (user) {
+      saveSeekerResume({
+        ...data,
+        template,
+        pageMode,
+        splitAfter,
+        updatedAt: new Date().toISOString(),
+      }).catch((err) => console.warn("Auto-save on PDF download:", err));
+    }
+
     const element = document.getElementById("resume-canvas");
     if (!element) {
       window.print();

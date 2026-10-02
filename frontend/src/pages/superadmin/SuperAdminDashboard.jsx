@@ -32,6 +32,7 @@ import {
   Link2,
   Trash2,
   Phone,
+  FileText,
 } from "lucide-react";
 import ResumePreviewModal from "../../components/ResumePreviewModal.jsx";
 import ConfirmModal from "../../components/common/ConfirmModal.jsx";
@@ -81,6 +82,8 @@ const SuperAdminDashboard = () => {
           ? role === "seeker" || role === "user"
           : userRoleFilter === "admin"
           ? role === "admin" || role === "superadmin"
+          : userRoleFilter === "builder_resume"
+          ? Boolean(u.hasBuilderResume)
           : role === userRoleFilter;
 
       const q = userSearch.trim().toLowerCase();
@@ -750,7 +753,7 @@ const SuperAdminDashboard = () => {
         <div className="space-y-8">
           {/* Metrics */}
           {stats && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
               <StatCard
                 label="Total Registered Users"
                 value={stats.totalUsers}
@@ -777,6 +780,15 @@ const SuperAdminDashboard = () => {
                   setUserRoleFilter("seeker");
                 }}
                 hint="View seekers"
+              />
+              <StatCard
+                label="Resumes Built (Builder)"
+                value={stats.resumesCreatedWithBuilder ?? 0}
+                onClick={() => {
+                  setTab("users");
+                  setUserRoleFilter("builder_resume");
+                }}
+                hint="Students with Builder Resumes"
               />
               <StatCard
                 label="Platform Applications"
@@ -1127,6 +1139,20 @@ const SuperAdminDashboard = () => {
                     }
                     )
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => setUserRoleFilter("builder_resume")}
+                    className={`px-3 py-1 rounded-lg font-semibold transition-all inline-flex items-center gap-1.5 ${
+                      userRoleFilter === "builder_resume"
+                        ? "bg-emerald-800 text-white shadow-2xs font-bold"
+                        : "text-emerald-800 bg-emerald-50 hover:bg-emerald-100"
+                    }`}
+                  >
+                    <Sparkles size={12} className={userRoleFilter === "builder_resume" ? "text-amber-300" : "text-emerald-600"} />
+                    Resumes Built (
+                    {users.filter((u) => u.hasBuilderResume).length}
+                    )
+                  </button>
                 </div>
 
                 {/* Quick Search */}
@@ -1150,6 +1176,7 @@ const SuperAdminDashboard = () => {
                     <th className="text-left px-5 py-3">Email</th>
                     <th className="text-left px-5 py-3">Mobile No.</th>
                     <th className="text-left px-5 py-3">Role</th>
+                    <th className="text-left px-5 py-3">Resume</th>
                     <th className="text-left px-5 py-3">Status</th>
                     <th className="text-right px-5 py-3">Role Actions</th>
                     <th className="text-right px-5 py-3">Account Status</th>
@@ -1159,7 +1186,7 @@ const SuperAdminDashboard = () => {
                 <tbody>
                   {filteredUsers.length === 0 ? (
                     <tr>
-                      <td colSpan="8" className="text-center py-12 text-brand-grey text-xs">
+                      <td colSpan="9" className="text-center py-12 text-brand-grey text-xs">
                         No registered users match your selected filter or search term.
                       </td>
                     </tr>
@@ -1196,6 +1223,27 @@ const SuperAdminDashboard = () => {
                         >
                           {u.role}
                         </span>
+                      </td>
+                      <td className="px-5 py-3">
+                        {u.hasBuilderResume ? (
+                          <span
+                            className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs whitespace-nowrap"
+                            title={u.resumeBuilderUpdatedAt ? `Created/edited on ${new Date(u.resumeBuilderUpdatedAt).toLocaleDateString("en-IN")}` : "Built with Resume Builder"}
+                          >
+                            <Sparkles size={11} className="text-emerald-600 shrink-0" />
+                            Builder Resume
+                          </span>
+                        ) : u.hasUploadedResume ? (
+                          <span
+                            className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-md bg-sky-50 text-sky-800 border border-sky-200 whitespace-nowrap"
+                            title={u.resumeUploadedAt ? `Uploaded on ${new Date(u.resumeUploadedAt).toLocaleDateString("en-IN")}` : "Uploaded File"}
+                          >
+                            <FileText size={11} className="text-sky-600 shrink-0" />
+                            Uploaded PDF
+                          </span>
+                        ) : (
+                          <span className="text-gray-400 text-xs italic">No Resume</span>
+                        )}
                       </td>
                       <td className="px-5 py-3">
                         <span

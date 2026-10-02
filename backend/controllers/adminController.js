@@ -17,18 +17,52 @@ const logAction = async (actor, action, targetType, targetId, meta = {}) => {
 // @desc  Platform-wide stats for the dashboard
 // @route GET /api/admin/stats
 export const getPlatformStats = asyncHandler(async (req, res) => {
-  const [totalUsers, totalEmployers, totalSeekers, totalJobs, approvedJobs, pendingJobs, totalApplications] =
-    await Promise.all([
-      User.countDocuments(),
-      User.countDocuments({ role: "employer" }),
-      User.countDocuments({ role: "seeker" }),
-      Job.countDocuments(),
-      Job.countDocuments({ status: "approved" }),
-      Job.countDocuments({ status: "pending" }),
-      Application.countDocuments(),
-    ]);
+  const [
+    totalUsers,
+    totalEmployers,
+    totalSeekers,
+    totalJobs,
+    approvedJobs,
+    pendingJobs,
+    totalApplications,
+    resumesCreatedWithBuilder,
+    resumesUploaded,
+  ] = await Promise.all([
+    User.countDocuments(),
+    User.countDocuments({ role: "employer" }),
+    User.countDocuments({ role: "seeker" }),
+    Job.countDocuments(),
+    Job.countDocuments({ status: "approved" }),
+    Job.countDocuments({ status: "pending" }),
+    Application.countDocuments(),
+    SeekerProfile.countDocuments({
+      $or: [
+        { resumeBuilderUpdatedAt: { $exists: true, $ne: null } },
+        { activeResumeType: "builder" },
+        { "resumeData.fullName": { $exists: true, $ne: "" } },
+        { "resumeData.basics.name": { $exists: true, $ne: "" } },
+      ],
+    }),
+    SeekerProfile.countDocuments({
+      $or: [
+        { resumeFileData: { $exists: true, $ne: null, $ne: "" } },
+        { resumeUrl: { $exists: true, $ne: null, $ne: "" } },
+        { resumeUploadedAt: { $exists: true, $ne: null } },
+      ],
+    }),
+  ]);
 
-  res.json({ totalUsers, totalEmployers, totalSeekers, totalJobs, approvedJobs, pendingJobs, totalApplications });
+  res.json({
+    totalUsers,
+    totalEmployers,
+    totalSeekers,
+    totalJobs,
+    approvedJobs,
+    pendingJobs,
+    totalApplications,
+    resumesCreatedWithBuilder,
+    resumesUploaded,
+  });
 });
 
 // @desc  List all users (filterable by role/status) — Super Admin full, Admin limited
@@ -50,9 +84,12 @@ export const listUsers = asyncHandler(async (req, res) => {
   const employerProfiles = await EmployerProfile.find({}, "user").lean();
   const employerUserIds = new Set(employerProfiles.map((p) => p.user?.toString()).filter(Boolean));
 
-  // Query seekerProfiles for fallback phone numbers (e.g. from resumeData)
-  const seekerProfiles = await SeekerProfile.find({}, "user resumeData").lean();
-  const seekerPhoneMap = new Map();
+  // Query seekerProfiles for fallback phone numbers and resume tracking
+  const seekerProfiles = await SeekerProfile.find(
+    {},
+    "user resumeData resumeBuilderUpdatedAt resumeUploadedAt resumeUrl resumeFileData activeResumeType"
+  ).lean();
+  const seekerInfoMap = new Map();
   seekerProfiles.forEach((sp) => {
     if (sp.user) {
       const phone =
@@ -60,21 +97,41 @@ export const listUsers = asyncHandler(async (req, res) => {
         sp.resumeData?.phone ||
         sp.resumeData?.personalInfo?.phone ||
         "";
-      if (phone && String(phone).trim()) {
-        seekerPhoneMap.set(sp.user.toString(), String(phone).trim());
-      }
+      const hasBuilderResume = Boolean(
+        sp.resumeBuilderUpdatedAt ||
+        sp.activeResumeType === "builder" ||
+        sp.resumeData?.fullName ||
+        sp.resumeData?.basics?.name
+      );
+      const hasUploadedResume = Boolean(
+        sp.resumeFileData ||
+        sp.resumeUrl ||
+        sp.resumeUploadedAt
+      );
+      seekerInfoMap.set(sp.user.toString(), {
+        phone: phone && String(phone).trim() ? String(phone).trim() : "",
+        hasBuilderResume,
+        hasUploadedResume,
+        resumeBuilderUpdatedAt: sp.resumeBuilderUpdatedAt || null,
+        resumeUploadedAt: sp.resumeUploadedAt || null,
+      });
     }
   });
 
   const enrichedUsers = users.map((u) => {
     const hasEmpProfile = employerUserIds.has(u._id.toString());
     const originalRole = u.previousRole || (hasEmpProfile ? "employer" : "seeker");
-    const resolvedPhone = u.phone || seekerPhoneMap.get(u._id.toString()) || "";
+    const seekerInfo = seekerInfoMap.get(u._id.toString()) || {};
+    const resolvedPhone = u.phone || seekerInfo.phone || "";
     return {
       ...u,
       phone: resolvedPhone,
       hasEmployerProfile: hasEmpProfile,
       originalRole,
+      hasBuilderResume: seekerInfo.hasBuilderResume || false,
+      hasUploadedResume: seekerInfo.hasUploadedResume || false,
+      resumeBuilderUpdatedAt: seekerInfo.resumeBuilderUpdatedAt || null,
+      resumeUploadedAt: seekerInfo.resumeUploadedAt || null,
     };
   });
 
