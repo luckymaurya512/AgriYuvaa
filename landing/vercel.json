@@ -6,11 +6,14 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": ".*(facebookexternalhit|WhatsApp|twitterbot|Twitterbot|LinkedInBot|linkedinbot|TelegramBot|telegrambot|Discordbot|slackbot).*"
+          "value": ".*(facebookexternalhit|WhatsApp|twitterbot|Twitterbot|LinkedInBot|linkedinbot|TelegramBot|telegrambot|Discordbot|slackbot|RankMath|rankmath|Googlebot|googlebot|bingbot|Bingbot|DuckDuckBot|Applebot|YandexBot|Baiduspider|crawler|spider|bot|curl|wget).*"
         }
       ],
       "destination": "https://agriyuvaa.onrender.com/api/blogs/share/:slug?site=landing"
     },
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ]
 }

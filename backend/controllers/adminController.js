@@ -438,7 +438,7 @@ export const reviewJob = asyncHandler(async (req, res) => {
 
   if (decision === "approved") {
     const employerProfile = await EmployerProfile.findOne({ user: job.employer });
-    broadcastNewJobAlert(job, employerProfile).catch(() => {});
+    broadcastNewJobAlert(job, employerProfile).catch(() => { });
   }
 
   await logAction(req.user, "review_job", "Job", job._id, { decision, isFeatured: job.isFeatured });
@@ -534,6 +534,18 @@ export const deleteEmployer = asyncHandler(async (req, res) => {
     message: `Employer "${companyName}" and associated data deleted successfully.`,
   });
 });
+
+// @desc  Get a user's builder resume data (admin)
+// @route GET /api/admin/users/:id/resume
+export const getUserResume = asyncHandler(async (req, res) => {
+  const profile = await SeekerProfile.findOne({ user: req.params.id });
+  if (!profile || !profile.resumeData) {
+    res.status(404);
+    throw new Error("No builder resume found for this user");
+  }
+  res.json({ resumeData: profile.resumeData });
+});
+
 
 // @desc  Delete a user account and all related data (cascade)
 // @route DELETE /api/admin/users/:id

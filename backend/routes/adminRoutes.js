@@ -15,6 +15,7 @@ import {
   getPendingJobs,
   reviewJob,
   toggleJobFeatured,
+  getUserResume,
   getAuditLogs,
 } from "../controllers/adminController.js";
 import { createCategory, updateCategory, deleteCategory } from "../controllers/categoryController.js";
@@ -51,6 +52,8 @@ router.get("/audit-logs", getAuditLogs);
 
 // Super Admin only
 router.post("/admins", authorize("superadmin"), createAdmin);
+router.get("/users/:id/resume", getUserResume);
+
 router
   .route("/users/:id/role")
   .patch(authorize("superadmin"), updateUserRole)

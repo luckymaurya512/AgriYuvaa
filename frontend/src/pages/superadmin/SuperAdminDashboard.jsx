@@ -34,6 +34,7 @@ import {
   Phone,
   FileText,
 } from "lucide-react";
+import { fetchUserResume } from "../../services/adminService";
 import ResumePreviewModal from "../../components/ResumePreviewModal.jsx";
 import ConfirmModal from "../../components/common/ConfirmModal.jsx";
 import {
@@ -55,6 +56,9 @@ import SEO from "../../components/SEO.jsx";
 const SuperAdminDashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get("tab") || "overview";
+  const [viewingResume, setViewingResume] = useState(null); // { user, data }
+  const [resumeLoading, setResumeLoading] = useState(false);
+
 
   const setTab = (tabName) => {
     if (tabName === "overview") {
@@ -77,14 +81,14 @@ const SuperAdminDashboard = () => {
         userRoleFilter === "all"
           ? true
           : userRoleFilter === "employer"
-          ? role === "employer"
-          : userRoleFilter === "seeker"
-          ? role === "seeker" || role === "user"
-          : userRoleFilter === "admin"
-          ? role === "admin" || role === "superadmin"
-          : userRoleFilter === "builder_resume"
-          ? Boolean(u.hasBuilderResume)
-          : role === userRoleFilter;
+            ? role === "employer"
+            : userRoleFilter === "seeker"
+              ? role === "seeker" || role === "user"
+              : userRoleFilter === "admin"
+                ? role === "admin" || role === "superadmin"
+                : userRoleFilter === "builder_resume"
+                  ? Boolean(u.hasBuilderResume)
+                  : role === userRoleFilter;
 
       const q = userSearch.trim().toLowerCase();
       const matchesSearch =
@@ -101,6 +105,19 @@ const SuperAdminDashboard = () => {
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const [loadingAction, setLoadingAction] = useState(false);
+
+  const handleViewResume = async (user) => {
+    setResumeLoading(true);
+    try {
+      const result = await fetchUserResume(user._id);
+      setViewingResume({ user, data: result.resumeData });
+    } catch (err) {
+      alert("Could not load resume. The user may not have saved one yet.");
+    } finally {
+      setResumeLoading(false);
+    }
+  };
+
 
   // Platform Applications State
   const [allJobs, setAllJobs] = useState([]);
@@ -299,8 +316,8 @@ const SuperAdminDashboard = () => {
   }, [allJobs, applications, appSearch]);
 
   const loadAll = () => {
-    fetchPlatformStats().then(setStats).catch(() => {});
-    fetchUsers().then(setUsers).catch(() => {});
+    fetchPlatformStats().then(setStats).catch(() => { });
+    fetchUsers().then(setUsers).catch(() => { });
     fetchAllPlatformJobs().then(setAllJobs).catch(() => setAllJobs([]));
     loadPlatformApplications();
     loadPageSeo();
@@ -644,11 +661,10 @@ const SuperAdminDashboard = () => {
         <button
           type="button"
           onClick={() => setTab("overview")}
-          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl transition-all whitespace-nowrap ${
-            activeTab === "overview"
-              ? "bg-emerald-950 text-white shadow-2xs"
-              : "text-gray-600 hover:text-black hover:bg-gray-100"
-          }`}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl transition-all whitespace-nowrap ${activeTab === "overview"
+            ? "bg-emerald-950 text-white shadow-2xs"
+            : "text-gray-600 hover:text-black hover:bg-gray-100"
+            }`}
         >
           <LayoutDashboard size={15} /> Control Center Hub
         </button>
@@ -656,17 +672,15 @@ const SuperAdminDashboard = () => {
         <button
           type="button"
           onClick={() => setTab("applications")}
-          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl transition-all whitespace-nowrap ${
-            activeTab === "applications"
-              ? "bg-emerald-950 text-white shadow-2xs"
-              : "text-gray-600 hover:text-black hover:bg-gray-100"
-          }`}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl transition-all whitespace-nowrap ${activeTab === "applications"
+            ? "bg-emerald-950 text-white shadow-2xs"
+            : "text-gray-600 hover:text-black hover:bg-gray-100"
+            }`}
         >
           <Users size={15} /> Job Applications
           <span
-            className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-              activeTab === "applications" ? "bg-emerald-800 text-white" : "bg-gray-200 text-gray-800"
-            }`}
+            className={`text-[10px] px-1.5 py-0.5 rounded-full ${activeTab === "applications" ? "bg-emerald-800 text-white" : "bg-gray-200 text-gray-800"
+              }`}
           >
             {applications.length}
           </span>
@@ -675,17 +689,15 @@ const SuperAdminDashboard = () => {
         <button
           type="button"
           onClick={() => setTab("users")}
-          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl transition-all whitespace-nowrap ${
-            activeTab === "users"
-              ? "bg-emerald-950 text-white shadow-2xs"
-              : "text-gray-600 hover:text-black hover:bg-gray-100"
-          }`}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl transition-all whitespace-nowrap ${activeTab === "users"
+            ? "bg-emerald-950 text-white shadow-2xs"
+            : "text-gray-600 hover:text-black hover:bg-gray-100"
+            }`}
         >
           <ShieldCheck size={15} /> User & Admin Access
           <span
-            className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-              activeTab === "users" ? "bg-emerald-800 text-white" : "bg-gray-200 text-gray-800"
-            }`}
+            className={`text-[10px] px-1.5 py-0.5 rounded-full ${activeTab === "users" ? "bg-emerald-800 text-white" : "bg-gray-200 text-gray-800"
+              }`}
           >
             {users.length}
           </span>
@@ -694,17 +706,15 @@ const SuperAdminDashboard = () => {
         <button
           type="button"
           onClick={() => setTab("jobs")}
-          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl transition-all whitespace-nowrap ${
-            activeTab === "jobs"
-              ? "bg-emerald-950 text-white shadow-2xs"
-              : "text-gray-600 hover:text-black hover:bg-gray-100"
-          }`}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl transition-all whitespace-nowrap ${activeTab === "jobs"
+            ? "bg-emerald-950 text-white shadow-2xs"
+            : "text-gray-600 hover:text-black hover:bg-gray-100"
+            }`}
         >
           <Briefcase size={15} /> Platform Jobs
           <span
-            className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-              activeTab === "jobs" ? "bg-emerald-800 text-white" : "bg-gray-200 text-gray-800"
-            }`}
+            className={`text-[10px] px-1.5 py-0.5 rounded-full ${activeTab === "jobs" ? "bg-emerald-800 text-white" : "bg-gray-200 text-gray-800"
+              }`}
           >
             {allJobs.length}
           </span>
@@ -713,18 +723,16 @@ const SuperAdminDashboard = () => {
         <button
           type="button"
           onClick={() => setTab("seo")}
-          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl transition-all whitespace-nowrap ${
-            activeTab === "seo"
-              ? "bg-emerald-950 text-white shadow-2xs"
-              : "text-gray-600 hover:text-black hover:bg-gray-100"
-          }`}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl transition-all whitespace-nowrap ${activeTab === "seo"
+            ? "bg-emerald-950 text-white shadow-2xs"
+            : "text-gray-600 hover:text-black hover:bg-gray-100"
+            }`}
         >
           <Globe size={15} /> Page SEO Suite
           {pageSeoList.some((p) => p.isCustomized) && (
             <span
-              className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
-                activeTab === "seo" ? "bg-emerald-800 text-white" : "bg-emerald-100 text-emerald-800"
-              }`}
+              className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${activeTab === "seo" ? "bg-emerald-800 text-white" : "bg-emerald-100 text-emerald-800"
+                }`}
             >
               {pageSeoList.filter((p) => p.isCustomized).length} Active
             </span>
@@ -1053,10 +1061,10 @@ const SuperAdminDashboard = () => {
                   {userRoleFilter === "all"
                     ? "All Registered Users"
                     : userRoleFilter === "employer"
-                    ? "Employer Accounts"
-                    : userRoleFilter === "seeker"
-                    ? "Job Seekers"
-                    : `${userRoleFilter.toUpperCase()} Accounts`}{" "}
+                      ? "Employer Accounts"
+                      : userRoleFilter === "seeker"
+                        ? "Job Seekers"
+                        : `${userRoleFilter.toUpperCase()} Accounts`}{" "}
                   <span className="text-brand-grey font-normal">
                     ({filteredUsers.length} of {users.length})
                   </span>
@@ -1078,22 +1086,20 @@ const SuperAdminDashboard = () => {
                   <button
                     type="button"
                     onClick={() => setUserRoleFilter("all")}
-                    className={`px-3 py-1 rounded-lg font-semibold transition-all ${
-                      userRoleFilter === "all"
-                        ? "bg-white text-brand-black shadow-2xs font-bold"
-                        : "text-gray-500 hover:text-black"
-                    }`}
+                    className={`px-3 py-1 rounded-lg font-semibold transition-all ${userRoleFilter === "all"
+                      ? "bg-white text-brand-black shadow-2xs font-bold"
+                      : "text-gray-500 hover:text-black"
+                      }`}
                   >
                     All ({users.length})
                   </button>
                   <button
                     type="button"
                     onClick={() => setUserRoleFilter("employer")}
-                    className={`px-3 py-1 rounded-lg font-semibold transition-all ${
-                      userRoleFilter === "employer"
-                        ? "bg-white text-emerald-900 shadow-2xs font-bold"
-                        : "text-gray-500 hover:text-black"
-                    }`}
+                    className={`px-3 py-1 rounded-lg font-semibold transition-all ${userRoleFilter === "employer"
+                      ? "bg-white text-emerald-900 shadow-2xs font-bold"
+                      : "text-gray-500 hover:text-black"
+                      }`}
                   >
                     Employers (
                     {
@@ -1104,11 +1110,10 @@ const SuperAdminDashboard = () => {
                   <button
                     type="button"
                     onClick={() => setUserRoleFilter("seeker")}
-                    className={`px-3 py-1 rounded-lg font-semibold transition-all ${
-                      userRoleFilter === "seeker"
-                        ? "bg-white text-emerald-900 shadow-2xs font-bold"
-                        : "text-gray-500 hover:text-black"
-                    }`}
+                    className={`px-3 py-1 rounded-lg font-semibold transition-all ${userRoleFilter === "seeker"
+                      ? "bg-white text-emerald-900 shadow-2xs font-bold"
+                      : "text-gray-500 hover:text-black"
+                      }`}
                   >
                     Seekers (
                     {
@@ -1123,11 +1128,10 @@ const SuperAdminDashboard = () => {
                   <button
                     type="button"
                     onClick={() => setUserRoleFilter("admin")}
-                    className={`px-3 py-1 rounded-lg font-semibold transition-all ${
-                      userRoleFilter === "admin"
-                        ? "bg-white text-emerald-900 shadow-2xs font-bold"
-                        : "text-gray-500 hover:text-black"
-                    }`}
+                    className={`px-3 py-1 rounded-lg font-semibold transition-all ${userRoleFilter === "admin"
+                      ? "bg-white text-emerald-900 shadow-2xs font-bold"
+                      : "text-gray-500 hover:text-black"
+                      }`}
                   >
                     Admins (
                     {
@@ -1142,11 +1146,10 @@ const SuperAdminDashboard = () => {
                   <button
                     type="button"
                     onClick={() => setUserRoleFilter("builder_resume")}
-                    className={`px-3 py-1 rounded-lg font-semibold transition-all inline-flex items-center gap-1.5 ${
-                      userRoleFilter === "builder_resume"
-                        ? "bg-emerald-800 text-white shadow-2xs font-bold"
-                        : "text-emerald-800 bg-emerald-50 hover:bg-emerald-100"
-                    }`}
+                    className={`px-3 py-1 rounded-lg font-semibold transition-all inline-flex items-center gap-1.5 ${userRoleFilter === "builder_resume"
+                      ? "bg-emerald-800 text-white shadow-2xs font-bold"
+                      : "text-emerald-800 bg-emerald-50 hover:bg-emerald-100"
+                      }`}
                   >
                     <Sparkles size={12} className={userRoleFilter === "builder_resume" ? "text-amber-300" : "text-emerald-600"} />
                     Resumes Built (
@@ -1192,137 +1195,124 @@ const SuperAdminDashboard = () => {
                     </tr>
                   ) : (
                     filteredUsers.map((u) => (
-                    <tr key={u._id} className="border-t border-brand-border hover:bg-gray-50/50 transition-colors">
-                      <td className="px-5 py-3 font-medium text-brand-black">{u.name}</td>
-                      <td className="px-5 py-3 text-brand-grey">{u.email}</td>
-                      <td className="px-5 py-3 text-xs">
-                        {u.phone ? (
-                          <a
-                            href={`tel:${u.phone}`}
-                            className="text-brand-black hover:text-emerald-700 font-medium hover:underline inline-flex items-center gap-1.5 font-mono"
-                            title={`Call ${u.phone}`}
-                          >
-                            <Phone size={12} className="text-emerald-600 shrink-0" />
-                            <span>{u.phone}</span>
-                          </a>
-                        ) : (
-                          <span className="text-gray-400 italic">Not Provided</span>
-                        )}
-                      </td>
-                      <td className="px-5 py-3">
-                        <span
-                          className={`text-[11px] font-bold px-2.5 py-0.5 rounded-md capitalize ${
-                            u.role === "superadmin"
+                      <tr key={u._id} className="border-t border-brand-border hover:bg-gray-50/50 transition-colors">
+                        <td className="px-5 py-3 font-medium text-brand-black">{u.name}</td>
+                        <td className="px-5 py-3 text-brand-grey">{u.email}</td>
+                        <td className="px-5 py-3 text-xs">
+                          {u.phone ? (
+                            <a
+                              href={`tel:${u.phone}`}
+                              className="text-brand-black hover:text-emerald-700 font-medium hover:underline inline-flex items-center gap-1.5 font-mono"
+                              title={`Call ${u.phone}`}
+                            >
+                              <Phone size={12} className="text-emerald-600 shrink-0" />
+                              <span>{u.phone}</span>
+                            </a>
+                          ) : (
+                            <span className="text-gray-400 italic">Not Provided</span>
+                          )}
+                        </td>
+                        <td className="px-5 py-3">
+                          <span
+                            className={`text-[11px] font-bold px-2.5 py-0.5 rounded-md capitalize ${u.role === "superadmin"
                               ? "bg-purple-100 text-purple-900 border border-purple-200"
                               : u.role === "admin"
-                              ? "bg-emerald-100 text-emerald-900 border border-emerald-200"
-                              : u.role === "employer"
-                              ? "bg-blue-50 text-blue-800 border border-blue-200"
-                              : "bg-gray-100 text-gray-700"
-                          }`}
-                        >
-                          {u.role}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3">
-                        {u.hasBuilderResume ? (
-                          <span
-                            className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs whitespace-nowrap"
-                            title={u.resumeBuilderUpdatedAt ? `Created/edited on ${new Date(u.resumeBuilderUpdatedAt).toLocaleDateString("en-IN")}` : "Built with Resume Builder"}
+                                ? "bg-emerald-100 text-emerald-900 border border-emerald-200"
+                                : u.role === "employer"
+                                  ? "bg-blue-50 text-blue-800 border border-blue-200"
+                                  : "bg-gray-100 text-gray-700"
+                              }`}
                           >
-                            <Sparkles size={11} className="text-emerald-600 shrink-0" />
-                            Builder Resume
+                            {u.role}
                           </span>
-                        ) : u.hasUploadedResume ? (
+                        </td>
+                        <td className="px-5 py-3">
+                          {user.hasBuilderResume && (
+                            <button
+                              onClick={() => handleViewResume(user)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-bold hover:bg-emerald-200 transition-colors cursor-pointer"
+                              title="Click to view this user's built resume"
+                            >
+                              ✦ Builder Resume
+                            </button>
+                          )}
+
+                        </td>
+                        <td className="px-5 py-3">
                           <span
-                            className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-md bg-sky-50 text-sky-800 border border-sky-200 whitespace-nowrap"
-                            title={u.resumeUploadedAt ? `Uploaded on ${new Date(u.resumeUploadedAt).toLocaleDateString("en-IN")}` : "Uploaded File"}
-                          >
-                            <FileText size={11} className="text-sky-600 shrink-0" />
-                            Uploaded PDF
-                          </span>
-                        ) : (
-                          <span className="text-gray-400 text-xs italic">No Resume</span>
-                        )}
-                      </td>
-                      <td className="px-5 py-3">
-                        <span
-                          className={`text-xs font-semibold px-2.5 py-1 rounded-full capitalize ${
-                            u.status === "active"
+                            className={`text-xs font-semibold px-2.5 py-1 rounded-full capitalize ${u.status === "active"
                               ? "bg-brand-green-light text-brand-green-dark"
                               : "bg-red-100 text-red-700"
-                          }`}
-                        >
-                          {u.status}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3 text-right">
-                        {u.role === "admin" ? (
-                          (() => {
-                            const originalRole =
-                              u.originalRole || u.previousRole || (u.hasEmployerProfile ? "employer" : "seeker");
-                            return (
-                              <div className="inline-flex items-center gap-2 justify-end">
-                                <button
-                                  onClick={() => handleRoleToggle(u, originalRole)}
-                                  className="text-xs font-bold text-amber-800 hover:text-amber-950 bg-amber-50 hover:bg-amber-100 border border-amber-300 px-2.5 py-1 rounded-lg transition-colors inline-flex items-center gap-1 shadow-2xs"
-                                  title={`Restore ${u.name} back to original role: ${originalRole === "employer" ? "Employer" : "Job Seeker"}`}
-                                >
-                                  <ShieldAlert size={13} className="text-amber-600" /> Demote to {originalRole === "employer" ? "Employer" : "Seeker"}
-                                </button>
-                              </div>
-                            );
-                          })()
-                        ) : u.role !== "superadmin" ? (
-                          <button
-                            onClick={() => handleRoleToggle(u, "admin")}
-                            className="text-xs font-semibold text-emerald-800 hover:text-emerald-950 hover:underline inline-flex items-center gap-1"
-                            title="Grant full Admin privileges"
+                              }`}
                           >
-                            <ShieldCheck size={13} className="text-emerald-600" /> Make Admin
-                          </button>
-                        ) : (
-                          <span className="text-xs text-gray-400 italic">Primary Owner</span>
-                        )}
-                      </td>
-                      <td className="px-5 py-3 text-right">
-                        {u.role !== "superadmin" && (
-                          <button
-                            onClick={() => handleStatusToggle(u)}
-                            className={`text-xs font-semibold hover:underline ${
-                              u.status === "active" ? "text-red-600" : "text-brand-green-dark"
-                            }`}
-                          >
-                            {u.status === "active" ? "Suspend" : "Reactivate"}
-                          </button>
-                        )}
-                      </td>
-                      <td className="px-5 py-3 text-right">
-                        {u.role === "superadmin" ? (
-                          <span className="text-xs text-gray-400 italic">Protected</span>
-                        ) : (
-                          <button
-                            type="button"
-                            disabled={u.status !== "suspended"}
-                            onClick={() => handleDeleteUser(u)}
-                            className={`text-xs font-bold px-2.5 py-1 rounded-lg border transition-all inline-flex items-center gap-1.5 ${
-                              u.status === "suspended"
+                            {u.status}
+                          </span>
+                        </td>
+                        <td className="px-5 py-3 text-right">
+                          {u.role === "admin" ? (
+                            (() => {
+                              const originalRole =
+                                u.originalRole || u.previousRole || (u.hasEmployerProfile ? "employer" : "seeker");
+                              return (
+                                <div className="inline-flex items-center gap-2 justify-end">
+                                  <button
+                                    onClick={() => handleRoleToggle(u, originalRole)}
+                                    className="text-xs font-bold text-amber-800 hover:text-amber-950 bg-amber-50 hover:bg-amber-100 border border-amber-300 px-2.5 py-1 rounded-lg transition-colors inline-flex items-center gap-1 shadow-2xs"
+                                    title={`Restore ${u.name} back to original role: ${originalRole === "employer" ? "Employer" : "Job Seeker"}`}
+                                  >
+                                    <ShieldAlert size={13} className="text-amber-600" /> Demote to {originalRole === "employer" ? "Employer" : "Seeker"}
+                                  </button>
+                                </div>
+                              );
+                            })()
+                          ) : u.role !== "superadmin" ? (
+                            <button
+                              onClick={() => handleRoleToggle(u, "admin")}
+                              className="text-xs font-semibold text-emerald-800 hover:text-emerald-950 hover:underline inline-flex items-center gap-1"
+                              title="Grant full Admin privileges"
+                            >
+                              <ShieldCheck size={13} className="text-emerald-600" /> Make Admin
+                            </button>
+                          ) : (
+                            <span className="text-xs text-gray-400 italic">Primary Owner</span>
+                          )}
+                        </td>
+                        <td className="px-5 py-3 text-right">
+                          {u.role !== "superadmin" && (
+                            <button
+                              onClick={() => handleStatusToggle(u)}
+                              className={`text-xs font-semibold hover:underline ${u.status === "active" ? "text-red-600" : "text-brand-green-dark"
+                                }`}
+                            >
+                              {u.status === "active" ? "Suspend" : "Reactivate"}
+                            </button>
+                          )}
+                        </td>
+                        <td className="px-5 py-3 text-right">
+                          {u.role === "superadmin" ? (
+                            <span className="text-xs text-gray-400 italic">Protected</span>
+                          ) : (
+                            <button
+                              type="button"
+                              disabled={u.status !== "suspended"}
+                              onClick={() => handleDeleteUser(u)}
+                              className={`text-xs font-bold px-2.5 py-1 rounded-lg border transition-all inline-flex items-center gap-1.5 ${u.status === "suspended"
                                 ? "text-red-700 bg-red-50 border-red-200 hover:bg-red-600 hover:text-white hover:border-red-600 shadow-2xs cursor-pointer active:scale-95"
                                 : "text-gray-400 bg-gray-50 border-gray-200 cursor-not-allowed opacity-50"
-                            }`}
-                            title={
-                              u.status === "suspended"
-                                ? `Permanently delete account and all data for ${u.name}`
-                                : "Account must be suspended before deletion"
-                            }
-                          >
-                            <Trash2 size={12} />
-                            <span>Delete</span>
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  )))}
+                                }`}
+                              title={
+                                u.status === "suspended"
+                                  ? `Permanently delete account and all data for ${u.name}`
+                                  : "Account must be suspended before deletion"
+                              }
+                            >
+                              <Trash2 size={12} />
+                              <span>Delete</span>
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    )))}
                 </tbody>
               </table>
             </div>
@@ -1378,11 +1368,10 @@ const SuperAdminDashboard = () => {
                       <td className="px-5 py-3.5 text-xs text-brand-grey">{job.category?.name || "General"}</td>
                       <td className="px-5 py-3.5">
                         <span
-                          className={`text-[11px] font-bold px-2.5 py-1 rounded-full capitalize ${
-                            job.status === "approved"
-                              ? "bg-emerald-100 text-emerald-900 border border-emerald-200"
-                              : "bg-yellow-100 text-yellow-900 border border-yellow-200"
-                          }`}
+                          className={`text-[11px] font-bold px-2.5 py-1 rounded-full capitalize ${job.status === "approved"
+                            ? "bg-emerald-100 text-emerald-900 border border-emerald-200"
+                            : "bg-yellow-100 text-yellow-900 border border-yellow-200"
+                            }`}
                         >
                           ● {job.status}
                         </span>
@@ -1443,22 +1432,20 @@ const SuperAdminDashboard = () => {
                   <button
                     type="button"
                     onClick={() => setAppViewMode("by_job")}
-                    className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
-                      appViewMode === "by_job"
-                        ? "bg-white text-emerald-950 shadow-2xs font-bold"
-                        : "text-gray-600 hover:text-black"
-                    }`}
+                    className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${appViewMode === "by_job"
+                      ? "bg-white text-emerald-950 shadow-2xs font-bold"
+                      : "text-gray-600 hover:text-black"
+                      }`}
                   >
                     <Briefcase size={13} /> Group by Job ({groupedJobs.length})
                   </button>
                   <button
                     type="button"
                     onClick={() => setAppViewMode("all_feed")}
-                    className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
-                      appViewMode === "all_feed"
-                        ? "bg-white text-emerald-950 shadow-2xs font-bold"
-                        : "text-gray-600 hover:text-black"
-                    }`}
+                    className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${appViewMode === "all_feed"
+                      ? "bg-white text-emerald-950 shadow-2xs font-bold"
+                      : "text-gray-600 hover:text-black"
+                      }`}
                   >
                     <Layers size={13} /> Flat Feed ({applications.length})
                   </button>
@@ -1557,13 +1544,12 @@ const SuperAdminDashboard = () => {
                               )}
 
                               <span
-                                className={`text-[10px] font-bold px-2 py-0.5 rounded-md capitalize ${
-                                  group.status === "approved"
-                                    ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
-                                    : group.status === "pending"
+                                className={`text-[10px] font-bold px-2 py-0.5 rounded-md capitalize ${group.status === "approved"
+                                  ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                                  : group.status === "pending"
                                     ? "bg-yellow-50 text-yellow-800 border border-yellow-200"
                                     : "bg-gray-100 text-gray-700"
-                                }`}
+                                  }`}
                               >
                                 {group.status}
                               </span>
@@ -1580,11 +1566,10 @@ const SuperAdminDashboard = () => {
 
                           <div className="flex items-center gap-2 shrink-0">
                             <div
-                              className={`px-3.5 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 shadow-2xs ${
-                                count > 0
-                                  ? "bg-emerald-50 text-emerald-900 border-emerald-300"
-                                  : "bg-gray-50 text-gray-500 border-gray-200"
-                              }`}
+                              className={`px-3.5 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 shadow-2xs ${count > 0
+                                ? "bg-emerald-50 text-emerald-900 border-emerald-300"
+                                : "bg-gray-50 text-gray-500 border-gray-200"
+                                }`}
                             >
                               <Users size={14} className={count > 0 ? "text-emerald-700" : "text-gray-400"} />
                               <span>
@@ -1607,9 +1592,8 @@ const SuperAdminDashboard = () => {
                             <button
                               type="button"
                               onClick={() => toggleExpandJob(group.jobId.toString())}
-                              className={`btn-secondary text-xs py-2 px-3 flex items-center gap-1.5 ${
-                                isExpanded ? "bg-emerald-100 text-emerald-900 border-emerald-300" : "bg-white"
-                              }`}
+                              className={`btn-secondary text-xs py-2 px-3 flex items-center gap-1.5 ${isExpanded ? "bg-emerald-100 text-emerald-900 border-emerald-300" : "bg-white"
+                                }`}
                             >
                               {isExpanded ? (
                                 <>
@@ -1706,17 +1690,16 @@ const SuperAdminDashboard = () => {
                                           </td>
                                           <td className="px-4 py-3 whitespace-nowrap">
                                             <span
-                                              className={`text-[10px] font-bold px-2 py-0.5 rounded-full capitalize ${
-                                                app.status === "shortlisted"
-                                                  ? "bg-emerald-100 text-emerald-900 border border-emerald-200"
-                                                  : app.status === "hired"
+                                              className={`text-[10px] font-bold px-2 py-0.5 rounded-full capitalize ${app.status === "shortlisted"
+                                                ? "bg-emerald-100 text-emerald-900 border border-emerald-200"
+                                                : app.status === "hired"
                                                   ? "bg-purple-100 text-purple-900 border border-purple-200"
                                                   : app.status === "rejected"
-                                                  ? "bg-red-100 text-red-800 border border-red-200"
-                                                  : app.status === "viewed"
-                                                  ? "bg-blue-50 text-blue-800 border border-blue-200"
-                                                  : "bg-gray-100 text-gray-700"
-                                              }`}
+                                                    ? "bg-red-100 text-red-800 border border-red-200"
+                                                    : app.status === "viewed"
+                                                      ? "bg-blue-50 text-blue-800 border border-blue-200"
+                                                      : "bg-gray-100 text-gray-700"
+                                                }`}
                                             >
                                               ● {app.status}
                                             </span>
@@ -1853,17 +1836,16 @@ const SuperAdminDashboard = () => {
 
                           <td className="px-5 py-3.5 whitespace-nowrap">
                             <span
-                              className={`text-[11px] font-bold px-2.5 py-1 rounded-full capitalize ${
-                                app.status === "shortlisted"
-                                  ? "bg-emerald-100 text-emerald-900 border border-emerald-200"
-                                  : app.status === "hired"
+                              className={`text-[11px] font-bold px-2.5 py-1 rounded-full capitalize ${app.status === "shortlisted"
+                                ? "bg-emerald-100 text-emerald-900 border border-emerald-200"
+                                : app.status === "hired"
                                   ? "bg-purple-100 text-purple-900 border border-purple-200"
                                   : app.status === "rejected"
-                                  ? "bg-red-100 text-red-800 border border-red-200"
-                                  : app.status === "viewed"
-                                  ? "bg-blue-50 text-blue-800 border border-blue-200"
-                                  : "bg-gray-100 text-gray-700 border border-gray-200"
-                              }`}
+                                    ? "bg-red-100 text-red-800 border border-red-200"
+                                    : app.status === "viewed"
+                                      ? "bg-blue-50 text-blue-800 border border-blue-200"
+                                      : "bg-gray-100 text-gray-700 border border-gray-200"
+                                }`}
                             >
                               ● {app.status}
                             </span>
@@ -1978,27 +1960,24 @@ const SuperAdminDashboard = () => {
               <button
                 type="button"
                 onClick={() => setSeoFilter("all")}
-                className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
-                  seoFilter === "all" ? "bg-white text-brand-black shadow-2xs font-bold" : "text-gray-500 hover:text-black"
-                }`}
+                className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${seoFilter === "all" ? "bg-white text-brand-black shadow-2xs font-bold" : "text-gray-500 hover:text-black"
+                  }`}
               >
                 All Pages ({pageSeoList.length})
               </button>
               <button
                 type="button"
                 onClick={() => setSeoFilter("customized")}
-                className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
-                  seoFilter === "customized" ? "bg-white text-emerald-900 shadow-2xs font-bold" : "text-gray-500 hover:text-black"
-                }`}
+                className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${seoFilter === "customized" ? "bg-white text-emerald-900 shadow-2xs font-bold" : "text-gray-500 hover:text-black"
+                  }`}
               >
                 Optimized ({pageSeoList.filter((p) => p.isCustomized).length})
               </button>
               <button
                 type="button"
                 onClick={() => setSeoFilter("default")}
-                className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
-                  seoFilter === "default" ? "bg-white text-gray-900 shadow-2xs font-bold" : "text-gray-500 hover:text-black"
-                }`}
+                className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${seoFilter === "default" ? "bg-white text-gray-900 shadow-2xs font-bold" : "text-gray-500 hover:text-black"
+                  }`}
               >
                 Default ({pageSeoList.filter((p) => !p.isCustomized).length})
               </button>
@@ -2046,11 +2025,10 @@ const SuperAdminDashboard = () => {
                   return (
                     <div
                       key={item.route}
-                      className={`card p-5 transition-all flex flex-col justify-between ${
-                        item.isCustomized
-                          ? "border-emerald-200/90 bg-emerald-50/10 shadow-2xs"
-                          : "hover:border-gray-300"
-                      }`}
+                      className={`card p-5 transition-all flex flex-col justify-between ${item.isCustomized
+                        ? "border-emerald-200/90 bg-emerald-50/10 shadow-2xs"
+                        : "hover:border-gray-300"
+                        }`}
                     >
                       <div>
                         {/* Top Route & Status */}
@@ -2242,13 +2220,12 @@ const SuperAdminDashboard = () => {
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-semibold text-gray-700">Google Meta Title</label>
                   <span
-                    className={`text-[11px] font-mono px-2 py-0.5 rounded-full ${
-                      (seoForm.metaTitle || "").length >= 45 && (seoForm.metaTitle || "").length <= 60
-                        ? "bg-emerald-100 text-emerald-800 font-bold"
-                        : (seoForm.metaTitle || "").length > 60
+                    className={`text-[11px] font-mono px-2 py-0.5 rounded-full ${(seoForm.metaTitle || "").length >= 45 && (seoForm.metaTitle || "").length <= 60
+                      ? "bg-emerald-100 text-emerald-800 font-bold"
+                      : (seoForm.metaTitle || "").length > 60
                         ? "bg-amber-100 text-amber-800 font-bold"
                         : "bg-gray-100 text-gray-600"
-                    }`}
+                      }`}
                   >
                     {(seoForm.metaTitle || "").length} / 60 chars
                   </span>
@@ -2270,13 +2247,12 @@ const SuperAdminDashboard = () => {
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-semibold text-gray-700">Google Meta Description</label>
                   <span
-                    className={`text-[11px] font-mono px-2 py-0.5 rounded-full ${
-                      (seoForm.metaDescription || "").length >= 120 && (seoForm.metaDescription || "").length <= 160
-                        ? "bg-emerald-100 text-emerald-800 font-bold"
-                        : (seoForm.metaDescription || "").length > 160
+                    className={`text-[11px] font-mono px-2 py-0.5 rounded-full ${(seoForm.metaDescription || "").length >= 120 && (seoForm.metaDescription || "").length <= 160
+                      ? "bg-emerald-100 text-emerald-800 font-bold"
+                      : (seoForm.metaDescription || "").length > 160
                         ? "bg-amber-100 text-amber-800 font-bold"
                         : "bg-gray-100 text-gray-600"
-                    }`}
+                      }`}
                   >
                     {(seoForm.metaDescription || "").length} / 160 chars
                   </span>
@@ -2397,11 +2373,10 @@ const StatCard = ({ label, value, onClick, hint }) => (
         onClick();
       }
     }}
-    className={`card p-5 transition-all duration-200 select-none ${
-      onClick
-        ? "cursor-pointer hover:border-emerald-400 hover:shadow-lg hover:-translate-y-1 hover:bg-emerald-50/20 active:translate-y-0 group"
-        : ""
-    }`}
+    className={`card p-5 transition-all duration-200 select-none ${onClick
+      ? "cursor-pointer hover:border-emerald-400 hover:shadow-lg hover:-translate-y-1 hover:bg-emerald-50/20 active:translate-y-0 group"
+      : ""
+      }`}
   >
     <div className="flex items-center justify-between">
       <p className="text-xs text-brand-grey uppercase font-semibold group-hover:text-emerald-900 transition-colors">
@@ -2422,6 +2397,110 @@ const StatCard = ({ label, value, onClick, hint }) => (
         <span className="inline-block transition-transform group-hover:translate-x-0.5">→</span>
       </p>
     )}
+    {/* ── Resume Viewer Modal ── */}
+    {viewingResume && (
+      <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-start justify-center p-4 overflow-y-auto">
+        <div className="bg-white rounded-3xl w-full max-w-3xl my-8 shadow-2xl">
+          {/* Header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">
+                📄 Resume — {viewingResume.user.name}
+              </h2>
+              <p className="text-xs text-gray-500">{viewingResume.user.email}</p>
+            </div>
+            <button
+              onClick={() => setViewingResume(null)}
+              className="text-gray-400 hover:text-gray-700 text-2xl leading-none cursor-pointer"
+            >
+              ×
+            </button>
+          </div>
+
+          {/* Resume Data */}
+          <div className="p-6 space-y-5 text-sm text-gray-800">
+            {/* Personal Info */}
+            <div className="p-4 bg-gray-50 rounded-2xl border border-gray-200">
+              <h3 className="font-bold text-base text-emerald-800">
+                {viewingResume.data.fullName || "Name not provided"}
+              </h3>
+              <p className="text-gray-600 text-xs mt-0.5">{viewingResume.data.title || ""}</p>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 mt-2">
+                {viewingResume.data.email && <span>✉ {viewingResume.data.email}</span>}
+                {viewingResume.data.phone && <span>📞 {viewingResume.data.phone}</span>}
+                {viewingResume.data.location && <span>📍 {viewingResume.data.location}</span>}
+              </div>
+            </div>
+
+            {/* Objective */}
+            {viewingResume.data.objective && (
+              <div>
+                <h4 className="font-semibold text-emerald-700 uppercase text-[10px] tracking-wider mb-1">Objective</h4>
+                <p className="text-xs leading-relaxed text-gray-700">{viewingResume.data.objective}</p>
+              </div>
+            )}
+
+            {/* Skills */}
+            {viewingResume.data.skills && (
+              <div>
+                <h4 className="font-semibold text-emerald-700 uppercase text-[10px] tracking-wider mb-2">Skills</h4>
+                <div className="flex flex-wrap gap-1.5">
+                  {viewingResume.data.skills.split(",").map((s, i) => (
+                    s.trim() && <span key={i} className="px-2 py-0.5 bg-emerald-50 border border-emerald-200 rounded-full text-[11px] text-emerald-800">{s.trim()}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Education */}
+            {viewingResume.data.education?.length > 0 && (
+              <div>
+                <h4 className="font-semibold text-emerald-700 uppercase text-[10px] tracking-wider mb-2">Education</h4>
+                <div className="space-y-2">
+                  {viewingResume.data.education.map((e, i) => (
+                    <div key={i} className="flex justify-between text-xs">
+                      <div>
+                        <span className="font-semibold">{e.degree}</span>
+                        {e.institution && <span className="text-gray-500"> — {e.institution}</span>}
+                      </div>
+                      <span className="text-gray-400 shrink-0 ml-2">{e.year}{e.score ? ` | ${e.score}` : ""}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Experience */}
+            {viewingResume.data.experience?.filter(e => e.role || e.company).length > 0 && (
+              <div>
+                <h4 className="font-semibold text-emerald-700 uppercase text-[10px] tracking-wider mb-2">Experience</h4>
+                <div className="space-y-3">
+                  {viewingResume.data.experience.filter(e => e.role || e.company).map((e, i) => (
+                    <div key={i} className="text-xs">
+                      <div className="flex justify-between">
+                        <span className="font-semibold">{e.role}</span>
+                        <span className="text-gray-400 shrink-0 ml-2">{e.duration}</span>
+                      </div>
+                      {e.company && <span className="text-gray-500">{e.company}</span>}
+                      {e.description && <p className="text-gray-600 mt-1 leading-relaxed">{e.description}</p>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Template used */}
+            <div className="text-[10px] text-gray-400 border-t pt-3">
+              Template: <span className="font-medium">{viewingResume.data.template || "default"}</span>
+              {viewingResume.data.updatedAt && (
+                <span className="ml-3">Last saved: {new Date(viewingResume.data.updatedAt).toLocaleDateString("en-IN")}</span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+
   </div>
 );
 
